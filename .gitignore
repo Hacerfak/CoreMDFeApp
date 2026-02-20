@@ -1,0 +1,27 @@
+# Cache, bin e obj
+[Bb]in/
+[Oo]bj/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Arquivos de Banco de Dados local SQLite
+*.db
+*.db-shm
+*.db-wal
+core_mdfe_app.db
+zeus_mdfe_app.db
+
+# Arquivos temporários e logs
+*.log
+*.tmp
+*.bak
+TestResults/
+*.TestResults/
+
+# Publish e pacotes
+[Pp]ublish/
+*.nupkg
+*.snupkg

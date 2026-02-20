@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="CoreMDFe.Core/CoreMDFe.Core.csproj" />
+  <Project Path="CoreMDFe.Desktop/CoreMDFe.Desktop.csproj" />
+  <Project Path="CoreMDFe.Infrastructure/CoreMDFe.Infrastructure.csproj" />
+  <Project Path="CoreMDFe.Application/CoreMDFe.Application.csproj" />
+</Solution>
