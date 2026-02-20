@@ -33,8 +33,10 @@ namespace CoreMDFe.Desktop
 
             // 3. Registrar ViewModels
             services.AddTransient<MainViewModel>();
+            services.AddTransient<ConfiguracoesViewModel>();
 
             Services = services.BuildServiceProvider();
+
 
             // Garante que o DB foi criado (ou aplica as migrations)
             using (var scope = Services.CreateScope())

@@ -45,6 +45,7 @@
             <SplitView.Pane>
                 <Border Background="#2C3E50">
                     <StackPanel Spacing="8" Margin="0,16,0,0">
+
                         <Button Classes="Flat" Command="{Binding AbrirEmissaoCommand}"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
                             Foreground="White" ToolTip.Tip="Ctrl+E">
@@ -74,28 +75,16 @@
                                     FontSize="16" />
                             </StackPanel>
                         </Button>
+
                     </StackPanel>
                 </Border>
             </SplitView.Pane>
 
             <SplitView.Content>
                 <Border Background="#F4F6F8" Padding="24">
-                    <Border Background="White" CornerRadius="8" BoxShadow="0 4 8 0 #40000000"
-                        Padding="32"
-                        HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <StackPanel Spacing="16" MaxWidth="500">
-                            <icons:MaterialIcon Kind="TruckFastOutline" Width="80" Height="80"
-                                Foreground="{DynamicResource PrimaryHueMidBrush}"
-                                HorizontalAlignment="Center" />
-                            <TextBlock Text="Bem-vindo ao Zeus MDF-e!" FontSize="28"
-                                FontWeight="Bold"
-                                HorizontalAlignment="Center" Foreground="#333333" />
-                            <TextBlock
-                                Text="Utilize o menu lateral ou os atalhos de teclado para navegar pelo sistema."
-                                TextWrapping="Wrap" TextAlignment="Center" FontSize="16"
-                                Foreground="#666666" />
-                        </StackPanel>
-                    </Border>
+
+                    <ContentControl Content="{Binding ConteudoAtual}" />
+
                 </Border>
             </SplitView.Content>
         </SplitView>

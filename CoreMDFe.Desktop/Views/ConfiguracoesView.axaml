@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
+    x:Class="CoreMDFe.Desktop.Views.ConfiguracoesView"
+    x:DataType="vm:ConfiguracoesViewModel">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+        <TextBlock Grid.Row="0" Text="Configurações da Empresa e Certificado" FontSize="24"
+            FontWeight="Bold" Margin="0,0,0,16" />
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+
+                <Border Background="White" CornerRadius="8" Padding="16"
+                    BoxShadow="0 2 4 0 #20000000">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Dados do Emitente" FontWeight="SemiBold" FontSize="16"
+                            Foreground="Teal" />
+
+                        <TextBox Watermark="CNPJ (Somente Números)" Text="{Binding Cnpj}"
+                            MaxLength="14" />
+                        <TextBox Watermark="Razão Social" Text="{Binding Nome}" />
+                        <TextBox Watermark="Nome Fantasia" Text="{Binding Fantasia}" />
+
+                        <Grid ColumnDefinitions="*,*">
+                            <TextBox Grid.Column="0" Watermark="Inscrição Estadual"
+                                Text="{Binding Ie}" Margin="0,0,8,0" />
+                            <TextBox Grid.Column="1" Watermark="RNTRC" Text="{Binding Rntrc}"
+                                Margin="8,0,0,0" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,*">
+                            <TextBox Grid.Column="0" Watermark="UF Emissor (Ex: SP)"
+                                Text="{Binding UfEmitente}" Margin="0,0,8,0" />
+                            <ComboBox Grid.Column="1" Margin="8,0,0,0"
+                                SelectedIndex="{Binding TipoAmbiente}" HorizontalAlignment="Stretch">
+                                <ComboBoxItem>Ignorado(0)</ComboBoxItem>
+                                <ComboBoxItem>Produção(1)</ComboBoxItem>
+                                <ComboBoxItem>Homologação(2)</ComboBoxItem>
+                            </ComboBox>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="White" CornerRadius="8" Padding="16"
+                    BoxShadow="0 2 4 0 #20000000">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Certificado Digital A1" FontWeight="SemiBold" FontSize="16"
+                            Foreground="Teal" />
+
+                        <TextBox Watermark="Caminho do arquivo .pfx"
+                            Text="{Binding CaminhoCertificado}" />
+                        <TextBox Watermark="Senha do Certificado" PasswordChar="*"
+                            Text="{Binding SenhaCertificado}" />
+                        <CheckBox Content="Manter certificado em cache (memória)"
+                            IsChecked="{Binding ManterCertificadoCache}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="16" Margin="0,16,0,0">
+            <Button Content="Salvar Configurações" Command="{Binding SalvarConfiguracoesCommand}"
+                Classes="Primary" Background="Teal" Foreground="White" Padding="16,8" />
+            <TextBlock Text="{Binding MensagemSistema}" VerticalAlignment="Center" FontWeight="Bold"
+                Foreground="Orange" />
+        </StackPanel>
+    </Grid>
+</UserControl>
