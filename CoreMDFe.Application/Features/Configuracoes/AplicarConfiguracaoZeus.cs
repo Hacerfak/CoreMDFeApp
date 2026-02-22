@@ -41,9 +41,13 @@ namespace CoreMDFe.Application.Features.Configuracoes
                 ManterDadosEmCache = configApp.ManterCertificadoEmCache
             };
 
+            // Determina o caminho dinâmico da pasta Schemas junto ao executável (Linux ou Windows)
+            string diretorioBase = AppDomain.CurrentDomain.BaseDirectory;
+            string caminhoSchemas = Path.Combine(diretorioBase, "Schemas");
+
             // Aplica ao Singleton da biblioteca do Zeus
             MDFeConfiguracao.Instancia.ConfiguracaoCertificado = configuracaoCertificado;
-            MDFeConfiguracao.Instancia.CaminhoSchemas = configApp.CaminhoSchemas;
+            MDFeConfiguracao.Instancia.CaminhoSchemas = caminhoSchemas;
             MDFeConfiguracao.Instancia.CaminhoSalvarXml = configApp.DiretorioSalvarXml;
             MDFeConfiguracao.Instancia.IsSalvarXml = configApp.IsSalvarXml;
 

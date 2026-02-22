@@ -1,0 +1,179 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
+    xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    x:Class="CoreMDFe.Desktop.Views.DashboardView"
+    x:DataType="vm:DashboardViewModel">
+
+    <Grid ColumnDefinitions="250, *">
+
+        <Border Grid.Column="0" Background="#FAFAFA" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0">
+            <StackPanel Margin="0, 20, 0, 0">
+
+                <StackPanel Orientation="Horizontal" Margin="20, 10, 20, 30" Spacing="10">
+                    <materialIcons:MaterialIcon Kind="TruckFast" Width="32" Height="32"
+                        Foreground="#673AB7" />
+                    <TextBlock Text="Core MDF-e" FontSize="20" FontWeight="Bold"
+                        VerticalAlignment="Center" Foreground="#333333" />
+                </StackPanel>
+
+                <Button Command="{Binding AbrirDashboardCommand}" Classes="Flat" Margin="10, 5"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15, 10"
+                    Background="{Binding IsDashboard, StringFormat='#EDE7F6|Transparent'}"
+                    Foreground="{Binding IsDashboard, StringFormat='#673AB7|Black'}">
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <materialIcons:MaterialIcon Kind="ViewDashboard" Width="20" Height="20" />
+                        <TextBlock Text="Dashboard" VerticalAlignment="Center"
+                            FontWeight="{Binding IsDashboard, StringFormat='SemiBold|Normal'}" />
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding IniciarEmissaoCommand}" Classes="Flat" Margin="10, 5"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15, 10"
+                    Background="{Binding IsWizardVisible, StringFormat='#EDE7F6|Transparent'}"
+                    Foreground="{Binding IsWizardVisible, StringFormat='#673AB7|Black'}">
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <materialIcons:MaterialIcon Kind="FileDocumentPlus" Width="20" Height="20" />
+                        <TextBlock Text="Emitir MDF-e" VerticalAlignment="Center"
+                            FontWeight="{Binding IsWizardVisible, StringFormat='SemiBold|Normal'}" />
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding AbrirHistoricoCommand}" Classes="Flat" Margin="10, 5"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15, 10"
+                    Background="{Binding IsHistorico, StringFormat='#EDE7F6|Transparent'}"
+                    Foreground="{Binding IsHistorico, StringFormat='#673AB7|Black'}">
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <materialIcons:MaterialIcon Kind="History" Width="20" Height="20" />
+                        <TextBlock Text="Histórico MDF-e" VerticalAlignment="Center"
+                            FontWeight="{Binding IsHistorico, StringFormat='SemiBold|Normal'}" />
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding AbrirVeiculosCommand}" Classes="Flat" Margin="10, 5"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15, 10"
+                    Background="{Binding IsVeiculos, StringFormat='#EDE7F6|Transparent'}"
+                    Foreground="{Binding IsVeiculos, StringFormat='#673AB7|Black'}">
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <materialIcons:MaterialIcon Kind="TruckOutline" Width="20" Height="20" />
+                        <TextBlock Text="Meus Veículos" VerticalAlignment="Center"
+                            FontWeight="{Binding IsVeiculos, StringFormat='SemiBold|Normal'}" />
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding AbrirCondutoresCommand}" Classes="Flat" Margin="10, 5"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15, 10"
+                    Background="{Binding IsCondutores, StringFormat='#EDE7F6|Transparent'}"
+                    Foreground="{Binding IsCondutores, StringFormat='#673AB7|Black'}">
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <materialIcons:MaterialIcon Kind="AccountTieHat" Width="20" Height="20" />
+                        <TextBlock Text="Condutores" VerticalAlignment="Center"
+                            FontWeight="{Binding IsCondutores, StringFormat='SemiBold|Normal'}" />
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding AbrirConfiguracoesCommand}" Classes="Flat" Margin="10, 5"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15, 10"
+                    Background="{Binding IsConfiguracoes, StringFormat='#EDE7F6|Transparent'}"
+                    Foreground="{Binding IsConfiguracoes, StringFormat='#673AB7|Black'}">
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <materialIcons:MaterialIcon Kind="Cog" Width="20" Height="20" />
+                        <TextBlock Text="Configurações" VerticalAlignment="Center"
+                            FontWeight="{Binding IsConfiguracoes, StringFormat='SemiBold|Normal'}" />
+                    </StackPanel>
+                </Button>
+
+                <Separator Margin="10,20,10,10" />
+
+                <Button Command="{Binding VoltarAoSeletorCommand}" Classes="Flat" Margin="10, 5"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15, 10"
+                    Foreground="#F44336">
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <materialIcons:MaterialIcon Kind="Logout" Width="20" Height="20" />
+                        <TextBlock Text="Trocar Empresa" VerticalAlignment="Center"
+                            FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Column="1" Background="#F4F6F8">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <Border Padding="40">
+                    <Panel>
+
+                        <StackPanel IsVisible="{Binding IsDashboard}" Spacing="20">
+                            <TextBlock Text="Resumo Geral" FontSize="28" FontWeight="Light"
+                                Foreground="#222222" />
+                            <TextBlock Text="Acompanhe as emissões e o status da frota."
+                                FontSize="14" Foreground="Gray" Margin="0,-15,0,10" />
+
+                            <Grid ColumnDefinitions="*, 20, *, 20, *" Margin="0, 10, 0, 30">
+                                <Border Grid.Column="0" Background="White" CornerRadius="8"
+                                    Padding="20" BoxShadow="0 4 15 0 #0A000000">
+                                    <StackPanel>
+                                        <materialIcons:MaterialIcon Kind="CheckDecagram"
+                                            Foreground="#4CAF50" Width="36" Height="36"
+                                            HorizontalAlignment="Left" />
+                                        <TextBlock Text="Emitidos Hoje" Foreground="#555555"
+                                            Margin="0,15,0,0" />
+                                        <TextBlock Text="0" FontWeight="Bold" FontSize="36"
+                                            Foreground="#333333" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="2" Background="White" CornerRadius="8"
+                                    Padding="20" BoxShadow="0 4 15 0 #0A000000">
+                                    <StackPanel>
+                                        <materialIcons:MaterialIcon Kind="TruckFastOutline"
+                                            Foreground="#FF9800" Width="36" Height="36"
+                                            HorizontalAlignment="Left" />
+                                        <TextBlock Text="MDF-es em Trânsito" Foreground="#555555"
+                                            Margin="0,15,0,0" />
+                                        <TextBlock Text="0" FontWeight="Bold" FontSize="36"
+                                            Foreground="#333333" />
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Grid.Column="4" Background="White" CornerRadius="8"
+                                    Padding="20" BoxShadow="0 4 15 0 #0A000000">
+                                    <StackPanel>
+                                        <materialIcons:MaterialIcon Kind="AlertCircleOutline"
+                                            Foreground="#F44336" Width="36" Height="36"
+                                            HorizontalAlignment="Left" />
+                                        <TextBlock Text="Rejeitados Sefaz" Foreground="#555555"
+                                            Margin="0,15,0,0" />
+                                        <TextBlock Text="0" FontWeight="Bold" FontSize="36"
+                                            Foreground="#333333" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <Border Background="White" CornerRadius="8" Padding="30"
+                                BoxShadow="0 4 15 0 #0A000000">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                    Spacing="20">
+                                    <materialIcons:MaterialIcon Kind="FileDocumentPlus" Width="48"
+                                        Height="48" Foreground="#E0E0E0" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Nova Viagem Programada?" FontSize="18"
+                                            FontWeight="SemiBold" />
+                                        <TextBlock
+                                            Text="Inicie a emissão do MDF-e para liberar o veículo."
+                                            Foreground="Gray" />
+                                    </StackPanel>
+                                    <Button Content="Emitir MDF-e"
+                                        Command="{Binding IniciarEmissaoCommand}" Classes="Primary"
+                                        Theme="{StaticResource SolidButton}" Padding="20,10"
+                                        CornerRadius="20" Margin="20,0,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                    </Panel>
+                </Border>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

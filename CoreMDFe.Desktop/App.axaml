@@ -13,21 +13,15 @@
             <views:ConfiguracoesView />
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type vm:HomeViewModel}">
-            <Border Background="White" CornerRadius="8" BoxShadow="0 4 8 0 #40000000" Padding="32"
-                HorizontalAlignment="Center" VerticalAlignment="Center">
-                <StackPanel Spacing="16" MaxWidth="500">
-                    <icons:MaterialIcon Kind="TruckFastOutline" Width="80" Height="80"
-                        Foreground="{DynamicResource PrimaryHueMidBrush}"
-                        HorizontalAlignment="Center" />
-                    <TextBlock Text="Bem-vindo ao Zeus MDF-e!" FontSize="28" FontWeight="Bold"
-                        HorizontalAlignment="Center" Foreground="#333333" />
-                    <TextBlock
-                        Text="Utilize o menu lateral ou os atalhos de teclado para navegar pelo sistema."
-                        TextWrapping="Wrap" TextAlignment="Center" FontSize="16"
-                        Foreground="#666666" />
-                </StackPanel>
-            </Border>
+        <DataTemplate DataType="{x:Type vm:OnboardingViewModel}">
+            <views:OnboardingView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:SeletorEmpresaViewModel}">
+            <views:SeletorEmpresaView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView />
         </DataTemplate>
 
     </Application.DataTemplates>

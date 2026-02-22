@@ -1,57 +1,41 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using MediatR;
+using CoreMDFe.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {
-        private readonly IMediator _mediator;
+        private readonly IServiceProvider _serviceProvider;
 
-        [ObservableProperty]
-        private string _tituloAbaAtual = "Início";
-
-        [ObservableProperty]
-        private bool _isMenuOpen = true;
-
-        // Propriedade que guarda a ViewModel da tela ativa
         [ObservableProperty]
         private ObservableObject _conteudoAtual = null!;
 
-        public MainViewModel(IMediator mediator)
+        public MainViewModel(IServiceProvider serviceProvider)
         {
-            _mediator = mediator;
-            // Define a tela inicial
-            ConteudoAtual = new HomeViewModel();
+            _serviceProvider = serviceProvider;
+            NavegarParaSeletor(); // Tela inicial é sempre o seletor!
         }
 
-        [RelayCommand]
-        private void AbrirEmissao()
+        public void NavegarParaSeletor()
         {
-            TituloAbaAtual = "Emitir MDF-e";
-            // Quando tivermos a tela de emissão, faremos:
-            // ConteudoAtual = App.Services!.GetRequiredService<EmissaoViewModel>();
+            ConteudoAtual = _serviceProvider.GetRequiredService<SeletorEmpresaViewModel>();
         }
 
-        [RelayCommand]
-        private void AbrirConfiguracoes()
+        public void NavegarParaOnboarding()
         {
-            TituloAbaAtual = "Configurações do Sistema";
-            // Injeta a ViewModel de configurações na área central
-            ConteudoAtual = App.Services!.GetRequiredService<ConfiguracoesViewModel>();
+            ConteudoAtual = _serviceProvider.GetRequiredService<OnboardingViewModel>();
         }
 
-        [RelayCommand]
-        private void ConsultarSefaz()
+        public void NavegarParaDashboard(string dbPath)
         {
-            TituloAbaAtual = "Consultas Sefaz";
-        }
+            // Dizemos ao sistema inteiro: "A partir de agora, use ESTE banco de dados"
+            var tenantService = _serviceProvider.GetRequiredService<CurrentTenantService>();
+            tenantService.SetTenant(dbPath);
 
-        [RelayCommand]
-        private void AlternarMenu() => IsMenuOpen = !IsMenuOpen;
+            // Carrega o layout lindo do Dashboard
+            ConteudoAtual = _serviceProvider.GetRequiredService<DashboardViewModel>();
+        }
     }
-
-    // ViewModel provisória apenas para desenhar a tela inicial de Boas-vindas
-    public class HomeViewModel : ObservableObject { }
 }

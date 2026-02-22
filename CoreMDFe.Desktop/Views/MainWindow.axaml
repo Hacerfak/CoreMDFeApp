@@ -1,92 +1,11 @@
 <Window xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
-    mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
     x:Class="CoreMDFe.Desktop.Views.MainWindow"
     x:DataType="vm:MainViewModel"
-    Title="Zeus MDF-e - Sistema Emissor"
+    Title="Zeus MDF-e"
     WindowStartupLocation="CenterScreen"
-    Width="1024" Height="768">
+    Width="1200" Height="800">
 
-    <Window.KeyBindings>
-        <KeyBinding Gesture="Ctrl+E" Command="{Binding AbrirEmissaoCommand}" />
-        <KeyBinding Gesture="Ctrl+C" Command="{Binding AbrirConfiguracoesCommand}" />
-        <KeyBinding Gesture="Ctrl+S" Command="{Binding ConsultarSefazCommand}" />
-        <KeyBinding Gesture="Ctrl+M" Command="{Binding AlternarMenuCommand}" />
-    </Window.KeyBindings>
-
-    <Grid RowDefinitions="Auto,*">
-
-        <Border Grid.Row="0" Background="{DynamicResource PrimaryHueMidBrush}" Height="56">
-            <Grid ColumnDefinitions="Auto, *, Auto">
-                <Button Grid.Column="0" Classes="Flat" Command="{Binding AlternarMenuCommand}"
-                    Foreground="White" Margin="8" ToolTip.Tip="Menu (Ctrl+M)">
-                    <icons:MaterialIcon Kind="Menu" Width="24" Height="24" />
-                </Button>
-
-                <TextBlock Grid.Column="1" Text="{Binding TituloAbaAtual}"
-                    Foreground="White" FontSize="20" FontWeight="Medium"
-                    VerticalAlignment="Center" Margin="16,0,0,0" />
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,16,0">
-                    <Button Classes="Flat" Foreground="White" ToolTip.Tip="Status Sefaz">
-                        <icons:MaterialIcon Kind="ServerNetwork" Width="24" Height="24" />
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <SplitView Grid.Row="1" IsPaneOpen="{Binding IsMenuOpen}"
-            DisplayMode="CompactInline" OpenPaneLength="250" CompactPaneLength="64">
-
-            <SplitView.Pane>
-                <Border Background="#2C3E50">
-                    <StackPanel Spacing="8" Margin="0,16,0,0">
-
-                        <Button Classes="Flat" Command="{Binding AbrirEmissaoCommand}"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Foreground="White" ToolTip.Tip="Ctrl+E">
-                            <StackPanel Orientation="Horizontal" Spacing="16" Margin="8,0">
-                                <icons:MaterialIcon Kind="FileDocumentEditOutline" Width="24"
-                                    Height="24" />
-                                <TextBlock Text="Emitir MDF-e" VerticalAlignment="Center"
-                                    FontSize="16" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Classes="Flat" Command="{Binding ConsultarSefazCommand}"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Foreground="White" ToolTip.Tip="Ctrl+S">
-                            <StackPanel Orientation="Horizontal" Spacing="16" Margin="8,0">
-                                <icons:MaterialIcon Kind="Magnify" Width="24" Height="24" />
-                                <TextBlock Text="Consultas" VerticalAlignment="Center" FontSize="16" />
-                            </StackPanel>
-                        </Button>
-
-                        <Button Classes="Flat" Command="{Binding AbrirConfiguracoesCommand}"
-                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Foreground="White" ToolTip.Tip="Ctrl+C">
-                            <StackPanel Orientation="Horizontal" Spacing="16" Margin="8,0">
-                                <icons:MaterialIcon Kind="CogOutline" Width="24" Height="24" />
-                                <TextBlock Text="Configurações" VerticalAlignment="Center"
-                                    FontSize="16" />
-                            </StackPanel>
-                        </Button>
-
-                    </StackPanel>
-                </Border>
-            </SplitView.Pane>
-
-            <SplitView.Content>
-                <Border Background="#F4F6F8" Padding="24">
-
-                    <ContentControl Content="{Binding ConteudoAtual}" />
-
-                </Border>
-            </SplitView.Content>
-        </SplitView>
-    </Grid>
+    <ContentControl Content="{Binding ConteudoAtual}" />
 </Window>

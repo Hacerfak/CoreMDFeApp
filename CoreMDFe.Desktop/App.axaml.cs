@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using CoreMDFe.Core.Interfaces;
 using CoreMDFe.Infrastructure.Data;
+using CoreMDFe.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using CoreMDFe.Desktop.ViewModels;
@@ -23,27 +24,28 @@ namespace CoreMDFe.Desktop
         {
             var services = new ServiceCollection();
 
-            // 1. Configurar Banco de Dados
-            services.AddDbContext<AppDbContext>();
-            services.AddScoped<IAppDbContext>(provider => provider.GetRequiredService<AppDbContext>());
+            // 1. Registra o serviço de Sessão (Tenant) como Singleton (Único para todo o app)
+            services.AddSingleton<CurrentTenantService>();
 
-            // 2. Configurar MediatR
-            // Usamos o "global::" para o C# não confundir o seu projeto "Application" com a classe "Avalonia.Application"
+            // 2. Configura Banco de Dados DINÂMICO
+            services.AddScoped<IAppDbContext>(provider =>
+            {
+                var tenant = provider.GetRequiredService<CurrentTenantService>();
+                // Se não tem empresa selecionada, usa um banco em memória ou de design (só para evitar erro de injeção)
+                var path = tenant.CurrentDbPath ?? "design_time.db";
+                return new AppDbContext(path);
+            });
+
+            // 3. Configura MediatR
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(global::CoreMDFe.Application.Features.Configuracoes.SalvarConfiguracaoCommand).Assembly));
 
-            // 3. Registrar ViewModels
-            services.AddTransient<MainViewModel>();
-            services.AddTransient<ConfiguracoesViewModel>();
+            // 4. Registrar ViewModels (O MainViewModel TEM que ser Singleton para a navegação funcionar)
+            services.AddSingleton<MainViewModel>();
+            services.AddTransient<OnboardingViewModel>();
+            services.AddTransient<SeletorEmpresaViewModel>();
+            services.AddTransient<DashboardViewModel>();
 
             Services = services.BuildServiceProvider();
-
-
-            // Garante que o DB foi criado (ou aplica as migrations)
-            using (var scope = Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                db.Database.EnsureCreated();
-            }
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {

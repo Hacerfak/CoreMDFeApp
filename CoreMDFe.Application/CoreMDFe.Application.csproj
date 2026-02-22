@@ -2,11 +2,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CoreMDFe.Core\CoreMDFe.Core.csproj" />
+    <ProjectReference Include="..\CoreMDFe.Infrastructure\CoreMDFe.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MediatR" Version="12.4.1" />
     <PackageReference Include="Zeus.Net.MDFe" Version="2026.2.18.1740" />
+    <PackageReference Include="Zeus.Net.NFe.NFCe" Version="2026.2.18.1740" />
   </ItemGroup>
 
   <PropertyGroup>

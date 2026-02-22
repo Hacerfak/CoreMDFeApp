@@ -1,0 +1,178 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
+    xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    x:Class="CoreMDFe.Desktop.Views.OnboardingView"
+    x:DataType="vm:OnboardingViewModel"
+    Background="#F4F6F8">
+
+    <Grid>
+        <Border Background="#CCFFFFFF" ZIndex="100" IsVisible="{Binding IsCarregando}">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="16">
+                <ProgressBar IsIndeterminate="True" Width="200" Height="6" Foreground="#673AB7" />
+                <TextBlock Text="{Binding MensagemCarregando}" FontSize="18" FontWeight="SemiBold"
+                    Foreground="#333333" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="24"
+                Margin="20" MaxWidth="650">
+
+                <StackPanel Spacing="8" HorizontalAlignment="Center">
+                    <icons:MaterialIcon Kind="DomainPlus" Width="64" Height="64"
+                        Foreground="#673AB7" HorizontalAlignment="Center" />
+                    <TextBlock Text="Adicionar Nova Empresa" FontSize="32" FontWeight="Light"
+                        Foreground="#222222" HorizontalAlignment="Center" />
+                    <TextBlock Text="Configure o ambiente isolado para emissão de MDF-e."
+                        FontSize="16" Foreground="Gray" HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <Border Background="#FFEBEE" BorderBrush="#FF9800" BorderThickness="1"
+                    CornerRadius="8" Padding="16"
+                    IsVisible="{Binding MensagemErro, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <icons:MaterialIcon Kind="AlertOutline" Foreground="#E65100" Width="24"
+                            Height="24" />
+                        <TextBlock Text="{Binding MensagemErro}" Foreground="#E65100"
+                            VerticalAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border IsVisible="{Binding IsPasso1}" Background="White" CornerRadius="12"
+                    Padding="40" BoxShadow="0 10 30 0 #1A000000">
+                    <StackPanel Spacing="20">
+                        <TextBlock Text="1. Certificado e UF" FontSize="20" FontWeight="SemiBold"
+                            Foreground="#333333" />
+                        <TextBlock
+                            Text="Selecione o arquivo PFX do certificado A1. O sistema fará a leitura automática na SEFAZ."
+                            Foreground="Gray" TextWrapping="Wrap" Margin="0,-10,0,10" />
+
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="Caminho do Arquivo (.pfx)" FontWeight="SemiBold"
+                                Foreground="#555555" FontSize="13" />
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBox Grid.Column="0" Text="{Binding CaminhoCertificado}"
+                                    Classes="Outline" Theme="{StaticResource OutlineTextBox}"
+                                    Watermark="Nenhum arquivo selecionado..." IsReadOnly="True" />
+                                <Button Grid.Column="1"
+                                    Command="{Binding ProcurarCertificadoCommand}" Classes="Outline"
+                                    Margin="8,0,0,0" ToolTip.Tip="Procurar arquivo">
+                                    <icons:MaterialIcon Kind="FolderOpen" Foreground="#673AB7"
+                                        Width="20" Height="20" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*, 20, 150">
+                            <StackPanel Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Senha do Certificado" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <TextBox Text="{Binding SenhaCertificado}" PasswordChar="•"
+                                    Classes="Outline" Theme="{StaticResource OutlineTextBox}"
+                                    Watermark="Digite a senha..." />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Spacing="5">
+                                <TextBlock Text="UF Emissora" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <ComboBox ItemsSource="{Binding ListaUFs}"
+                                    SelectedItem="{Binding UfSelecionada}"
+                                    HorizontalAlignment="Stretch"
+                                    Theme="{StaticResource OutlineComboBox}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Button Content="Avançar e Consultar SEFAZ"
+                            Command="{Binding ConsultarSefazCommand}"
+                            Classes="Primary" Theme="{StaticResource SolidButton}"
+                            Background="#673AB7" Foreground="White"
+                            HorizontalAlignment="Right" Padding="24,12" CornerRadius="24"
+                            Margin="0,20,0,0" FontSize="16" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Border>
+
+                <Border IsVisible="{Binding IsPasso2}" Background="White" CornerRadius="12"
+                    Padding="40" BoxShadow="0 10 30 0 #1A000000">
+                    <StackPanel Spacing="20">
+                        <TextBlock Text="2. Revisão de Dados" FontSize="20" FontWeight="SemiBold"
+                            Foreground="#333333" />
+                        <TextBlock
+                            Text="Dados retornados da SEFAZ. Preencha apenas as informações faltantes."
+                            Foreground="Gray" TextWrapping="Wrap" Margin="0,-10,0,10" />
+
+                        <Grid ColumnDefinitions="*, 15, *" RowDefinitions="Auto, 15, Auto">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="5">
+                                <TextBlock Text="CNPJ" FontWeight="SemiBold" Foreground="#555555"
+                                    FontSize="13" />
+                                <TextBox Text="{Binding Cnpj}" IsReadOnly="True"
+                                    Background="#F0F0F0" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="2" Spacing="5">
+                                <TextBlock Text="Inscrição Estadual" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <TextBox Text="{Binding InscricaoEstadual}" IsReadOnly="True"
+                                    Background="#F0F0F0" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Spacing="5">
+                                <TextBlock Text="Razão Social" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <TextBox Text="{Binding RazaoSocial}" IsReadOnly="True"
+                                    Background="#F0F0F0" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Separator Background="#EEEEEE" Margin="0,10" />
+
+                        <Grid ColumnDefinitions="*, 15, *" RowDefinitions="Auto, 15, Auto">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Nome Fantasia" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <TextBox Text="{Binding NomeFantasia}" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="2" Spacing="5">
+                                <TextBlock Text="RNTRC (Opcional se carga própria)"
+                                    FontWeight="SemiBold" Foreground="#555555" FontSize="13" />
+                                <TextBox Text="{Binding Rntrc}" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Telefone" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <TextBox Text="{Binding Telefone}" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Grid.Column="2" Spacing="5">
+                                <TextBlock Text="E-mail" FontWeight="SemiBold" Foreground="#555555"
+                                    FontSize="13" />
+                                <TextBox Text="{Binding Email}" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto, *, Auto" Margin="0, 20, 0, 0">
+                            <Button Grid.Column="0" Content="Voltar"
+                                Command="{Binding VoltarPasso1Command}" Classes="Flat"
+                                Foreground="Gray" Padding="20,12" />
+
+                            <Button Grid.Column="2" Content="Concluir e Criar Ambiente"
+                                Command="{Binding FinalizarCadastroCommand}"
+                                Classes="Primary" Theme="{StaticResource SolidButton}"
+                                Background="#4CAF50" Foreground="White"
+                                Padding="24,12" CornerRadius="24" FontSize="16"
+                                FontWeight="SemiBold" />
+                        </Grid>
+
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

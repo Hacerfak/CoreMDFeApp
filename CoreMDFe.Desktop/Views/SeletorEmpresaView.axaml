@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
+    xmlns:icons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    x:Class="CoreMDFe.Desktop.Views.SeletorEmpresaView"
+    x:DataType="vm:SeletorEmpresaViewModel"
+    Background="#F4F6F8">
+
+    <Grid RowDefinitions="Auto, *">
+        <Border Grid.Row="0" Background="White" BoxShadow="0 2 8 0 #10000000" Padding="30,20">
+            <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Selecione uma Empresa" FontSize="26" FontWeight="Light"
+                        Foreground="#333333" />
+                    <TextBlock Text="Escolha o ambiente de trabalho ou cadastre um novo emissor."
+                        Foreground="Gray" FontSize="14" />
+                </StackPanel>
+                <Button Grid.Column="1" Content="+ Adicionar Nova Empresa"
+                    Command="{Binding NovaEmpresaCommand}"
+                    Classes="Primary" Theme="{StaticResource SolidButton}" Background="#673AB7"
+                    Foreground="White"
+                    CornerRadius="20" Padding="20,10" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" Padding="30">
+            <ItemsControl ItemsSource="{Binding Empresas}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" CornerRadius="12" Padding="24" Margin="0,0,20,20"
+                            BoxShadow="0 4 15 0 #10000000" Width="320">
+                            <StackPanel Spacing="10">
+                                <icons:MaterialIcon Kind="Domain" Width="40" Height="40"
+                                    Foreground="#673AB7" HorizontalAlignment="Left" />
+                                <TextBlock Text="{Binding RazaoSocial}" FontWeight="Bold"
+                                    FontSize="18" TextTrimming="CharacterEllipsis"
+                                    ToolTip.Tip="{Binding RazaoSocial}" />
+                                <TextBlock Text="{Binding Cnpj}" Foreground="Gray" FontSize="14" />
+
+                                <Button Content="Acessar Sistema"
+                                    Command="{Binding $parent[UserControl].((vm:SeletorEmpresaViewModel)DataContext).EntrarEmpresaCommand}"
+                                    CommandParameter="{Binding}"
+                                    Classes="Outline" Foreground="#673AB7" BorderBrush="#673AB7"
+                                    Margin="0,15,0,0" HorizontalAlignment="Stretch" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
