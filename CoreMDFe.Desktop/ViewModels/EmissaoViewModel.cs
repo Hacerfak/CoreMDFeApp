@@ -99,11 +99,42 @@ namespace CoreMDFe.Desktop.ViewModels
         public bool IsModalAquaviario => ModalSelecionadoIndex == 2;
         public bool IsModalFerroviario => ModalSelecionadoIndex == 3;
 
+        // ==========================================
+        // DADOS OPCIONAIS (TODOS OS MODAIS)
+        // ==========================================
+        [ObservableProperty] private bool _isSeguroAberto;
+        [ObservableProperty] private string _seguradoraCnpj = string.Empty;
+        [ObservableProperty] private string _seguradoraNome = string.Empty;
+        [ObservableProperty] private string _numeroApolice = string.Empty;
+        [ObservableProperty] private string _numeroAverbacao = string.Empty;
+
+        [ObservableProperty] private bool _isProdutoPredominanteAberto;
+        public string[] ListaTiposCarga { get; } = { "01-Granel sólido", "02-Granel líquido", "03-Frigorificada", "04-Conteinerizada", "05-Carga Geral", "06-Neogranel", "07-Perigosa (Sólido)", "08-Perigosa (Líquido)", "09-Perigosa (Frigorificada)", "10-Perigosa (Conteinerizada)", "11-Perigosa (Carga Geral)", "12-Granel pressurizada" };
+        [ObservableProperty] private int _tipoCargaIndex = 4; // Carga Geral
+        [ObservableProperty] private string _nomeProdutoPredominante = string.Empty;
+        [ObservableProperty] private string _ncmProduto = string.Empty;
+
         // Dados Rodoviário
         public ObservableCollection<Veiculo> VeiculosDisponiveis { get; } = new();
         public ObservableCollection<Condutor> CondutoresDisponiveis { get; } = new();
         [ObservableProperty] private Veiculo? _veiculoSelecionado;
         [ObservableProperty] private Condutor? _condutorSelecionado;
+        [ObservableProperty] private bool _isReboquesAberto;
+        [ObservableProperty] private Veiculo? _reboque1Selecionado;
+        [ObservableProperty] private Veiculo? _reboque2Selecionado;
+        [ObservableProperty] private Veiculo? _reboque3Selecionado; // Limite do XSD são 3 reboques
+
+        [ObservableProperty] private bool _isCiotValePedagioAberto;
+        [ObservableProperty] private string _ciot = string.Empty;
+        [ObservableProperty] private string _cpfCnpjCiot = string.Empty;
+        [ObservableProperty] private string _cnpjFornecedorValePedagio = string.Empty;
+        [ObservableProperty] private string _cnpjPagadorValePedagio = string.Empty;
+        [ObservableProperty] private string _numeroComprovanteVale = string.Empty;
+        [ObservableProperty] private decimal _valorValePedagio;
+
+        [ObservableProperty] private bool _isContratanteAberto;
+        [ObservableProperty] private string _cnpjContratante = string.Empty;
+        [ObservableProperty] private string _nomeContratante = string.Empty;
 
         // --- PASSO 4: RESUMO E FEEDBACK ---
         [ObservableProperty] private bool _isProcessando;

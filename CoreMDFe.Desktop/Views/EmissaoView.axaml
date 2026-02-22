@@ -120,87 +120,268 @@
                         <TextBlock Text="Dados do Transporte" FontSize="22" FontWeight="SemiBold"
                             Foreground="#333" />
 
-                        <Border IsVisible="{Binding IsModalRodoviario}" Background="#F8F9FA"
-                            Padding="20" CornerRadius="8">
-                            <StackPanel Spacing="15">
-                                <TextBlock Text="Configuração Rodoviária" FontWeight="Bold"
-                                    Foreground="#673AB7" FontSize="16" />
+                        <StackPanel IsVisible="{Binding IsModalRodoviario}" Spacing="15">
 
-                                <TextBlock Text="Veículo de Tração" FontWeight="SemiBold"
-                                    FontSize="13" />
-                                <ComboBox ItemsSource="{Binding VeiculosDisponiveis}"
-                                    SelectedItem="{Binding VeiculoSelecionado}"
-                                    HorizontalAlignment="Stretch"
-                                    PlaceholderText="Escolha um veículo..."
-                                    Theme="{StaticResource OutlineComboBox}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Placa}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
+                            <Border Background="#F8F9FA" BorderBrush="#E0E0E0" BorderThickness="1"
+                                Padding="20" CornerRadius="8">
+                                <StackPanel Spacing="15">
+                                    <TextBlock Text="Configuração Básica (Obrigatório)"
+                                        FontWeight="Bold" Foreground="#673AB7" FontSize="16" />
 
-                                <TextBlock Text="Condutor" FontWeight="SemiBold" FontSize="13" />
-                                <ComboBox ItemsSource="{Binding CondutoresDisponiveis}"
-                                    SelectedItem="{Binding CondutorSelecionado}"
-                                    HorizontalAlignment="Stretch"
-                                    PlaceholderText="Escolha o motorista..."
-                                    Theme="{StaticResource OutlineComboBox}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Nome}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </StackPanel>
-                        </Border>
+                                    <Grid ColumnDefinitions="*, 20, *">
+                                        <StackPanel Grid.Column="0" Spacing="5">
+                                            <TextBlock Text="Veículo de Tração"
+                                                FontWeight="SemiBold"
+                                                FontSize="13" />
+                                            <ComboBox ItemsSource="{Binding VeiculosDisponiveis}"
+                                                SelectedItem="{Binding VeiculoSelecionado}"
+                                                HorizontalAlignment="Stretch"
+                                                PlaceholderText="Escolha um veículo..."
+                                                Theme="{StaticResource OutlineComboBox}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Placa}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Spacing="5">
+                                            <TextBlock Text="Condutor Principal"
+                                                FontWeight="SemiBold"
+                                                FontSize="13" />
+                                            <ComboBox ItemsSource="{Binding CondutoresDisponiveis}"
+                                                SelectedItem="{Binding CondutorSelecionado}"
+                                                HorizontalAlignment="Stretch"
+                                                PlaceholderText="Escolha o motorista..."
+                                                Theme="{StaticResource OutlineComboBox}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Nome}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
 
-                        <Border IsVisible="{Binding IsModalAereo}" Background="#F8F9FA" Padding="20"
-                            CornerRadius="8">
-                            <StackPanel Spacing="15">
-                                <TextBlock Text="Configuração Aérea" FontWeight="Bold"
-                                    Foreground="#673AB7" FontSize="16" />
-                                <Grid ColumnDefinitions="*, 15, *">
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Matrícula da Aeronave"
-                                            FontWeight="SemiBold" FontSize="13" />
-                                        <TextBox Watermark="Ex: PT-ABC" Classes="Outline"
-                                            Theme="{StaticResource OutlineTextBox}" />
+                            <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1"
+                                CornerRadius="8" Padding="15">
+                                <StackPanel>
+                                    <ToggleButton IsChecked="{Binding IsReboquesAberto}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Classes="Outline" BorderThickness="0"
+                                        Background="Transparent"
+                                        Foreground="#333">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon
+                                                Kind="{Binding IsReboquesAberto, StringFormat='ChevronUp|ChevronDown'}"
+                                                Width="20" Height="20" Foreground="#673AB7" />
+                                            <TextBlock
+                                                Text="Adicionar Veículos de Reboque (Opcional)"
+                                                VerticalAlignment="Center" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                    </ToggleButton>
+                                    <StackPanel IsVisible="{Binding IsReboquesAberto}" Spacing="10"
+                                        Margin="0,15,0,0">
+                                        <TextBlock
+                                            Text="O MDF-e suporta até 3 reboques simultâneos."
+                                            FontSize="12" Foreground="Gray" />
+                                        <Grid ColumnDefinitions="*, 15, *, 15, *">
+                                            <ComboBox Grid.Column="0"
+                                                ItemsSource="{Binding VeiculosDisponiveis}"
+                                                SelectedItem="{Binding Reboque1Selecionado}"
+                                                PlaceholderText="Reboque 1"
+                                                HorizontalAlignment="Stretch"
+                                                Theme="{StaticResource OutlineComboBox}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Placa}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                            <ComboBox Grid.Column="2"
+                                                ItemsSource="{Binding VeiculosDisponiveis}"
+                                                SelectedItem="{Binding Reboque2Selecionado}"
+                                                PlaceholderText="Reboque 2"
+                                                HorizontalAlignment="Stretch"
+                                                Theme="{StaticResource OutlineComboBox}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Placa}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                            <ComboBox Grid.Column="4"
+                                                ItemsSource="{Binding VeiculosDisponiveis}"
+                                                SelectedItem="{Binding Reboque3Selecionado}"
+                                                PlaceholderText="Reboque 3"
+                                                HorizontalAlignment="Stretch"
+                                                Theme="{StaticResource OutlineComboBox}">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Placa}" />
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                        </Grid>
                                     </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Número do Voo" FontWeight="SemiBold"
-                                            FontSize="13" />
-                                        <TextBox Watermark="Ex: 1234" Classes="Outline"
-                                            Theme="{StaticResource OutlineTextBox}" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1"
+                                CornerRadius="8" Padding="15">
+                                <StackPanel>
+                                    <ToggleButton IsChecked="{Binding IsSeguroAberto}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Classes="Outline" BorderThickness="0"
+                                        Background="Transparent"
+                                        Foreground="#333">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon
+                                                Kind="{Binding IsSeguroAberto, StringFormat='ChevronUp|ChevronDown'}"
+                                                Width="20" Height="20" Foreground="#673AB7" />
+                                            <TextBlock
+                                                Text="Seguro da Carga (Opcional / Obrigatório p/ Prestadores)"
+                                                VerticalAlignment="Center" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                    </ToggleButton>
+                                    <StackPanel IsVisible="{Binding IsSeguroAberto}" Spacing="10"
+                                        Margin="0,15,0,0">
+                                        <Grid ColumnDefinitions="*, 15, *">
+                                            <StackPanel Grid.Column="0" Spacing="5">
+                                                <TextBlock Text="CNPJ Seguradora" FontSize="12"
+                                                    FontWeight="SemiBold" Foreground="#666" />
+                                                <TextBox Text="{Binding SeguradoraCnpj}"
+                                                    Watermark="Ex: 00.000.000/0001-00"
+                                                    Classes="Outline"
+                                                    Theme="{StaticResource OutlineTextBox}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Spacing="5">
+                                                <TextBlock Text="Nome da Seguradora" FontSize="12"
+                                                    FontWeight="SemiBold" Foreground="#666" />
+                                                <TextBox Text="{Binding SeguradoraNome}"
+                                                    Watermark="Ex: Porto Seguro S/A"
+                                                    Classes="Outline"
+                                                    Theme="{StaticResource OutlineTextBox}" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <Grid ColumnDefinitions="*, 15, *">
+                                            <StackPanel Grid.Column="0" Spacing="5">
+                                                <TextBlock Text="Número da Apólice" FontSize="12"
+                                                    FontWeight="SemiBold" Foreground="#666" />
+                                                <TextBox Text="{Binding NumeroApolice}"
+                                                    Classes="Outline"
+                                                    Theme="{StaticResource OutlineTextBox}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Spacing="5">
+                                                <TextBlock Text="Número da Averbação" FontSize="12"
+                                                    FontWeight="SemiBold" Foreground="#666" />
+                                                <TextBox Text="{Binding NumeroAverbacao}"
+                                                    Classes="Outline"
+                                                    Theme="{StaticResource OutlineTextBox}" />
+                                            </StackPanel>
+                                        </Grid>
                                     </StackPanel>
-                                </Grid>
-                            </StackPanel>
-                        </Border>
+                                </StackPanel>
+                            </Border>
 
-                        <Border IsVisible="{Binding IsModalAquaviario}" Background="#F8F9FA"
-                            Padding="20" CornerRadius="8">
-                            <StackPanel Spacing="15">
-                                <TextBlock Text="Configuração Aquaviária" FontWeight="Bold"
-                                    Foreground="#673AB7" FontSize="16" />
-                                <TextBlock Text="Nome da Embarcação" FontWeight="SemiBold"
-                                    FontSize="13" />
-                                <TextBox Watermark="Ex: Balsa Rio Negro" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" />
-                            </StackPanel>
-                        </Border>
+                            <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1"
+                                CornerRadius="8" Padding="15">
+                                <StackPanel>
+                                    <ToggleButton IsChecked="{Binding IsProdutoPredominanteAberto}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Classes="Outline" BorderThickness="0"
+                                        Background="Transparent"
+                                        Foreground="#333">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon
+                                                Kind="{Binding IsProdutoPredominanteAberto, StringFormat='ChevronUp|ChevronDown'}"
+                                                Width="20" Height="20" Foreground="#673AB7" />
+                                            <TextBlock Text="Produto Predominante (Opcional)"
+                                                VerticalAlignment="Center" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                    </ToggleButton>
+                                    <StackPanel IsVisible="{Binding IsProdutoPredominanteAberto}"
+                                        Spacing="10" Margin="0,15,0,0">
+                                        <Grid ColumnDefinitions="*, 15, 2*">
+                                            <StackPanel Grid.Column="0" Spacing="5">
+                                                <TextBlock Text="Tipo de Carga" FontSize="12"
+                                                    FontWeight="SemiBold" Foreground="#666" />
+                                                <ComboBox ItemsSource="{Binding ListaTiposCarga}"
+                                                    SelectedIndex="{Binding TipoCargaIndex}"
+                                                    HorizontalAlignment="Stretch"
+                                                    Theme="{StaticResource OutlineComboBox}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Spacing="5">
+                                                <TextBlock Text="Descrição do Produto" FontSize="12"
+                                                    FontWeight="SemiBold" Foreground="#666" />
+                                                <TextBox Text="{Binding NomeProdutoPredominante}"
+                                                    Watermark="Ex: Soja em grãos" Classes="Outline"
+                                                    Theme="{StaticResource OutlineTextBox}" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBox Text="{Binding NcmProduto}"
+                                            Watermark="Código NCM (Opcional)" Classes="Outline"
+                                            Theme="{StaticResource OutlineTextBox}"
+                                            HorizontalAlignment="Left" Width="200" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
 
-                        <Border IsVisible="{Binding IsModalFerroviario}" Background="#F8F9FA"
-                            Padding="20" CornerRadius="8">
-                            <StackPanel Spacing="15">
-                                <TextBlock Text="Configuração Ferroviária" FontWeight="Bold"
-                                    Foreground="#673AB7" FontSize="16" />
-                                <TextBlock Text="Prefixo do Trem" FontWeight="SemiBold"
-                                    FontSize="13" />
-                                <TextBox Watermark="Ex: TR-099" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" />
-                            </StackPanel>
-                        </Border>
-
+                            <Border Background="White" BorderBrush="#E0E0E0" BorderThickness="1"
+                                CornerRadius="8" Padding="15">
+                                <StackPanel>
+                                    <ToggleButton IsChecked="{Binding IsCiotValePedagioAberto}"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Left"
+                                        Classes="Outline" BorderThickness="0"
+                                        Background="Transparent"
+                                        Foreground="#333">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <materialIcons:MaterialIcon
+                                                Kind="{Binding IsCiotValePedagioAberto, StringFormat='ChevronUp|ChevronDown'}"
+                                                Width="20" Height="20" Foreground="#673AB7" />
+                                            <TextBlock Text="CIOT e Vale Pedágio / ANTT (Opcional)"
+                                                VerticalAlignment="Center" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                    </ToggleButton>
+                                    <StackPanel IsVisible="{Binding IsCiotValePedagioAberto}"
+                                        Spacing="10" Margin="0,15,0,0">
+                                        <TextBlock Text="Dados do CIOT" FontWeight="Bold"
+                                            FontSize="13"
+                                            Foreground="#666" Margin="0,5,0,0" />
+                                        <Grid ColumnDefinitions="*, 15, *">
+                                            <TextBox Grid.Column="0" Text="{Binding Ciot}"
+                                                Watermark="Código CIOT" Classes="Outline"
+                                                Theme="{StaticResource OutlineTextBox}" />
+                                            <TextBox Grid.Column="2" Text="{Binding CpfCnpjCiot}"
+                                                Watermark="CPF/CNPJ do Responsável pelo CIOT"
+                                                Classes="Outline"
+                                                Theme="{StaticResource OutlineTextBox}" />
+                                        </Grid>
+                                        <Separator Background="#EEEEEE" Margin="0,10" />
+                                        <TextBlock Text="Vale Pedágio" FontWeight="Bold"
+                                            FontSize="13"
+                                            Foreground="#666" />
+                                        <Grid ColumnDefinitions="*, 15, *">
+                                            <TextBox Grid.Column="0"
+                                                Text="{Binding CnpjFornecedorValePedagio}"
+                                                Watermark="CNPJ Fornecedor do Pedágio"
+                                                Classes="Outline"
+                                                Theme="{StaticResource OutlineTextBox}" />
+                                            <TextBox Grid.Column="2"
+                                                Text="{Binding CnpjPagadorValePedagio}"
+                                                Watermark="CNPJ Pagador" Classes="Outline"
+                                                Theme="{StaticResource OutlineTextBox}" />
+                                        </Grid>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
                     </StackPanel>
 
                     <StackPanel IsVisible="{Binding IsPasso4}" Spacing="20">
