@@ -1,0 +1,238 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
+    xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    x:Class="CoreMDFe.Desktop.Views.EmissaoView"
+    x:DataType="vm:EmissaoViewModel">
+
+    <Grid RowDefinitions="Auto, *, Auto" Margin="20">
+        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="20"
+            BoxShadow="0 2 10 0 #10000000" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20">
+                <TextBlock Text="1. Documentos"
+                    FontWeight="{Binding IsPasso1, StringFormat='Bold|Normal'}"
+                    Foreground="{Binding IsPasso1, StringFormat='#673AB7|Gray'}" />
+                <TextBlock Text=">" Foreground="#E0E0E0" />
+                <TextBlock Text="2. Roteiro"
+                    FontWeight="{Binding IsPasso2, StringFormat='Bold|Normal'}"
+                    Foreground="{Binding IsPasso2, StringFormat='#673AB7|Gray'}" />
+                <TextBlock Text=">" Foreground="#E0E0E0" />
+                <TextBlock Text="3. Transporte"
+                    FontWeight="{Binding IsPasso3, StringFormat='Bold|Normal'}"
+                    Foreground="{Binding IsPasso3, StringFormat='#673AB7|Gray'}" />
+                <TextBlock Text=">" Foreground="#E0E0E0" />
+                <TextBlock Text="4. Envio"
+                    FontWeight="{Binding IsPasso4, StringFormat='Bold|Normal'}"
+                    Foreground="{Binding IsPasso4, StringFormat='#673AB7|Gray'}" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="1">
+            <Border Background="White" CornerRadius="8" Padding="30" BoxShadow="0 2 10 0 #05000000">
+                <Panel>
+                    <StackPanel IsVisible="{Binding IsPasso1}" Spacing="20">
+                        <TextBlock Text="Documentos Vinculados (NF-e / CT-e)" FontSize="22"
+                            FontWeight="SemiBold" Foreground="#333" />
+                        <TextBlock
+                            Text="Faça o upload dos XMLs das notas. O sistema calculará os totais de peso e valor automaticamente."
+                            Foreground="Gray" />
+
+                        <Button Content="Procurar XMLs"
+                            Command="{Binding ProcurarDocumentosCommand}" Classes="Outline"
+                            Foreground="#673AB7" BorderBrush="#673AB7" HorizontalAlignment="Left"
+                            Padding="20,10" />
+
+                        <Grid ColumnDefinitions="*,*,*,*" Margin="0,20">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Qtd NF-e" Foreground="Gray" />
+                                <TextBlock Text="{Binding QuantidadeNFe}" FontSize="24"
+                                    FontWeight="Bold" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Qtd CT-e" Foreground="Gray" />
+                                <TextBlock Text="{Binding QuantidadeCTe}" FontSize="24"
+                                    FontWeight="Bold" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Peso Total (KG)" Foreground="Gray" />
+                                <TextBlock Text="{Binding PesoTotalCarga}" FontSize="24"
+                                    FontWeight="Bold" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="3">
+                                <TextBlock Text="Valor Total (R$)" Foreground="Gray" />
+                                <TextBlock Text="{Binding ValorTotalCarga}" FontSize="24"
+                                    FontWeight="Bold" />
+                            </StackPanel>
+                        </Grid>
+
+                        <ListBox ItemsSource="{Binding DocumentosFiscais}" Height="200"
+                            Background="#F8F9FA" CornerRadius="4" />
+                    </StackPanel>
+
+                    <StackPanel IsVisible="{Binding IsPasso2}" Spacing="20">
+                        <TextBlock Text="Configurações e Roteiro" FontSize="22"
+                            FontWeight="SemiBold" Foreground="#333" />
+
+                        <Grid ColumnDefinitions="*, 20, *">
+                            <StackPanel Grid.Column="0" Spacing="5">
+                                <TextBlock Text="UF Origem" FontWeight="SemiBold" FontSize="13" />
+                                <ComboBox ItemsSource="{Binding ListaUFs}"
+                                    SelectedItem="{Binding UfCarregamento}"
+                                    HorizontalAlignment="Stretch"
+                                    Theme="{StaticResource OutlineComboBox}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="5">
+                                <TextBlock Text="UF Destino" FontWeight="SemiBold" FontSize="13" />
+                                <ComboBox ItemsSource="{Binding ListaUFs}"
+                                    SelectedItem="{Binding UfDescarregamento}"
+                                    HorizontalAlignment="Stretch"
+                                    Theme="{StaticResource OutlineComboBox}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, 20, *, 20, *">
+                            <StackPanel Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Tipo Emitente" FontWeight="SemiBold" FontSize="13" />
+                                <ComboBox ItemsSource="{Binding ListaTiposEmitente}"
+                                    SelectedIndex="{Binding TipoEmitenteIndex}"
+                                    HorizontalAlignment="Stretch"
+                                    Theme="{StaticResource OutlineComboBox}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="5">
+                                <TextBlock Text="Tipo Transportador" FontWeight="SemiBold"
+                                    FontSize="13" />
+                                <ComboBox ItemsSource="{Binding ListaTiposTransportador}"
+                                    SelectedIndex="{Binding TipoTransportadorIndex}"
+                                    HorizontalAlignment="Stretch"
+                                    Theme="{StaticResource OutlineComboBox}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="4" Spacing="5">
+                                <TextBlock Text="Modal" FontWeight="SemiBold" FontSize="13" />
+                                <ComboBox ItemsSource="{Binding ListaModais}"
+                                    SelectedIndex="{Binding ModalSelecionadoIndex}"
+                                    HorizontalAlignment="Stretch"
+                                    Theme="{StaticResource OutlineComboBox}" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel IsVisible="{Binding IsPasso3}" Spacing="20">
+                        <TextBlock Text="Dados do Transporte" FontSize="22" FontWeight="SemiBold"
+                            Foreground="#333" />
+
+                        <Border IsVisible="{Binding IsModalRodoviario}" Background="#F8F9FA"
+                            Padding="20" CornerRadius="8">
+                            <StackPanel Spacing="15">
+                                <TextBlock Text="Configuração Rodoviária" FontWeight="Bold"
+                                    Foreground="#673AB7" FontSize="16" />
+
+                                <TextBlock Text="Veículo de Tração" FontWeight="SemiBold"
+                                    FontSize="13" />
+                                <ComboBox ItemsSource="{Binding VeiculosDisponiveis}"
+                                    SelectedItem="{Binding VeiculoSelecionado}"
+                                    HorizontalAlignment="Stretch"
+                                    PlaceholderText="Escolha um veículo..."
+                                    Theme="{StaticResource OutlineComboBox}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Placa}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+
+                                <TextBlock Text="Condutor" FontWeight="SemiBold" FontSize="13" />
+                                <ComboBox ItemsSource="{Binding CondutoresDisponiveis}"
+                                    SelectedItem="{Binding CondutorSelecionado}"
+                                    HorizontalAlignment="Stretch"
+                                    PlaceholderText="Escolha o motorista..."
+                                    Theme="{StaticResource OutlineComboBox}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Nome}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                        </Border>
+
+                        <Border IsVisible="{Binding IsModalAereo}" Background="#F8F9FA" Padding="20"
+                            CornerRadius="8">
+                            <StackPanel Spacing="15">
+                                <TextBlock Text="Configuração Aérea" FontWeight="Bold"
+                                    Foreground="#673AB7" FontSize="16" />
+                                <Grid ColumnDefinitions="*, 15, *">
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Matrícula da Aeronave"
+                                            FontWeight="SemiBold" FontSize="13" />
+                                        <TextBox Watermark="Ex: PT-ABC" Classes="Outline"
+                                            Theme="{StaticResource OutlineTextBox}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Número do Voo" FontWeight="SemiBold"
+                                            FontSize="13" />
+                                        <TextBox Watermark="Ex: 1234" Classes="Outline"
+                                            Theme="{StaticResource OutlineTextBox}" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border IsVisible="{Binding IsModalAquaviario}" Background="#F8F9FA"
+                            Padding="20" CornerRadius="8">
+                            <StackPanel Spacing="15">
+                                <TextBlock Text="Configuração Aquaviária" FontWeight="Bold"
+                                    Foreground="#673AB7" FontSize="16" />
+                                <TextBlock Text="Nome da Embarcação" FontWeight="SemiBold"
+                                    FontSize="13" />
+                                <TextBox Watermark="Ex: Balsa Rio Negro" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border IsVisible="{Binding IsModalFerroviario}" Background="#F8F9FA"
+                            Padding="20" CornerRadius="8">
+                            <StackPanel Spacing="15">
+                                <TextBlock Text="Configuração Ferroviária" FontWeight="Bold"
+                                    Foreground="#673AB7" FontSize="16" />
+                                <TextBlock Text="Prefixo do Trem" FontWeight="SemiBold"
+                                    FontSize="13" />
+                                <TextBox Watermark="Ex: TR-099" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+
+                    <StackPanel IsVisible="{Binding IsPasso4}" Spacing="20">
+                        <TextBlock Text="Pronto para Transmitir" FontSize="22" FontWeight="SemiBold"
+                            Foreground="#333" />
+
+                        <TextBlock Text="{Binding MensagemProcessamento}" FontSize="16"
+                            FontWeight="Bold" Foreground="#E67E22" TextWrapping="Wrap" />
+                        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsProcessando}"
+                            Foreground="#673AB7" />
+
+                        <TextBox Text="{Binding XmlRetorno}" IsReadOnly="True" Height="200"
+                            AcceptsReturn="True" TextWrapping="Wrap" Background="#333"
+                            Foreground="#00FF00" FontFamily="Consolas" />
+                    </StackPanel>
+                </Panel>
+            </Border>
+        </ScrollViewer>
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto">
+            <Button Grid.Column="0" Content="Voltar" Command="{Binding VoltarCommand}"
+                IsVisible="{Binding !IsPasso1}" Classes="Flat" Foreground="Gray" Padding="20,10" />
+
+            <Button Grid.Column="2" Content="Avançar" Command="{Binding AvancarCommand}"
+                IsVisible="{Binding !IsPasso4}" Classes="Primary"
+                Theme="{StaticResource SolidButton}" Background="#673AB7" Foreground="White"
+                Padding="30,10" CornerRadius="20" />
+
+            <Button Grid.Column="2" Content="Emitir MDF-e" Command="{Binding EmitirCommand}"
+                IsVisible="{Binding IsPasso4}" Classes="Primary"
+                Theme="{StaticResource SolidButton}" Background="#4CAF50" Foreground="White"
+                Padding="30,10" CornerRadius="20" IsEnabled="{Binding !IsProcessando}" />
+        </Grid>
+    </Grid>
+</UserControl>

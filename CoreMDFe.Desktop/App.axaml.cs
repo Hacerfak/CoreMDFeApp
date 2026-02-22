@@ -46,6 +46,7 @@ namespace CoreMDFe.Desktop
             services.AddTransient<ResumoViewModel>();
             services.AddTransient<VeiculosViewModel>();
             services.AddTransient<CondutoresViewModel>();
+            services.AddTransient<EmissaoViewModel>();
 
             Services = services.BuildServiceProvider();
 

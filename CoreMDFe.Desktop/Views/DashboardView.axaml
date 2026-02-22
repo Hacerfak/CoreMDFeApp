@@ -32,7 +32,8 @@
                     </StackPanel>
                 </Button>
 
-                <Button Classes="Flat" Margin="10, 5" HorizontalAlignment="Stretch"
+                <Button Command="{Binding AbrirEmissaoCommand}" Classes="Flat" Margin="10, 5"
+                    HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Left" Padding="15, 10" Foreground="#333333">
                     <StackPanel Orientation="Horizontal" Spacing="15">
                         <materialIcons:MaterialIcon Kind="FileDocumentPlus" Width="20" Height="20" />

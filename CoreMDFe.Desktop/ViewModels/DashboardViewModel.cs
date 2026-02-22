@@ -53,6 +53,9 @@ namespace CoreMDFe.Desktop.ViewModels
         private void AbrirResumo() => ConteudoWorkspace = _serviceProvider.GetRequiredService<ResumoViewModel>();
 
         [RelayCommand]
+        private void AbrirEmissao() => ConteudoWorkspace = _serviceProvider.GetRequiredService<EmissaoViewModel>();
+
+        [RelayCommand]
         private void AbrirVeiculos() => ConteudoWorkspace = _serviceProvider.GetRequiredService<VeiculosViewModel>();
 
         [RelayCommand]

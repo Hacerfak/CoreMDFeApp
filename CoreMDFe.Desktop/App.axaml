@@ -37,6 +37,10 @@
             <views:CondutoresView />
         </DataTemplate>
 
+        <DataTemplate DataType="{x:Type vm:EmissaoViewModel}">
+            <views:EmissaoView />
+        </DataTemplate>
+
     </Application.DataTemplates>
 
     <Application.Styles>
