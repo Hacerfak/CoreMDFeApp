@@ -30,14 +30,18 @@ namespace CoreMDFe.Application.Features.Consultas
         {
             await _mediator.Send(new Configuracoes.AplicarConfiguracaoZeusCommand(), cancellationToken);
 
-            var empresa = await _dbContext.Empresas.FirstOrDefaultAsync(e => e.Id == request.EmpresaId, cancellationToken);
-            if (empresa == null)
-                return new ConsultarNaoEncerradosResult(false, "Empresa não encontrada", new List<ManifestoNaoEncerradoDto>());
-
             try
             {
-                var servicoConsulta = new ServicoMDFeConsultaNaoEncerrados();
-                var retorno = servicoConsulta.MDFeConsultaNaoEncerrados(empresa.Cnpj);
+
+                var configAplicada = await _mediator.Send(new Configuracoes.AplicarConfiguracaoZeusCommand(), cancellationToken);
+                if (!configAplicada) return new ConsultarNaoEncerradosResult(false, "Configure o certificado antes de consultar.", new List<ManifestoNaoEncerradoDto>());
+
+                // Como o AppDbContext é Transient e isolado por Tenant, podemos pegar a primeira empresa sem medo!
+                var empresa = await _dbContext.Empresas.FirstOrDefaultAsync(cancellationToken);
+                if (empresa == null) return new ConsultarNaoEncerradosResult(false, "Empresa não encontrada no banco isolado.", new List<ManifestoNaoEncerradoDto>());
+
+                var servicoNaoEncerrados = new ServicoMDFeConsultaNaoEncerrados();
+                var retorno = servicoNaoEncerrados.MDFeConsultaNaoEncerrados(empresa.Cnpj);
 
                 var lista = new List<ManifestoNaoEncerradoDto>();
 

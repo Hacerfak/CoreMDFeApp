@@ -50,10 +50,16 @@ namespace CoreMDFe.Desktop.ViewModels
         // --- COMANDOS DO MENU LATERAL ---
 
         [RelayCommand]
+        private void AbrirConfiguracoes() => ConteudoWorkspace = _serviceProvider.GetRequiredService<ConfiguracoesViewModel>();
+
+        [RelayCommand]
         private void AbrirResumo() => ConteudoWorkspace = _serviceProvider.GetRequiredService<ResumoViewModel>();
 
         [RelayCommand]
         private void AbrirEmissao() => ConteudoWorkspace = _serviceProvider.GetRequiredService<EmissaoViewModel>();
+
+        [RelayCommand]
+        private void AbrirHistorico() => ConteudoWorkspace = _serviceProvider.GetRequiredService<HistoricoViewModel>();
 
         [RelayCommand]
         private void AbrirVeiculos() => ConteudoWorkspace = _serviceProvider.GetRequiredService<VeiculosViewModel>();
@@ -68,7 +74,5 @@ namespace CoreMDFe.Desktop.ViewModels
             var mainVm = App.Services!.GetRequiredService<MainViewModel>();
             mainVm.NavegarParaSeletor();
         }
-
-        // Futuros: AbrirEmissao(), AbrirHistorico()...
     }
 }

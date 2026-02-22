@@ -41,6 +41,10 @@
             <views:EmissaoView />
         </DataTemplate>
 
+        <DataTemplate DataType="{x:Type vm:HistoricoViewModel}">
+            <views:HistoricoView />
+        </DataTemplate>
+
     </Application.DataTemplates>
 
     <Application.Styles>

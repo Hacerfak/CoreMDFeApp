@@ -7,6 +7,7 @@ using CoreMDFe.Application.Features.Cadastros;
 using CoreMDFe.Application.Features.Manifestos;
 using CoreMDFe.Core.Entities;
 using CoreMDFe.Core.Interfaces;
+using CoreMDFe.Application.Features.Consultas;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -18,26 +19,6 @@ using System.Xml.Linq;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
-    // DTO para armazenar os dados lidos dos XMLs
-    public class DocumentoFiscalDto
-    {
-        public string Chave { get; set; } = string.Empty;
-        public int Tipo { get; set; } // 55 = NFe, 57 = CTe
-        public decimal Valor { get; set; }
-        public decimal Peso { get; set; }
-
-        public long IbgeCarregamento { get; set; }
-        public string MunicipioCarregamento { get; set; } = string.Empty;
-        public string UfCarregamento { get; set; } = string.Empty;
-
-        public long IbgeDescarga { get; set; }
-        public string MunicipioDescarga { get; set; } = string.Empty;
-        public string UfDescarga { get; set; } = string.Empty;
-
-        // O que vai aparecer na ListBox da UI
-        public override string ToString() => $"{(Tipo == 55 ? "NF-e" : "CT-e")} - {Chave} | Rota: {UfCarregamento} -> {UfDescarga}";
-    }
-
     public partial class EmissaoViewModel : ObservableObject
     {
         private readonly IMediator _mediator;
@@ -58,7 +39,7 @@ namespace CoreMDFe.Desktop.ViewModels
         public bool IsPasso4 => PassoAtual == 4;
 
         // --- PASSO 1: DOCUMENTOS ---
-        public ObservableCollection<DocumentoFiscalDto> DocumentosFiscais { get; } = new();
+        public ObservableCollection<DocumentoMDFeDto> DocumentosFiscais { get; } = new();
         [ObservableProperty] private decimal _valorTotalCarga;
         [ObservableProperty] private decimal _pesoTotalCarga;
         [ObservableProperty] private int _quantidadeNFe;
@@ -89,52 +70,41 @@ namespace CoreMDFe.Desktop.ViewModels
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsModalRodoviario))]
-        [NotifyPropertyChangedFor(nameof(IsModalAereo))]
-        [NotifyPropertyChangedFor(nameof(IsModalAquaviario))]
-        [NotifyPropertyChangedFor(nameof(IsModalFerroviario))]
         private int _modalSelecionadoIndex = 0;
-
         public bool IsModalRodoviario => ModalSelecionadoIndex == 0;
-        public bool IsModalAereo => ModalSelecionadoIndex == 1;
-        public bool IsModalAquaviario => ModalSelecionadoIndex == 2;
-        public bool IsModalFerroviario => ModalSelecionadoIndex == 3;
 
-        // ==========================================
-        // DADOS OPCIONAIS (TODOS OS MODAIS)
-        // ==========================================
+        // Dados Rodoviário Básicos
+        public ObservableCollection<Veiculo> VeiculosDisponiveis { get; } = new();
+        public ObservableCollection<Condutor> CondutoresDisponiveis { get; } = new();
+        [ObservableProperty] private Veiculo? _veiculoSelecionado;
+        [ObservableProperty] private Condutor? _condutorSelecionado;
+
+        // Opcionais: Reboques
+        [ObservableProperty] private bool _isReboquesAberto;
+        [ObservableProperty] private Veiculo? _reboque1Selecionado;
+        [ObservableProperty] private Veiculo? _reboque2Selecionado;
+        [ObservableProperty] private Veiculo? _reboque3Selecionado;
+
+        // Opcionais: Seguro
         [ObservableProperty] private bool _isSeguroAberto;
         [ObservableProperty] private string _seguradoraCnpj = string.Empty;
         [ObservableProperty] private string _seguradoraNome = string.Empty;
         [ObservableProperty] private string _numeroApolice = string.Empty;
         [ObservableProperty] private string _numeroAverbacao = string.Empty;
 
+        // Opcionais: Produto Predominante
         [ObservableProperty] private bool _isProdutoPredominanteAberto;
         public string[] ListaTiposCarga { get; } = { "01-Granel sólido", "02-Granel líquido", "03-Frigorificada", "04-Conteinerizada", "05-Carga Geral", "06-Neogranel", "07-Perigosa (Sólido)", "08-Perigosa (Líquido)", "09-Perigosa (Frigorificada)", "10-Perigosa (Conteinerizada)", "11-Perigosa (Carga Geral)", "12-Granel pressurizada" };
         [ObservableProperty] private int _tipoCargaIndex = 4; // Carga Geral
         [ObservableProperty] private string _nomeProdutoPredominante = string.Empty;
         [ObservableProperty] private string _ncmProduto = string.Empty;
 
-        // Dados Rodoviário
-        public ObservableCollection<Veiculo> VeiculosDisponiveis { get; } = new();
-        public ObservableCollection<Condutor> CondutoresDisponiveis { get; } = new();
-        [ObservableProperty] private Veiculo? _veiculoSelecionado;
-        [ObservableProperty] private Condutor? _condutorSelecionado;
-        [ObservableProperty] private bool _isReboquesAberto;
-        [ObservableProperty] private Veiculo? _reboque1Selecionado;
-        [ObservableProperty] private Veiculo? _reboque2Selecionado;
-        [ObservableProperty] private Veiculo? _reboque3Selecionado; // Limite do XSD são 3 reboques
-
+        // Opcionais: CIOT / Vale Pedágio
         [ObservableProperty] private bool _isCiotValePedagioAberto;
         [ObservableProperty] private string _ciot = string.Empty;
         [ObservableProperty] private string _cpfCnpjCiot = string.Empty;
         [ObservableProperty] private string _cnpjFornecedorValePedagio = string.Empty;
         [ObservableProperty] private string _cnpjPagadorValePedagio = string.Empty;
-        [ObservableProperty] private string _numeroComprovanteVale = string.Empty;
-        [ObservableProperty] private decimal _valorValePedagio;
-
-        [ObservableProperty] private bool _isContratanteAberto;
-        [ObservableProperty] private string _cnpjContratante = string.Empty;
-        [ObservableProperty] private string _nomeContratante = string.Empty;
 
         // --- PASSO 4: RESUMO E FEEDBACK ---
         [ObservableProperty] private bool _isProcessando;
@@ -176,23 +146,15 @@ namespace CoreMDFe.Desktop.ViewModels
                     FileTypeFilter = new[] { new FilePickerFileType("Arquivos XML") { Patterns = new[] { "*.xml" } } }
                 });
 
-                foreach (var file in files)
-                {
-                    ProcessarArquivoXml(file.Path.LocalPath);
-                }
+                foreach (var file in files) ProcessarArquivoXml(file.Path.LocalPath);
             }
         }
 
-        // ==============================================================
-        // LÓGICA DE EXTRAÇÃO DOS DADOS DO XML (NF-E e CT-E)
-        // ==============================================================
         private void ProcessarArquivoXml(string caminhoArquivo)
         {
             try
             {
                 var doc = XDocument.Load(caminhoArquivo);
-
-                // Identifica se é NFe ou CTe independente do namespace usando LocalName
                 var isNFe = doc.Descendants().Any(x => x.Name.LocalName == "infNFe");
                 var isCTe = doc.Descendants().Any(x => x.Name.LocalName == "infCte");
 
@@ -201,10 +163,7 @@ namespace CoreMDFe.Desktop.ViewModels
 
                 AtualizarTotaisEResumos();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erro ao ler XML {caminhoArquivo}: {ex.Message}");
-            }
+            catch (Exception ex) { Console.WriteLine($"Erro ao ler XML {caminhoArquivo}: {ex.Message}"); }
         }
 
         private void ExtrairDadosNFe(XDocument doc)
@@ -218,22 +177,29 @@ namespace CoreMDFe.Desktop.ViewModels
             var vNf = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "vNF")?.Value;
             var pesoB = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "pesoB")?.Value;
 
-            // Origem (Emitente)
             var enderEmit = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "emit")?.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderEmit");
-            // Destino (Destinatário)
             var enderDest = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "dest")?.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderDest");
 
-            var dto = new DocumentoFiscalDto
+            // === NOVO: Extrair o Produto Predominante (NFe) ===
+            var prod = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "prod");
+            if (prod != null && string.IsNullOrEmpty(NomeProdutoPredominante))
+            {
+                NomeProdutoPredominante = prod.Elements().FirstOrDefault(x => x.Name.LocalName == "xProd")?.Value ?? "";
+                NcmProduto = prod.Elements().FirstOrDefault(x => x.Name.LocalName == "NCM")?.Value ?? "";
+
+                // Se achou, já abre a aba de Produto para o usuário ver a mágica
+                if (!string.IsNullOrEmpty(NomeProdutoPredominante)) IsProdutoPredominanteAberto = true;
+            }
+
+            var dto = new DocumentoMDFeDto
             {
                 Chave = chave,
                 Tipo = 55,
                 Valor = ParseDecimal(vNf),
                 Peso = ParseDecimal(pesoB),
-
                 IbgeCarregamento = ParseLong(enderEmit?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value),
                 MunicipioCarregamento = enderEmit?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? "",
                 UfCarregamento = enderEmit?.Elements().FirstOrDefault(x => x.Name.LocalName == "UF")?.Value?.ToUpper() ?? "",
-
                 IbgeDescarga = ParseLong(enderDest?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value),
                 MunicipioDescarga = enderDest?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? "",
                 UfDescarga = enderDest?.Elements().FirstOrDefault(x => x.Name.LocalName == "UF")?.Value?.ToUpper() ?? ""
@@ -252,24 +218,30 @@ namespace CoreMDFe.Desktop.ViewModels
             if (string.IsNullOrEmpty(chave) || DocumentosFiscais.Any(d => d.Chave == chave)) return;
 
             var vCarga = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "vCarga")?.Value;
-
-            // Pega a TAG de Peso Bruto (cUnid = 01)
             var infQ = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infQ" && x.Elements().Any(e => e.Name.LocalName == "cUnid" && e.Value == "01"));
             var qCarga = infQ?.Elements().FirstOrDefault(x => x.Name.LocalName == "qCarga")?.Value;
 
             var ide = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "ide");
 
-            var dto = new DocumentoFiscalDto
+            // === NOVO: Extrair o Produto Predominante (CTe) ===
+            var infCarga = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infCarga");
+            if (infCarga != null && string.IsNullOrEmpty(NomeProdutoPredominante))
+            {
+                NomeProdutoPredominante = infCarga.Elements().FirstOrDefault(x => x.Name.LocalName == "proPred")?.Value ?? "";
+
+                // Se achou, já abre a aba de Produto
+                if (!string.IsNullOrEmpty(NomeProdutoPredominante)) IsProdutoPredominanteAberto = true;
+            }
+
+            var dto = new DocumentoMDFeDto
             {
                 Chave = chave,
                 Tipo = 57,
                 Valor = ParseDecimal(vCarga),
                 Peso = ParseDecimal(qCarga),
-
                 IbgeCarregamento = ParseLong(ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMunEnv")?.Value),
                 MunicipioCarregamento = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMunEnv")?.Value?.ToUpper() ?? "",
                 UfCarregamento = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "UFEnv")?.Value?.ToUpper() ?? "",
-
                 IbgeDescarga = ParseLong(ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMunFim")?.Value),
                 MunicipioDescarga = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMunFim")?.Value?.ToUpper() ?? "",
                 UfDescarga = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "UFFim")?.Value?.ToUpper() ?? ""
@@ -287,15 +259,12 @@ namespace CoreMDFe.Desktop.ViewModels
             ValorTotalCarga = DocumentosFiscais.Sum(d => d.Valor);
             PesoTotalCarga = DocumentosFiscais.Sum(d => d.Peso);
 
-            // Regra do Roteiro Automático:
-            // A UF inicial é a da primeira nota inserida. A UF final é a da última.
             if (DocumentosFiscais.Any())
             {
                 UfCarregamento = DocumentosFiscais.First().UfCarregamento;
                 UfDescarregamento = DocumentosFiscais.Last().UfDescarga;
             }
 
-            // Avisa a UI que as propriedades computadas mudaram
             OnPropertyChanged(nameof(ResumoCidadesCarregamento));
             OnPropertyChanged(nameof(ResumoCidadesDescarregamento));
         }
@@ -303,13 +272,71 @@ namespace CoreMDFe.Desktop.ViewModels
         [RelayCommand]
         private async Task Emitir()
         {
+            if (VeiculoSelecionado == null || CondutorSelecionado == null)
+            {
+                MensagemProcessamento = "Por favor, selecione ao menos o Veículo de Tração e o Condutor Principal no Passo 3.";
+                return;
+            }
+
             IsProcessando = true;
-            MensagemProcessamento = "Assinando e Transmitindo MDF-e para a SEFAZ...";
 
-            // Aqui enviaremos os dados da EmissaoViewModel pro Request (faremos na próxima etapa!)
-            var result = await _mediator.Send(new EmitirManifestoCommand(_empresaAtualId));
+            // ==============================================================
+            // 1. VERIFICAR STATUS DA SEFAZ (Feedback Inteligente)
+            // ==============================================================
+            MensagemProcessamento = "Verificando disponibilidade dos servidores da SEFAZ...";
 
-            MensagemProcessamento = result.Sucesso ? "MDF-e Autorizado com Sucesso!" : $"Rejeição: {result.Mensagem}";
+            // Invoca a nossa query que checa o Webservice
+            var statusSefaz = await _mediator.Send(new ConsultarStatusServicoQuery());
+
+            if (!statusSefaz.Online)
+            {
+                // Se a sefaz tiver offline, nem tenta enviar o xml
+                MensagemProcessamento = $"⚠️ SEFAZ Indisponível no momento.\nMotivo: {statusSefaz.Mensagem}\nTente novamente em alguns minutos.";
+                IsProcessando = false;
+                return;
+            }
+
+            // ==============================================================
+            // 2. SEFAZ ONLINE: ENVIAR MANIFESTO
+            // ==============================================================
+            MensagemProcessamento = "Sefaz Operacional! Assinando e transmitindo o MDF-e...";
+
+            var command = new EmitirManifestoCommand(
+                EmpresaId: _empresaAtualId,
+                Documentos: DocumentosFiscais.ToList(),
+                UfCarregamento: UfCarregamento,
+                UfDescarregamento: UfDescarregamento,
+                TipoEmitente: TipoEmitenteIndex + 1, // 1, 2 ou 3
+                TipoTransportador: TipoTransportadorIndex, // 0 a 3
+                Modal: 1, // Rodoviário Fixo
+                UfsPercurso: UfsPercurso,
+                DataInicioViagem: DataInicioViagem,
+                IsCanalVerde: IsCanalVerde,
+                IsCarregamentoPosterior: IsCarregamentoPosterior,
+                VeiculoTracao: VeiculoSelecionado,
+                Condutor: CondutorSelecionado,
+                Reboque1: Reboque1Selecionado,
+                Reboque2: Reboque2Selecionado,
+                Reboque3: Reboque3Selecionado,
+                HasSeguro: IsSeguroAberto,
+                SeguradoraCnpj: SeguradoraCnpj,
+                SeguradoraNome: SeguradoraNome,
+                NumeroApolice: NumeroApolice,
+                NumeroAverbacao: NumeroAverbacao,
+                HasProdutoPredominante: IsProdutoPredominanteAberto,
+                TipoCarga: (TipoCargaIndex + 1).ToString("D2"),
+                NomeProdutoPredominante: NomeProdutoPredominante,
+                NcmProduto: NcmProduto,
+                HasCiotValePedagio: IsCiotValePedagioAberto,
+                Ciot: Ciot,
+                CpfCnpjCiot: CpfCnpjCiot,
+                CnpjFornecedorValePedagio: CnpjFornecedorValePedagio,
+                CnpjPagadorValePedagio: CnpjPagadorValePedagio
+            );
+
+            var result = await _mediator.Send(command);
+
+            MensagemProcessamento = result.Sucesso ? "✅ MDF-e Autorizado com Sucesso!" : $"❌ Rejeição SEFAZ: {result.Mensagem}";
             XmlEnvio = result.XmlEnvio;
             XmlRetorno = result.XmlRetorno;
 

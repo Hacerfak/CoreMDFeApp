@@ -42,6 +42,16 @@
                     </StackPanel>
                 </Button>
 
+                <Button Command="{Binding AbrirHistoricoCommand}" Classes="Flat" Margin="10, 5"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left" Padding="15, 10" Foreground="#333333">
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <materialIcons:MaterialIcon Kind="History" Width="20" Height="20" />
+                        <TextBlock Text="MDF-e Emitidos" VerticalAlignment="Center"
+                            FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+
                 <Button Command="{Binding AbrirVeiculosCommand}" Classes="Flat" Margin="10, 5"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15, 10"
                     Foreground="#333333">
@@ -58,6 +68,16 @@
                     <StackPanel Orientation="Horizontal" Spacing="15">
                         <materialIcons:MaterialIcon Kind="AccountTieHat" Width="20" Height="20" />
                         <TextBlock Text="Condutores" VerticalAlignment="Center"
+                            FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding AbrirConfiguracoesCommand}" Classes="Flat" Margin="10, 5"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="15, 10"
+                    Foreground="#333333">
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <materialIcons:MaterialIcon Kind="Settings" Width="20" Height="20" />
+                        <TextBlock Text="Configurações" VerticalAlignment="Center"
                             FontWeight="SemiBold" />
                     </StackPanel>
                 </Button>

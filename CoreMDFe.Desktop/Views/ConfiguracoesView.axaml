@@ -1,69 +1,109 @@
 <UserControl xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
+    xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     x:Class="CoreMDFe.Desktop.Views.ConfiguracoesView"
     x:DataType="vm:ConfiguracoesViewModel">
 
-    <Grid RowDefinitions="Auto, *, Auto">
-        <TextBlock Grid.Row="0" Text="Configurações da Empresa e Certificado" FontSize="24"
-            FontWeight="Bold" Margin="0,0,0,16" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Border Padding="40">
+            <StackPanel Spacing="20" MaxWidth="800" HorizontalAlignment="Left">
+                <TextBlock Text="Configurações do Sistema" FontSize="28" FontWeight="Light"
+                    Foreground="#222222" />
+                <TextBlock
+                    Text="Configure o certificado, o ambiente de emissão e os dados fixos da transportadora."
+                    FontSize="14" Foreground="Gray" Margin="0,-15,0,10" />
 
-        <ScrollViewer Grid.Row="1">
-            <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+                <Border Background="White" CornerRadius="8" BoxShadow="0 4 15 0 #0A000000"
+                    Padding="30">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="1. Certificado Digital e Ambiente" FontWeight="Bold"
+                            Foreground="#673AB7" FontSize="16" Margin="0,0,0,10" />
 
-                <Border Background="White" CornerRadius="8" Padding="16"
-                    BoxShadow="0 2 4 0 #20000000">
-                    <StackPanel Spacing="12">
-                        <TextBlock Text="Dados do Emitente" FontWeight="SemiBold" FontSize="16"
-                            Foreground="Teal" />
+                        <Grid ColumnDefinitions="*, 20, 200" RowDefinitions="Auto, 15, Auto">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Caminho do Arquivo (.pfx)" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBox Grid.Column="0" Text="{Binding CaminhoCertificado}"
+                                        Classes="Outline" Theme="{StaticResource OutlineTextBox}"
+                                        IsReadOnly="True" Watermark="Nenhum arquivo..." />
+                                    <Button Grid.Column="1"
+                                        Command="{Binding ProcurarCertificadoCommand}"
+                                        Classes="Outline" Margin="5,0,0,0">
+                                        <materialIcons:MaterialIcon Kind="FolderOpen"
+                                            Foreground="#673AB7" Width="22" Height="22" />
+                                    </Button>
+                                </Grid>
+                            </StackPanel>
 
-                        <TextBox Watermark="CNPJ (Somente Números)" Text="{Binding Cnpj}"
-                            MaxLength="14" />
-                        <TextBox Watermark="Razão Social" Text="{Binding Nome}" />
-                        <TextBox Watermark="Nome Fantasia" Text="{Binding Fantasia}" />
+                            <StackPanel Grid.Row="0" Grid.Column="2" Spacing="5">
+                                <TextBlock Text="Ambiente SEFAZ" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <ComboBox ItemsSource="{Binding ListaAmbientes}"
+                                    SelectedIndex="{Binding AmbienteSelecionadoIndex}"
+                                    HorizontalAlignment="Stretch"
+                                    Theme="{StaticResource OutlineComboBox}" />
+                            </StackPanel>
 
-                        <Grid ColumnDefinitions="*,*">
-                            <TextBox Grid.Column="0" Watermark="Inscrição Estadual"
-                                Text="{Binding Ie}" Margin="0,0,8,0" />
-                            <TextBox Grid.Column="1" Watermark="RNTRC" Text="{Binding Rntrc}"
-                                Margin="8,0,0,0" />
-                        </Grid>
+                            <StackPanel Grid.Row="2" Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Senha do Certificado" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <TextBox Text="{Binding SenhaCertificado}" PasswordChar="•"
+                                    Classes="Outline" Theme="{StaticResource OutlineTextBox}"
+                                    Watermark="Digite a senha..." />
+                            </StackPanel>
 
-                        <Grid ColumnDefinitions="*,*">
-                            <TextBox Grid.Column="0" Watermark="UF Emissor (Ex: SP)"
-                                Text="{Binding UfEmitente}" Margin="0,0,8,0" />
-                            <ComboBox Grid.Column="1" Margin="8,0,0,0"
-                                SelectedIndex="{Binding TipoAmbiente}" HorizontalAlignment="Stretch">
-                                <ComboBoxItem>Ignorado(0)</ComboBoxItem>
-                                <ComboBoxItem>Produção(1)</ComboBoxItem>
-                                <ComboBoxItem>Homologação(2)</ComboBoxItem>
-                            </ComboBox>
+                            <CheckBox Grid.Row="2" Grid.Column="2"
+                                Content="Manter Certificado em Cache"
+                                IsChecked="{Binding ManterCertificadoCache}" Foreground="#555555"
+                                VerticalAlignment="Center" />
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <Border Background="White" CornerRadius="8" Padding="16"
-                    BoxShadow="0 2 4 0 #20000000">
-                    <StackPanel Spacing="12">
-                        <TextBlock Text="Certificado Digital A1" FontWeight="SemiBold" FontSize="16"
-                            Foreground="Teal" />
+                <Border Background="White" CornerRadius="8" BoxShadow="0 4 15 0 #0A000000"
+                    Padding="30">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="2. Dados da Empresa e ANTT" FontWeight="Bold"
+                            Foreground="#673AB7" FontSize="16" Margin="0,0,0,10" />
 
-                        <TextBox Watermark="Caminho do arquivo .pfx"
-                            Text="{Binding CaminhoCertificado}" />
-                        <TextBox Watermark="Senha do Certificado" PasswordChar="*"
-                            Text="{Binding SenhaCertificado}" />
-                        <CheckBox Content="Manter certificado em cache (memória)"
-                            IsChecked="{Binding ManterCertificadoCache}" />
+                        <Grid ColumnDefinitions="*, 20, *" RowDefinitions="Auto, 15, Auto">
+                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="5">
+                                <TextBlock Text="CNPJ" FontWeight="SemiBold" Foreground="#555555"
+                                    FontSize="13" />
+                                <TextBox Text="{Binding Cnpj}" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" Background="#F0F0F0"
+                                    IsReadOnly="True" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="2" Spacing="5">
+                                <TextBlock Text="RNTRC (Obrigatório para Rodoviário)"
+                                    FontWeight="SemiBold" Foreground="#555555" FontSize="13" />
+                                <TextBox Text="{Binding Rntrc}" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 12345678" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Spacing="5">
+                                <TextBlock Text="Razão Social" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <TextBox Text="{Binding Nome}" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </Border>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="20"
+                    Margin="0,10,0,0">
+                    <TextBlock Text="{Binding MensagemSistema}" Foreground="#4CAF50"
+                        FontWeight="Bold" VerticalAlignment="Center" />
+                    <Button Content="Salvar Configurações"
+                        Command="{Binding SalvarConfiguracoesCommand}" Classes="Primary"
+                        Theme="{StaticResource SolidButton}" Background="#4CAF50" Foreground="White"
+                        Padding="30,12" CornerRadius="20" FontSize="15" />
+                </StackPanel>
+
             </StackPanel>
-        </ScrollViewer>
-
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="16" Margin="0,16,0,0">
-            <Button Content="Salvar Configurações" Command="{Binding SalvarConfiguracoesCommand}"
-                Classes="Primary" Background="Teal" Foreground="White" Padding="16,8" />
-            <TextBlock Text="{Binding MensagemSistema}" VerticalAlignment="Center" FontWeight="Bold"
-                Foreground="Orange" />
-        </StackPanel>
-    </Grid>
+        </Border>
+    </ScrollViewer>
 </UserControl>
