@@ -9,7 +9,7 @@ namespace CoreMDFe.Core.Entities
     public abstract class EntityBase
     {
         [Key]
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; set; }
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
     }
 
