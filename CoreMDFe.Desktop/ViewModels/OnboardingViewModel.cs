@@ -153,7 +153,7 @@ namespace CoreMDFe.Desktop.ViewModels
             if (result.Sucesso)
             {
                 var mainViewModel = App.Services!.GetRequiredService<MainViewModel>();
-                mainViewModel.NavegarParaDashboard(result.CaminhoBanco);
+                await mainViewModel.NavegarParaDashboardAsync(result.CaminhoBanco);
             }
             else
             {

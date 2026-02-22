@@ -1,7 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CoreMDFe.Application.Services;
+using CoreMDFe.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Threading.Tasks;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
@@ -28,11 +31,29 @@ namespace CoreMDFe.Desktop.ViewModels
             ConteudoAtual = _serviceProvider.GetRequiredService<OnboardingViewModel>();
         }
 
-        public void NavegarParaDashboard(string dbPath)
+        // Alterado para 'async Task' para podermos aguardar a migration
+        public async Task NavegarParaDashboardAsync(string dbPath)
         {
             // Dizemos ao sistema inteiro: "A partir de agora, use ESTE banco de dados"
             var tenantService = _serviceProvider.GetRequiredService<CurrentTenantService>();
             tenantService.SetTenant(dbPath);
+
+            // MÁGICA DA ATUALIZAÇÃO AUTOMÁTICA (MIGRATIONS)
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
+
+                try
+                {
+                    // Aplica as migrations pendentes neste banco de dados específico
+                    await ((DbContext)dbContext).Database.MigrateAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[MainViewModel] Erro ao aplicar migrations no banco {dbPath}: {ex.Message}");
+                    // Aqui poderia ser implementado um aviso visual na UI caso a atualização do banco falhe
+                }
+            }
 
             // Carrega o layout lindo do Dashboard
             ConteudoAtual = _serviceProvider.GetRequiredService<DashboardViewModel>();

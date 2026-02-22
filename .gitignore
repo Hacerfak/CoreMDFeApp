@@ -25,3 +25,4 @@ TestResults/
 [Pp]ublish/
 *.nupkg
 *.snupkg
+CoreMDFe.Desktop/bin/*

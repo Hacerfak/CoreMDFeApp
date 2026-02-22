@@ -37,10 +37,13 @@ namespace CoreMDFe.Desktop.ViewModels
             App.Services!.GetRequiredService<MainViewModel>().NavegarParaOnboarding();
         }
 
+        // Alterado para Task (assíncrono) para podermos usar o 'await' na chamada ao MainViewModel
         [RelayCommand]
-        private void EntrarEmpresa(EmpresaResumoDto empresa)
+        private async Task EntrarEmpresa(EmpresaResumoDto empresa)
         {
-            App.Services!.GetRequiredService<MainViewModel>().NavegarParaDashboard(empresa.DbPath);
+            IsCarregando = true; // Feedback visual enquanto o banco atualiza
+            await App.Services!.GetRequiredService<MainViewModel>().NavegarParaDashboardAsync(empresa.DbPath);
+            IsCarregando = false;
         }
     }
 }

@@ -135,9 +135,9 @@ namespace CoreMDFe.Core.Entities
 
         // XMLs Completos (Guardados no banco para não depender apenas de arquivos em disco)
         public string XmlAssinado { get; set; } = string.Empty;
-        public string XmlAutorizado { get; set; } = string.Empty; // procMDFe
-        public string XmlEncerramento { get; set; } = string.Empty;
-        public string XmlCancelamento { get; set; } = string.Empty;
+        public string ReciboAutorizacao { get; set; } = string.Empty;
+        public string ReciboEncerramento { get; set; } = string.Empty;
+        public string ReciboCancelamento { get; set; } = string.Empty;
     }
 
     public enum StatusManifesto

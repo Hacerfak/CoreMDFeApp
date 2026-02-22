@@ -299,7 +299,8 @@ namespace CoreMDFe.Application.Features.Manifestos
                     TipoAmbiente = empresa.Configuracao.TipoAmbiente,
                     ChaveAcesso = mdfe.InfMDFe.Id.Substring(4),
                     XmlAssinado = retornoEnvio.EnvioXmlString ?? "",
-                    XmlAutorizado = retornoEnvio.RetornoXmlString ?? "",
+                    ReciboAutorizacao = retornoEnvio.RetornoXmlString ?? "",
+                    ProtocoloAutorizacao = retornoEnvio.ProtMdFe.InfProt.NProt,
                     CodigoStatus = retornoEnvio?.CStat.ToString() ?? "0",
                     MotivoStatus = retornoEnvio?.XMotivo ?? "Sem comunicação"
                 };
@@ -309,7 +310,7 @@ namespace CoreMDFe.Application.Features.Manifestos
                 _dbContext.Manifestos.Add(historico);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
-                return new EmitirManifestoResult(historico.Status == StatusManifesto.Autorizado, historico.MotivoStatus, historico.XmlAssinado, historico.XmlAutorizado);
+                return new EmitirManifestoResult(historico.Status == StatusManifesto.Autorizado, historico.MotivoStatus, historico.XmlAssinado, historico.ReciboAutorizacao);
             }
             catch (Exception ex)
             {

@@ -1,103 +1,251 @@
 <UserControl xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
+    xmlns:entities="clr-namespace:CoreMDFe.Core.Entities;assembly=CoreMDFe.Core"
     xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     xmlns:conv="clr-namespace:CoreMDFe.Desktop.Converters"
     x:Class="CoreMDFe.Desktop.Views.HistoricoView"
-    x:DataType="vm:HistoricoViewModel">
+    x:DataType="vm:HistoricoViewModel"
+    x:Name="RootControl">
 
     <UserControl.Resources>
         <conv:StatusToBrushConverter x:Key="StatusToBrushConverter" />
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Border Padding="40">
-            <StackPanel Spacing="20">
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Border Padding="40">
+                <StackPanel Spacing="20">
 
-                <Grid ColumnDefinitions="*, Auto">
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Histórico de MDF-e" FontSize="28" FontWeight="Light"
-                            Foreground="#222222" />
-                        <TextBlock
-                            Text="Gerencie os manifestos emitidos e realize eventos de encerramento."
-                            FontSize="14" Foreground="Gray" Margin="0,5,0,0" />
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Histórico de MDF-e" FontSize="28" FontWeight="Light"
+                                Foreground="#222222" />
+                            <TextBlock Text="Gerencie manifestos e realize eventos operacionais."
+                                FontSize="14" Foreground="Gray" Margin="0,5,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Command="{Binding CarregarHistoricoCommand}"
+                            Classes="Outline" VerticalAlignment="Center" Padding="10">
+                            <materialIcons:MaterialIcon Kind="Refresh" Width="24" Height="24"
+                                Foreground="#673AB7" />
+                        </Button>
+                    </Grid>
+
+                    <Border Background="#FFEBEE" Padding="15" CornerRadius="8"
+                        IsVisible="{Binding HasErro}">
+                        <TextBlock Text="{Binding MensagemErro}" Foreground="#D32F2F"
+                            FontWeight="SemiBold" TextWrapping="Wrap" />
+                    </Border>
+
+                    <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
+                        Padding="0">
+                        <StackPanel>
+                            <Border Background="#F8F9FA" Padding="20,15" BorderBrush="#EEEEEE"
+                                BorderThickness="0,0,0,1">
+                                <Grid ColumnDefinitions="80, 120, *, 120, 100, 180">
+                                    <TextBlock Grid.Column="0" Text="NÚMERO" FontWeight="SemiBold"
+                                        FontSize="12" Foreground="Gray" />
+                                    <TextBlock Grid.Column="1" Text="DATA" FontWeight="SemiBold"
+                                        FontSize="12" Foreground="Gray" />
+                                    <TextBlock Grid.Column="2" Text="CHAVE" FontWeight="SemiBold"
+                                        FontSize="12" Foreground="Gray" />
+                                    <TextBlock Grid.Column="3" Text="ROTA" FontWeight="SemiBold"
+                                        FontSize="12" Foreground="Gray" />
+                                    <TextBlock Grid.Column="4" Text="STATUS" FontWeight="SemiBold"
+                                        FontSize="12" Foreground="Gray" HorizontalAlignment="Center" />
+                                    <TextBlock Grid.Column="5" Text="AÇÕES" FontWeight="SemiBold"
+                                        FontSize="12" Foreground="Gray" HorizontalAlignment="Center" />
+                                </Grid>
+                            </Border>
+
+                            <ItemsControl ItemsSource="{Binding Manifestos}"
+                                x:CompileBindings="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#EEEEEE" BorderThickness="0,0,0,1"
+                                            Padding="20,15">
+                                            <Grid ColumnDefinitions="80, 120, *, 120, 100, 180">
+                                                <TextBlock Grid.Column="0" Text="{Binding Numero}"
+                                                    VerticalAlignment="Center" FontWeight="Bold" />
+                                                <TextBlock Grid.Column="1"
+                                                    Text="{Binding DataEmissao, StringFormat={}{0:dd/MM/yyyy}}"
+                                                    VerticalAlignment="Center" Foreground="#555" />
+                                                <TextBlock Grid.Column="2"
+                                                    Text="{Binding ChaveAcesso}"
+                                                    VerticalAlignment="Center" FontSize="11"
+                                                    Foreground="Gray"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    ToolTip.Tip="{Binding ChaveAcesso}" />
+
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal"
+                                                    Spacing="5" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding UfOrigem}"
+                                                        FontWeight="SemiBold" />
+                                                    <materialIcons:MaterialIcon Kind="ArrowRight"
+                                                        Width="14" />
+                                                    <TextBlock Text="{Binding UfDestino}"
+                                                        FontWeight="SemiBold" />
+                                                </StackPanel>
+
+                                                <Border Grid.Column="4" Padding="10,4"
+                                                    CornerRadius="12" HorizontalAlignment="Center"
+                                                    Background="{Binding Status, Converter={StaticResource StatusToBrushConverter}}">
+                                                    <TextBlock Text="{Binding Status}" FontSize="11"
+                                                        FontWeight="SemiBold" Foreground="White" />
+                                                </Border>
+
+                                                <StackPanel Grid.Column="5" Orientation="Horizontal"
+                                                    Spacing="5" HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center">
+
+                                                    <Button Classes="Flat" Padding="5"
+                                                        ToolTip.Tip="Encerrar"
+                                                        Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).EncerrarCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static entities:StatusManifesto.Autorizado}}">
+                                                        <materialIcons:MaterialIcon
+                                                            Kind="CheckCircleOutline" Width="22"
+                                                            Height="22" Foreground="#4CAF50" />
+                                                    </Button>
+
+                                                    <Button Classes="Flat" Padding="5"
+                                                        ToolTip.Tip="Cancelar"
+                                                        Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).AbrirDialogCancelarCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static entities:StatusManifesto.Autorizado}}">
+                                                        <materialIcons:MaterialIcon Kind="Cancel"
+                                                            Width="22" Height="22"
+                                                            Foreground="#F44336" />
+                                                    </Button>
+
+                                                    <Button Classes="Flat" Padding="5"
+                                                        ToolTip.Tip="Novo Condutor"
+                                                        Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).AbrirDialogCondutorCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static entities:StatusManifesto.Autorizado}}">
+                                                        <materialIcons:MaterialIcon
+                                                            Kind="AccountPlus" Width="22"
+                                                            Height="22" Foreground="#2196F3" />
+                                                    </Button>
+
+                                                    <Button Classes="Flat" Padding="5"
+                                                        ToolTip.Tip="Nova Carga (DF-e)"
+                                                        Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).AbrirDialogDFeCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static entities:StatusManifesto.Autorizado}}">
+                                                        <materialIcons:MaterialIcon
+                                                            Kind="FileDocumentPlus" Width="22"
+                                                            Height="22" Foreground="#FF9800" />
+                                                    </Button>
+
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="Nenhum manifesto encontrado."
+                                IsVisible="{Binding IsListaVazia}" HorizontalAlignment="Center"
+                                Margin="0,40" Foreground="Gray" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+
+        <Grid Background="#A0000000" IsVisible="{Binding IsDialogCancelarAberto}" ZIndex="100">
+            <Border Background="White" CornerRadius="8" Padding="30" Width="400"
+                VerticalAlignment="Center" HorizontalAlignment="Center"
+                BoxShadow="0 10 30 0 #50000000">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Cancelar MDF-e" FontWeight="Bold" FontSize="18"
+                        Foreground="#F44336" />
+                    <TextBlock Text="Informe o motivo do cancelamento (Mínimo de 15 caracteres):"
+                        TextWrapping="Wrap" Foreground="Gray" />
+                    <TextBox Text="{Binding JustificativaCancelamento}" Height="80"
+                        AcceptsReturn="True" TextWrapping="Wrap" Classes="Outline"
+                        Theme="{StaticResource OutlineTextBox}" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10"
+                        Margin="0,10,0,0">
+                        <Button Content="Desistir" Command="{Binding FecharDialogosCommand}"
+                            Classes="Flat" Foreground="Gray" />
+                        <Button Content="Confirmar Cancelamento"
+                            Command="{Binding ConfirmarCancelamentoCommand}" Background="#F44336"
+                            Foreground="White" Theme="{StaticResource SolidButton}" />
                     </StackPanel>
-                    <Button Grid.Column="1" Command="{Binding CarregarHistoricoCommand}"
-                        Classes="Outline" VerticalAlignment="Center" Padding="10">
-                        <materialIcons:MaterialIcon Kind="Refresh" Width="24" Height="24"
-                            Foreground="#673AB7" />
-                    </Button>
-                </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
 
-                <Border Background="#FFEBEE" Padding="15" CornerRadius="8"
-                    IsVisible="{Binding HasErro}">
-                    <TextBlock Text="{Binding MensagemErro}" Foreground="#D32F2F"
-                        FontWeight="SemiBold" TextWrapping="Wrap" />
-                </Border>
-
-                <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
-                    Padding="0">
-                    <StackPanel>
-                        <Border Background="#F8F9FA" Padding="20,15" BorderBrush="#EEEEEE"
-                            BorderThickness="0,0,0,1">
-                            <Grid ColumnDefinitions="80, 120, *, 120, 150">
-                                <TextBlock Grid.Column="0" Text="NÚMERO" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" />
-                                <TextBlock Grid.Column="1" Text="DATA" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" />
-                                <TextBlock Grid.Column="2" Text="CHAVE DE ACESSO"
-                                    FontWeight="SemiBold" FontSize="12" Foreground="Gray" />
-                                <TextBlock Grid.Column="3" Text="ROTA" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" />
-                                <TextBlock Grid.Column="4" Text="STATUS" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" HorizontalAlignment="Center" />
-                            </Grid>
-                        </Border>
-
-                        <ItemsControl ItemsSource="{Binding Manifestos}" x:CompileBindings="False">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border BorderBrush="#EEEEEE" BorderThickness="0,0,0,1"
-                                        Padding="20,15">
-                                        <Grid ColumnDefinitions="80, 120, *, 120, 150">
-                                            <TextBlock Grid.Column="0" Text="{Binding Numero}"
-                                                VerticalAlignment="Center" FontWeight="Bold" />
-                                            <TextBlock Grid.Column="1"
-                                                Text="{Binding DataEmissao, StringFormat={}{0:dd/MM/yyyy}}"
-                                                VerticalAlignment="Center" Foreground="#555" />
-                                            <TextBlock Grid.Column="2" Text="{Binding ChaveAcesso}"
-                                                VerticalAlignment="Center" FontSize="11"
-                                                Foreground="Gray" TextTrimming="CharacterEllipsis"
-                                                ToolTip.Tip="{Binding ChaveAcesso}" />
-
-                                            <StackPanel Grid.Column="3" Orientation="Horizontal"
-                                                Spacing="5" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding UfOrigem}"
-                                                    FontWeight="SemiBold" />
-                                                <materialIcons:MaterialIcon Kind="ArrowRight"
-                                                    Width="14" />
-                                                <TextBlock Text="{Binding UfDestino}"
-                                                    FontWeight="SemiBold" />
-                                            </StackPanel>
-
-                                            <Border Grid.Column="4" Padding="10,4" CornerRadius="12"
-                                                HorizontalAlignment="Center"
-                                                Background="{Binding Status, Converter={StaticResource StatusToBrushConverter}}">
-                                                <TextBlock Text="{Binding Status}" FontSize="11"
-                                                    FontWeight="SemiBold" Foreground="White" />
-                                            </Border>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <TextBlock Text="Nenhum manifesto encontrado."
-                            IsVisible="{Binding IsListaVazia}" HorizontalAlignment="Center"
-                            Margin="0,40" Foreground="Gray" />
+        <Grid Background="#A0000000" IsVisible="{Binding IsDialogCondutorAberto}" ZIndex="100">
+            <Border Background="White" CornerRadius="8" Padding="30" Width="400"
+                VerticalAlignment="Center" HorizontalAlignment="Center"
+                BoxShadow="0 10 30 0 #50000000">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Incluir Novo Condutor" FontWeight="Bold" FontSize="18"
+                        Foreground="#2196F3" />
+                    <TextBlock Text="Preencha os dados do motorista que assumirá o MDF-e."
+                        TextWrapping="Wrap" Foreground="Gray" />
+                    <TextBox Text="{Binding NovoCondutorNome}" Watermark="Nome Completo"
+                        Classes="Outline" Theme="{StaticResource OutlineTextBox}" />
+                    <TextBox Text="{Binding NovoCondutorCpf}" Watermark="CPF (Somente Números)"
+                        Classes="Outline" Theme="{StaticResource OutlineTextBox}" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10"
+                        Margin="0,10,0,0">
+                        <Button Content="Cancelar" Command="{Binding FecharDialogosCommand}"
+                            Classes="Flat" Foreground="Gray" />
+                        <Button Content="Adicionar Condutor"
+                            Command="{Binding ConfirmarInclusaoCondutorCommand}"
+                            Background="#2196F3" Foreground="White"
+                            Theme="{StaticResource SolidButton}" />
                     </StackPanel>
-                </Border>
-            </StackPanel>
-        </Border>
-    </ScrollViewer>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Background="#A0000000" IsVisible="{Binding IsDialogDFeAberto}" ZIndex="100">
+            <Border Background="White" CornerRadius="8" Padding="30" Width="500"
+                VerticalAlignment="Center" HorizontalAlignment="Center"
+                BoxShadow="0 10 30 0 #50000000">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Incluir NF-e / CT-e (Nova Carga)" FontWeight="Bold"
+                        FontSize="18" Foreground="#FF9800" />
+                    <TextBlock Text="Adicione uma nova nota fiscal ao percurso em andamento."
+                        TextWrapping="Wrap" Foreground="Gray" />
+
+                    <TextBox Text="{Binding NovaChaveDFe}" Watermark="Chave de Acesso (44 Dígitos)"
+                        Classes="Outline" Theme="{StaticResource OutlineTextBox}" />
+
+                    <Grid ColumnDefinitions="*, 10, *">
+                        <TextBox Grid.Column="0" Text="{Binding NovoIbgeCarrega}"
+                            Watermark="IBGE Cód. Carregamento" Classes="Outline"
+                            Theme="{StaticResource OutlineTextBox}" />
+                        <TextBox Grid.Column="2" Text="{Binding NovoMunCarrega}"
+                            Watermark="Cidade Carregamento" Classes="Outline"
+                            Theme="{StaticResource OutlineTextBox}" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*, 10, *">
+                        <TextBox Grid.Column="0" Text="{Binding NovoIbgeDescarga}"
+                            Watermark="IBGE Cód. Descarga" Classes="Outline"
+                            Theme="{StaticResource OutlineTextBox}" />
+                        <TextBox Grid.Column="2" Text="{Binding NovoMunDescarga}"
+                            Watermark="Cidade Descarga" Classes="Outline"
+                            Theme="{StaticResource OutlineTextBox}" />
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10"
+                        Margin="0,10,0,0">
+                        <Button Content="Cancelar" Command="{Binding FecharDialogosCommand}"
+                            Classes="Flat" Foreground="Gray" />
+                        <Button Content="Incluir Documento"
+                            Command="{Binding ConfirmarInclusaoDFeCommand}" Background="#FF9800"
+                            Foreground="White" Theme="{StaticResource SolidButton}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+    </Grid>
 </UserControl>
