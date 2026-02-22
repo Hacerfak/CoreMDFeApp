@@ -20,8 +20,21 @@
         <DataTemplate DataType="{x:Type vm:SeletorEmpresaViewModel}">
             <views:SeletorEmpresaView />
         </DataTemplate>
+
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
             <views:DashboardView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:ResumoViewModel}">
+            <views:ResumoView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:VeiculosViewModel}">
+            <views:VeiculosView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:CondutoresViewModel}">
+            <views:CondutoresView />
         </DataTemplate>
 
     </Application.DataTemplates>

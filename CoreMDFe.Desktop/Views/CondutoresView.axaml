@@ -1,0 +1,123 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
+    xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    x:Class="CoreMDFe.Desktop.Views.CondutoresView"
+    x:DataType="vm:CondutoresViewModel">
+
+    <Panel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Border Padding="40">
+                <StackPanel Spacing="20">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Condutores" FontSize="28" FontWeight="Light"
+                                Foreground="#222222" />
+                            <TextBlock Text="Cadastre os motoristas responsáveis pelo transporte."
+                                FontSize="14" Foreground="Gray" Margin="0,5,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="+ Novo Condutor"
+                            Command="{Binding AbrirModalCommand}" Classes="Primary"
+                            Theme="{StaticResource SolidButton}" Background="#673AB7"
+                            Foreground="White" CornerRadius="20" Padding="20,10"
+                            VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
+                        Margin="0,10,0,0" Padding="0,0,0,10">
+                        <StackPanel>
+                            <Border Background="#F8F9FA" Padding="20,15" Margin="0,0,0,10">
+                                <Grid ColumnDefinitions="3*, 2*, *">
+                                    <TextBlock Grid.Column="0" Text="NOME COMPLETO"
+                                        FontWeight="SemiBold" Foreground="#777777" FontSize="12" />
+                                    <TextBlock Grid.Column="1" Text="CPF" FontWeight="SemiBold"
+                                        Foreground="#777777" FontSize="12" />
+                                    <TextBlock Grid.Column="2" Text="AÇÕES" FontWeight="SemiBold"
+                                        Foreground="#777777" FontSize="12"
+                                        HorizontalAlignment="Right" />
+                                </Grid>
+                            </Border>
+
+                            <ItemsControl ItemsSource="{Binding Condutores}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#EEEEEE" BorderThickness="0,0,0,1"
+                                            Padding="20,10">
+                                            <Grid ColumnDefinitions="3*, 2*, *">
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                                    Spacing="15">
+                                                    <materialIcons:MaterialIcon Kind="AccountCircle"
+                                                        Foreground="#BDBDBD" Width="30" Height="30" />
+                                                    <TextBlock Text="{Binding Nome}"
+                                                        FontWeight="SemiBold"
+                                                        VerticalAlignment="Center"
+                                                        Foreground="#333333" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding Cpf}"
+                                                    VerticalAlignment="Center" Foreground="Gray" />
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                                    Spacing="5" HorizontalAlignment="Right">
+                                                    <Button
+                                                        Command="{Binding $parent[UserControl].((vm:CondutoresViewModel)DataContext).ExcluirCommand}"
+                                                        CommandParameter="{Binding Id}"
+                                                        Classes="Flat" Padding="5"
+                                                        Foreground="#F44336"
+                                                        ToolTip.Tip="Excluir Condutor">
+                                                        <materialIcons:MaterialIcon
+                                                            Kind="TrashCanOutline" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="Nenhum condutor registrado."
+                                IsVisible="{Binding !Condutores.Count}" Foreground="Gray"
+                                HorizontalAlignment="Center" Margin="0,30,0,20" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+
+        <Border Background="#B3000000" IsVisible="{Binding IsModalAberto}" ZIndex="100">
+            <Border Background="White" CornerRadius="12" Width="450" VerticalAlignment="Center"
+                HorizontalAlignment="Center" Padding="30" BoxShadow="0 10 30 0 #40000000">
+                <StackPanel Spacing="20">
+                    <TextBlock Text="Cadastrar Condutor" FontSize="20" FontWeight="Bold"
+                        Foreground="#333333" />
+
+                    <StackPanel Spacing="15">
+                        <StackPanel>
+                            <TextBlock Text="Nome Completo" FontWeight="SemiBold"
+                                Foreground="#555555" Margin="0,0,0,5" FontSize="13" />
+                            <TextBox Text="{Binding NovoCondutor.Nome}" Classes="Outline"
+                                Theme="{StaticResource OutlineTextBox}"
+                                Watermark="Nome conforme CNH" />
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Text="CPF" FontWeight="SemiBold" Foreground="#555555"
+                                Margin="0,0,0,5" FontSize="13" />
+                            <TextBox Text="{Binding NovoCondutor.Cpf}" Classes="Outline"
+                                Theme="{StaticResource OutlineTextBox}" Watermark="Apenas números" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*, *" Margin="0,10,0,0">
+                        <Button Grid.Column="0" Content="Cancelar (ESC)"
+                            Command="{Binding FecharModalCommand}" Classes="Flat" Foreground="Gray"
+                            HorizontalAlignment="Left" Padding="15,10" />
+                        <Button Grid.Column="1" Content="Salvar Condutor"
+                            Command="{Binding SalvarCommand}" IsDefault="True" Classes="Primary"
+                            Theme="{StaticResource SolidButton}" Background="#4CAF50"
+                            Foreground="White" HorizontalAlignment="Right" Padding="25,10"
+                            CornerRadius="20" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Panel>
+</UserControl>

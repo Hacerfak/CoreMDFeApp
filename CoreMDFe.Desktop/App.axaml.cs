@@ -28,10 +28,9 @@ namespace CoreMDFe.Desktop
             services.AddSingleton<CurrentTenantService>();
 
             // 2. Configura Banco de Dados DINÂMICO
-            services.AddScoped<IAppDbContext>(provider =>
+            services.AddTransient<IAppDbContext>(provider =>
             {
                 var tenant = provider.GetRequiredService<CurrentTenantService>();
-                // Se não tem empresa selecionada, usa um banco em memória ou de design (só para evitar erro de injeção)
                 var path = tenant.CurrentDbPath ?? "design_time.db";
                 return new AppDbContext(path);
             });
@@ -44,6 +43,9 @@ namespace CoreMDFe.Desktop
             services.AddTransient<OnboardingViewModel>();
             services.AddTransient<SeletorEmpresaViewModel>();
             services.AddTransient<DashboardViewModel>();
+            services.AddTransient<ResumoViewModel>();
+            services.AddTransient<VeiculosViewModel>();
+            services.AddTransient<CondutoresViewModel>();
 
             Services = services.BuildServiceProvider();
 
