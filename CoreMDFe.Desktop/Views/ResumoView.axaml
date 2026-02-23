@@ -4,51 +4,114 @@
     xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
     x:Class="CoreMDFe.Desktop.Views.ResumoView"
     x:DataType="vm:ResumoViewModel">
+
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Border Padding="40">
-            <StackPanel Spacing="20">
-                <TextBlock Text="Resumo Geral" FontSize="28" FontWeight="Light" Foreground="#222222" />
-                <TextBlock Text="Acompanhe as emissões e o status da frota." FontSize="14"
-                    Foreground="Gray" Margin="0,-15,0,10" />
+        <StackPanel Margin="40" Spacing="20">
 
-                <Grid ColumnDefinitions="*, 20, *, 20, *" Margin="0, 10, 0, 30">
-                    <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="20"
-                        BoxShadow="0 4 15 0 #0A000000">
-                        <StackPanel>
-                            <materialIcons:MaterialIcon Kind="CheckDecagram" Foreground="#4CAF50"
-                                Width="36" Height="36" HorizontalAlignment="Left" />
-                            <TextBlock Text="Emitidos Hoje" Foreground="#555555" Margin="0,15,0,0" />
-                            <TextBlock Text="{Binding EmitidosHoje}" FontWeight="Bold" FontSize="36"
-                                Foreground="#333333" />
-                        </StackPanel>
-                    </Border>
+            <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Resumo Operacional" FontSize="28" FontWeight="Light"
+                        Foreground="#222222" />
+                    <TextBlock
+                        Text="{Binding MesAtualTexto, StringFormat='Estatísticas referentes a {0}'}"
+                        FontSize="14" Foreground="Gray" Margin="0,5,0,0" />
+                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding CarregarDadosCommand}" Classes="Outline"
+                    ToolTip.Tip="Atualizar Dados">
+                    <materialIcons:MaterialIcon Kind="Refresh" Width="24" Height="24"
+                        Foreground="#673AB7" />
+                </Button>
+            </Grid>
 
-                    <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="20"
-                        BoxShadow="0 4 15 0 #0A000000">
-                        <StackPanel>
-                            <materialIcons:MaterialIcon Kind="TruckFastOutline" Foreground="#FF9800"
-                                Width="36" Height="36" HorizontalAlignment="Left" />
-                            <TextBlock Text="MDF-es em Trânsito" Foreground="#555555"
-                                Margin="0,15,0,0" />
-                            <TextBlock Text="{Binding EmTransito}" FontWeight="Bold" FontSize="36"
-                                Foreground="#333333" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Grid.Column="4" Background="White" CornerRadius="8" Padding="20"
-                        BoxShadow="0 4 15 0 #0A000000">
-                        <StackPanel>
-                            <materialIcons:MaterialIcon Kind="AlertCircleOutline"
-                                Foreground="#F44336" Width="36" Height="36"
-                                HorizontalAlignment="Left" />
-                            <TextBlock Text="Rejeitados Sefaz" Foreground="#555555"
-                                Margin="0,15,0,0" />
-                            <TextBlock Text="{Binding Rejeitados}" FontWeight="Bold" FontSize="36"
-                                Foreground="#333333" />
-                        </StackPanel>
-                    </Border>
+            <Border Background="#FFF3E0" BorderBrush="#FF9800" BorderThickness="1" CornerRadius="8"
+                Padding="20" IsVisible="{Binding TemManifestosEmAberto}">
+                <Grid ColumnDefinitions="Auto, *">
+                    <materialIcons:MaterialIcon Grid.Column="0" Kind="AlertCircleOutline" Width="40"
+                        Height="40" Foreground="#F57C00" VerticalAlignment="Center"
+                        Margin="0,0,15,0" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="Atenção: MDF-es Pendentes de Encerramento!"
+                            FontWeight="Bold" FontSize="16" Foreground="#E65100" />
+                        <TextBlock
+                            Text="{Binding EmAberto, StringFormat='Você tem {0} MDF-e(s) autorizado(s) que ainda não foram encerrados. Lembre-se que a SEFAZ bloqueia novas emissões para o mesmo veículo se houver viagens em aberto.'}"
+                            Foreground="#EF6C00" TextWrapping="Wrap" Margin="0,5,0,0" />
+                    </StackPanel>
                 </Grid>
-            </StackPanel>
-        </Border>
+            </Border>
+
+            <UniformGrid Columns="4" Rows="1" Margin="0,10,0,0">
+
+                <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
+                    Padding="20" Margin="0,0,15,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Background="#E3F2FD" CornerRadius="20" Width="40" Height="40">
+                                <materialIcons:MaterialIcon Kind="FileDocumentMultipleOutline"
+                                    Width="20" Height="20" Foreground="#2196F3" />
+                            </Border>
+                            <TextBlock Text="Total Emitido" VerticalAlignment="Center"
+                                FontWeight="SemiBold" Foreground="Gray" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding TotalMesAtual}" FontSize="36" FontWeight="Bold"
+                            Foreground="#333" Margin="0,15,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
+                    Padding="20" Margin="0,0,15,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Background="#E8F5E9" CornerRadius="20" Width="40" Height="40">
+                                <materialIcons:MaterialIcon Kind="CheckDecagramOutline" Width="20"
+                                    Height="20" Foreground="#4CAF50" />
+                            </Border>
+                            <TextBlock Text="Autorizados" VerticalAlignment="Center"
+                                FontWeight="SemiBold" Foreground="Gray" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Autorizados}" FontSize="36" FontWeight="Bold"
+                            Foreground="#4CAF50" Margin="0,15,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
+                    Padding="20" Margin="0,0,15,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Background="#F3E5F5" CornerRadius="20" Width="40" Height="40">
+                                <materialIcons:MaterialIcon Kind="FlagCheckered" Width="20"
+                                    Height="20" Foreground="#9C27B0" />
+                            </Border>
+                            <TextBlock Text="Encerrados" VerticalAlignment="Center"
+                                FontWeight="SemiBold" Foreground="Gray" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Encerrados}" FontSize="36" FontWeight="Bold"
+                            Foreground="#9C27B0" Margin="0,15,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
+                    Padding="20">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Background="#FFEBEE" CornerRadius="20" Width="40" Height="40">
+                                <materialIcons:MaterialIcon Kind="Cancel" Width="20" Height="20"
+                                    Foreground="#F44336" />
+                            </Border>
+                            <TextBlock Text="Invalidados" VerticalAlignment="Center"
+                                FontWeight="SemiBold" Foreground="Gray" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,15,0,0">
+                            <TextBlock Text="{Binding Cancelados}" FontSize="36" FontWeight="Bold"
+                                Foreground="#F44336" />
+                            <TextBlock Text="{Binding Rejeitados, StringFormat='(+{0} rejeitados)'}"
+                                FontSize="12" Foreground="Gray" VerticalAlignment="Bottom"
+                                Margin="0,0,0,5" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </UniformGrid>
+
+        </StackPanel>
     </ScrollViewer>
 </UserControl>
