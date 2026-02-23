@@ -50,5 +50,21 @@
     <Application.Styles>
         <themes:MaterialTheme BaseTheme="Light" PrimaryColor="Teal" SecondaryColor="Amber" />
         <icons:MaterialIconStyles />
+
+        <Style Selector="Button.MenuButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#555555" />
+        </Style>
+        <Style Selector="Button.MenuButton:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F3E5F5" />
+        </Style>
+
+        <Style Selector="Border.Card">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="BoxShadow" Value="0 2 10 0 #0A000000" />
+            <Setter Property="Padding" Value="25" />
+        </Style>
+
     </Application.Styles>
 </Application>

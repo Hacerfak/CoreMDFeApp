@@ -21,6 +21,11 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private Veiculo _novoVeiculo = new();
 
         [ObservableProperty] private bool _isVeiculoAvancadoAberto;
+
+        // NOVO: Controle do Tipo de Veículo
+        public ObservableCollection<string> ListaTiposVeiculo { get; } = new() { "0 - Tração", "1 - Reboque" };
+        [ObservableProperty] private int _tipoVeiculoSelecionadoIndex = 0; // Padrão: Tração
+
         [ObservableProperty] private int _rodadoSelecionadoIndex = 2; // Padrão: Cavalo Mecânico
         [ObservableProperty] private int _carroceriaSelecionadaIndex = 2; // Padrão: Fechada
 
@@ -39,7 +44,6 @@ namespace CoreMDFe.Desktop.ViewModels
 
         private async Task InicializarDadosAsync()
         {
-            // Pega a UF da empresa logada para usar como padrão no cadastro
             var empresa = await _dbContext.Empresas.FirstOrDefaultAsync();
             if (empresa != null) _ufPadraoEmpresa = empresa.SiglaUf;
 
@@ -57,6 +61,7 @@ namespace CoreMDFe.Desktop.ViewModels
         {
             NovoVeiculo = new Veiculo { UfLicenciamento = _ufPadraoEmpresa };
             IsVeiculoAvancadoAberto = false;
+            TipoVeiculoSelecionadoIndex = 0; // Reseta para Tração
             RodadoSelecionadoIndex = 2;
             CarroceriaSelecionadaIndex = 2;
             IsModalAberto = true;
@@ -70,7 +75,9 @@ namespace CoreMDFe.Desktop.ViewModels
         {
             if (string.IsNullOrWhiteSpace(NovoVeiculo.Placa)) return;
 
-            // Transforma o index (0, 1...) no código esperado pela SEFAZ ("01", "02"...)
+            // Salva o tipo do veículo (0 ou 1)
+            NovoVeiculo.TipoVeiculo = TipoVeiculoSelecionadoIndex;
+
             NovoVeiculo.TipoRodado = (RodadoSelecionadoIndex + 1).ToString("D2");
             NovoVeiculo.TipoCarroceria = CarroceriaSelecionadaIndex.ToString("D2");
 
@@ -84,6 +91,36 @@ namespace CoreMDFe.Desktop.ViewModels
         {
             await _mediator.Send(new ExcluirVeiculoCommand(id));
             await CarregarListaAsync();
+        }
+
+        [RelayCommand]
+        private void Editar(Veiculo veiculo)
+        {
+            NovoVeiculo = new Veiculo
+            {
+                Id = veiculo.Id,
+                Placa = veiculo.Placa,
+                Renavam = veiculo.Renavam,
+                UfLicenciamento = veiculo.UfLicenciamento,
+                TaraKg = veiculo.TaraKg,
+                CapacidadeKg = veiculo.CapacidadeKg,
+                CapacidadeM3 = veiculo.CapacidadeM3, // Carrega o M3
+                TipoVeiculo = veiculo.TipoVeiculo,
+                TipoRodado = veiculo.TipoRodado,
+                TipoCarroceria = veiculo.TipoCarroceria,
+                DataCriacao = veiculo.DataCriacao
+            };
+
+            // Sincroniza o ComboBox de Tipo de Veículo
+            TipoVeiculoSelecionadoIndex = veiculo.TipoVeiculo;
+
+            if (int.TryParse(veiculo.TipoRodado, out int rodado))
+                RodadoSelecionadoIndex = Math.Max(0, rodado - 1);
+
+            if (int.TryParse(veiculo.TipoCarroceria, out int carroceria))
+                CarroceriaSelecionadaIndex = Math.Max(0, carroceria);
+
+            IsModalAberto = true;
         }
     }
 }

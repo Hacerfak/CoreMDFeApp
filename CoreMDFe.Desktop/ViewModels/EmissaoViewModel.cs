@@ -50,6 +50,9 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private string _ufCarregamento = "";
         [ObservableProperty] private string _ufDescarregamento = "";
 
+        public string ResumoCidadesCarregamento => string.Join(", ", DocumentosFiscais.Select(d => d.MunicipioCarregamento).Where(m => !string.IsNullOrEmpty(m)).Distinct());
+        public string ResumoCidadesDescarregamento => string.Join(", ", DocumentosFiscais.Select(d => d.MunicipioDescarga).Where(m => !string.IsNullOrEmpty(m)).Distinct());
+
         public string[] ListaUFs { get; } = { "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO" };
 
         public string[] ListaTiposEmitente { get; } = { "1 - Prestador de Serviço de Transporte", "2 - Transportador de Carga Própria", "3 - CTe Globalizado" };
@@ -274,6 +277,9 @@ namespace CoreMDFe.Desktop.ViewModels
                 UfCarregamento = DocumentosFiscais.First().UfCarregamento;
                 UfDescarregamento = DocumentosFiscais.Last().UfDescarga;
             }
+
+            OnPropertyChanged(nameof(ResumoCidadesCarregamento));
+            OnPropertyChanged(nameof(ResumoCidadesDescarregamento));
         }
 
         [RelayCommand]
@@ -361,6 +367,67 @@ namespace CoreMDFe.Desktop.ViewModels
             else
             {
                 MensagemProcessamento = $"❌ Falha ao gerar PDF: {result.Mensagem}";
+            }
+        }
+
+        public void CarregarRascunhoDeRejeitado(ManifestoEletronico manifestoRejeitado)
+        {
+            if (string.IsNullOrEmpty(manifestoRejeitado.XmlAssinado)) return;
+
+            try
+            {
+                var doc = XDocument.Parse(manifestoRejeitado.XmlAssinado);
+
+                // 1. Limpa a tela atual
+                DocumentosFiscais.Clear();
+                QuantidadeNFe = 0; QuantidadeCTe = 0;
+                PassoAtual = 1;
+
+                // 2. Extrai as Notas Fiscais (NFe) do XML Rejeitado
+                var infNFes = doc.Descendants().Where(x => x.Name.LocalName == "infNFe");
+                foreach (var nfe in infNFes)
+                {
+                    DocumentosFiscais.Add(new DocumentoMDFeDto
+                    {
+                        Chave = nfe.Elements().FirstOrDefault(x => x.Name.LocalName == "chNFe")?.Value ?? "",
+                        Tipo = 55,
+                        MunicipioCarregamento = "RECARREGADO", // Simplificação para reaproveitamento
+                        MunicipioDescarga = "RECARREGADO"
+                    });
+                    QuantidadeNFe++;
+                }
+
+                // 3. Extrai os Conhecimentos de Transporte (CTe)
+                var infCTes = doc.Descendants().Where(x => x.Name.LocalName == "infCTe");
+                foreach (var cte in infCTes)
+                {
+                    DocumentosFiscais.Add(new DocumentoMDFeDto
+                    {
+                        Chave = cte.Elements().FirstOrDefault(x => x.Name.LocalName == "chCTe")?.Value ?? "",
+                        Tipo = 57,
+                        MunicipioCarregamento = "RECARREGADO",
+                        MunicipioDescarga = "RECARREGADO"
+                    });
+                    QuantidadeCTe++;
+                }
+
+                // 4. Repopula o Roteiro
+                UfCarregamento = manifestoRejeitado.UfOrigem;
+                UfDescarregamento = manifestoRejeitado.UfDestino;
+
+                // 5. Tenta selecionar o Veículo e Motorista (Mapeando pela Placa/CPF)
+                var placa = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "placa")?.Value;
+                if (placa != null) VeiculoSelecionado = VeiculosDisponiveis.FirstOrDefault(v => v.Placa == placa);
+
+                var cpfCondutor = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "CPF")?.Value;
+                if (cpfCondutor != null) CondutorSelecionado = CondutoresDisponiveis.FirstOrDefault(c => c.Cpf == cpfCondutor);
+
+                AtualizarTotaisEResumos();
+                MensagemProcessamento = "⚠️ Dados recuperados do MDF-e rejeitado. Verifique os campos antes de retransmitir.";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao extrair rascunho: {ex.Message}");
             }
         }
     }

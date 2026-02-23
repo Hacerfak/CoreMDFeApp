@@ -3,7 +3,8 @@
     xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
     x:Class="CoreMDFe.Desktop.Views.MainWindow"
     x:DataType="vm:MainViewModel"
-    Title="Zeus MDF-e"
+    Title="CoreMDFe - Emissor de Manifestos Eletrônicos"
+    Icon="/Assets/icon.ico"
     WindowStartupLocation="CenterScreen"
     Width="1200" Height="800">
 

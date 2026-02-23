@@ -55,5 +55,19 @@ namespace CoreMDFe.Desktop.ViewModels
             await _mediator.Send(new ExcluirCondutorCommand(id));
             await CarregarListaAsync();
         }
+
+        [RelayCommand]
+        private void Editar(Condutor condutor)
+        {
+            // Cria uma cópia para edição segura
+            NovoCondutor = new Condutor
+            {
+                Id = condutor.Id,
+                Nome = condutor.Nome,
+                Cpf = condutor.Cpf,
+                DataCriacao = condutor.DataCriacao
+            };
+            IsModalAberto = true;
+        }
     }
 }

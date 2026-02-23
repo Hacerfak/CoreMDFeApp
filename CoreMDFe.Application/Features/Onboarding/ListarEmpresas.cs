@@ -17,7 +17,7 @@ namespace CoreMDFe.Application.Features.Onboarding
         public async Task<List<EmpresaResumoDto>> Handle(ListarEmpresasQuery request, CancellationToken cancellationToken)
         {
             var lista = new List<EmpresaResumoDto>();
-            var basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZeusMDFe");
+            var basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CoreMDFe");
 
             if (!Directory.Exists(basePath)) return lista;
 

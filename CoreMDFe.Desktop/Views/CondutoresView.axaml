@@ -58,6 +58,14 @@
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal"
                                                     Spacing="5" HorizontalAlignment="Right">
                                                     <Button
+                                                        Command="{Binding $parent[UserControl].((vm:CondutoresViewModel)DataContext).EditarCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Classes="Flat" Padding="5"
+                                                        Foreground="#2196F3"
+                                                        ToolTip.Tip="Editar Condutor">
+                                                        <materialIcons:MaterialIcon Kind="Edit" />
+                                                    </Button>
+                                                    <Button
                                                         Command="{Binding $parent[UserControl].((vm:CondutoresViewModel)DataContext).ExcluirCommand}"
                                                         CommandParameter="{Binding Id}"
                                                         Classes="Flat" Padding="5"

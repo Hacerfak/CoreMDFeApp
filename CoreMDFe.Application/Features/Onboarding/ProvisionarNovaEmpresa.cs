@@ -25,7 +25,7 @@ namespace CoreMDFe.Application.Features.Onboarding
             {
                 // 1. Cria a estrutura de pastas segura baseada no CNPJ
                 var basePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                var empresaFolder = Path.Combine(basePath, "ZeusMDFe", request.Cnpj);
+                var empresaFolder = Path.Combine(basePath, "CoreMDFe", request.Cnpj);
                 var certsFolder = Path.Combine(empresaFolder, "Certificados");
 
                 Directory.CreateDirectory(empresaFolder);

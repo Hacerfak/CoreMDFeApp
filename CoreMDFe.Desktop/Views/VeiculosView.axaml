@@ -13,7 +13,8 @@
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="Meus Veículos" FontSize="28" FontWeight="Light"
                                 Foreground="#222222" />
-                            <TextBlock Text="Gerencie a frota para usar o preenchimento automático."
+                            <TextBlock
+                                Text="Gerencie a frota de tração e reboque para preenchimento rápido."
                                 FontSize="14" Foreground="Gray" Margin="0,5,0,0" />
                         </StackPanel>
                         <Button Grid.Column="1" Content="+ Novo Veículo"
@@ -23,16 +24,19 @@
                             VerticalAlignment="Center" />
                     </Grid>
 
-                    <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
-                        Margin="0,10,0,0" Padding="0,0,0,10">
+                    <Border Classes="Card" Margin="0,10,0,0" Padding="0,0,0,10">
                         <StackPanel>
-                            <Border Background="#F8F9FA" Padding="20,15" Margin="0,0,0,10">
-                                <Grid ColumnDefinitions="2*, 3*, *">
+                            <Border Background="#F8F9FA" Padding="20,15" Margin="0,0,0,10"
+                                CornerRadius="8,8,0,0" BorderBrush="#EEEEEE"
+                                BorderThickness="0,0,0,1">
+                                <Grid ColumnDefinitions="1.5*, 2*, 1.5*, *">
                                     <TextBlock Grid.Column="0" Text="PLACA" FontWeight="SemiBold"
                                         Foreground="#777777" FontSize="12" />
                                     <TextBlock Grid.Column="1" Text="RENAVAM" FontWeight="SemiBold"
                                         Foreground="#777777" FontSize="12" />
-                                    <TextBlock Grid.Column="2" Text="AÇÕES" FontWeight="SemiBold"
+                                    <TextBlock Grid.Column="2" Text="TIPO" FontWeight="SemiBold"
+                                        Foreground="#777777" FontSize="12" />
+                                    <TextBlock Grid.Column="3" Text="AÇÕES" FontWeight="SemiBold"
                                         Foreground="#777777" FontSize="12"
                                         HorizontalAlignment="Right" />
                                 </Grid>
@@ -43,7 +47,8 @@
                                     <DataTemplate>
                                         <Border BorderBrush="#EEEEEE" BorderThickness="0,0,0,1"
                                             Padding="20,10">
-                                            <Grid ColumnDefinitions="2*, 3*, *">
+                                            <Grid ColumnDefinitions="1.5*, 2*, 1.5*, *">
+
                                                 <StackPanel Grid.Column="0" Orientation="Horizontal"
                                                     Spacing="10">
                                                     <Border Background="#EDE7F6" CornerRadius="4"
@@ -53,10 +58,24 @@
                                                             VerticalAlignment="Center" />
                                                     </Border>
                                                 </StackPanel>
+
                                                 <TextBlock Grid.Column="1" Text="{Binding Renavam}"
                                                     VerticalAlignment="Center" Foreground="#333333" />
-                                                <StackPanel Grid.Column="2" Orientation="Horizontal"
+
+                                                <TextBlock Grid.Column="2"
+                                                    Text="{Binding TipoVeiculoDescricao}"
+                                                    VerticalAlignment="Center" Foreground="Gray"
+                                                    FontWeight="SemiBold" />
+
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal"
                                                     Spacing="5" HorizontalAlignment="Right">
+                                                    <Button
+                                                        Command="{Binding $parent[UserControl].((vm:VeiculosViewModel)DataContext).EditarCommand}"
+                                                        CommandParameter="{Binding}" Classes="Flat"
+                                                        Padding="5" Foreground="#2196F3"
+                                                        ToolTip.Tip="Editar Veículo">
+                                                        <materialIcons:MaterialIcon Kind="Edit" />
+                                                    </Button>
                                                     <Button
                                                         Command="{Binding $parent[UserControl].((vm:VeiculosViewModel)DataContext).ExcluirCommand}"
                                                         CommandParameter="{Binding Id}"
@@ -83,27 +102,37 @@
         </ScrollViewer>
 
         <Panel IsVisible="{Binding IsModalAberto}" ZIndex="100">
-            <Border Background="#80000000" />
+            <Border Background="#A0000000" />
 
-            <Border Background="White" Width="550" CornerRadius="12" Padding="30"
+            <Border Background="White" Width="600" CornerRadius="12" Padding="30"
                 VerticalAlignment="Center" HorizontalAlignment="Center"
                 BoxShadow="0 10 30 0 #40000000">
                 <StackPanel Spacing="15">
                     <TextBlock Text="Adicionar Veículo" FontSize="22" FontWeight="SemiBold"
                         Foreground="#333" Margin="0,0,0,10" />
 
-                    <Grid ColumnDefinitions="*, 15, 2*">
+                    <Grid ColumnDefinitions="*, 15, *, 15, *">
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Placa (Ex: ABC1D23)" FontWeight="SemiBold"
+                            <TextBlock Text="Placa (ABC1D23)" FontWeight="SemiBold"
                                 Foreground="#555" Margin="0,0,0,5" FontSize="13" />
                             <TextBox Text="{Binding NovoVeiculo.Placa}" Classes="Outline"
-                                Theme="{StaticResource OutlineTextBox}" />
+                                Theme="{StaticResource OutlineTextBox}" MaxLength="7" />
                         </StackPanel>
+
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Renavam" FontWeight="SemiBold" Foreground="#555"
                                 Margin="0,0,0,5" FontSize="13" />
                             <TextBox Text="{Binding NovoVeiculo.Renavam}" Classes="Outline"
-                                Theme="{StaticResource OutlineTextBox}" />
+                                Theme="{StaticResource OutlineTextBox}" MaxLength="11" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Tipo do Veículo" FontWeight="SemiBold"
+                                Foreground="#555" Margin="0,0,0,5" FontSize="13" />
+                            <ComboBox ItemsSource="{Binding ListaTiposVeiculo}"
+                                SelectedIndex="{Binding TipoVeiculoSelecionadoIndex}"
+                                HorizontalAlignment="Stretch"
+                                Theme="{StaticResource OutlineComboBox}" />
                         </StackPanel>
                     </Grid>
 
@@ -121,18 +150,27 @@
 
                     <StackPanel IsVisible="{Binding IsVeiculoAvancadoAberto}" Spacing="15"
                         Margin="0,5,0,10">
-                        <Grid ColumnDefinitions="*, 15, *">
+
+                        <Grid ColumnDefinitions="*, 15, *, 15, *">
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Tara (KG)" FontWeight="SemiBold" Foreground="#555"
                                     Margin="0,0,0,5" FontSize="13" />
                                 <TextBox Text="{Binding NovoVeiculo.TaraKg}" Classes="Outline"
                                     Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 10000" />
                             </StackPanel>
+
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Capacidade (KG)" FontWeight="SemiBold"
+                                <TextBlock Text="Capacid. (KG)" FontWeight="SemiBold"
                                     Foreground="#555" Margin="0,0,0,5" FontSize="13" />
                                 <TextBox Text="{Binding NovoVeiculo.CapacidadeKg}" Classes="Outline"
                                     Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 25000" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Capacid. (M³)" FontWeight="SemiBold"
+                                    Foreground="#555" Margin="0,0,0,5" FontSize="13" />
+                                <TextBox Text="{Binding NovoVeiculo.CapacidadeM3}" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 50" />
                             </StackPanel>
                         </Grid>
 
@@ -145,6 +183,7 @@
                                     HorizontalAlignment="Stretch"
                                     Theme="{StaticResource OutlineComboBox}" />
                             </StackPanel>
+
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Tipo de Carroceria" FontWeight="SemiBold"
                                     Foreground="#555" Margin="0,0,0,5" FontSize="13" />

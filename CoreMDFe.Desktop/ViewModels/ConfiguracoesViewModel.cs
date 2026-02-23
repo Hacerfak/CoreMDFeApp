@@ -4,6 +4,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Configuracoes;
+using CoreMDFe.Application.Features.Onboarding;
 using CoreMDFe.Core.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.IO;
+using Avalonia.Media.Imaging;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
@@ -19,22 +21,41 @@ namespace CoreMDFe.Desktop.ViewModels
         private readonly IMediator _mediator;
         private readonly IAppDbContext _dbContext;
 
+        // --- DADOS DA EMPRESA E ENDEREÇO ---
         [ObservableProperty] private string _cnpj = string.Empty;
         [ObservableProperty] private string _nome = string.Empty;
         [ObservableProperty] private string _fantasia = string.Empty;
         [ObservableProperty] private string _ie = string.Empty;
         [ObservableProperty] private string _rntrc = string.Empty;
 
+        [ObservableProperty] private string _logradouro = string.Empty;
+        [ObservableProperty] private string _numeroEndereco = string.Empty;
+        [ObservableProperty] private string _complemento = string.Empty;
+        [ObservableProperty] private string _bairro = string.Empty;
+        [ObservableProperty] private string _nomeMunicipio = string.Empty;
+        [ObservableProperty] private long _codigoIbgeMunicipio;
+        [ObservableProperty] private string _cep = string.Empty;
+        [ObservableProperty] private string _telefone = string.Empty;
+        [ObservableProperty] private string _email = string.Empty;
+        [ObservableProperty] private Bitmap? _logoPreview;
+
+        // --- CERTIFICADO E AMBIENTE ---
         [ObservableProperty] private string _caminhoCertificado = string.Empty;
         [ObservableProperty] private string _senhaCertificado = string.Empty;
         [ObservableProperty] private bool _manterCertificadoCache;
-
         [ObservableProperty] private string _ufEmitente = "SP";
 
         public ObservableCollection<string> ListaAmbientes { get; } = new() { "1 - Produção", "2 - Homologação" };
         [ObservableProperty] private int _ambienteSelecionadoIndex = 1;
 
-        [ObservableProperty] private string _mensagemSistema = string.Empty;
+        // --- ARQUIVOS E PASTAS ---
+        [ObservableProperty] private bool _isSalvarXml = true;
+        [ObservableProperty] private string _diretorioSalvarXml = string.Empty;
+        [ObservableProperty] private string _diretorioSalvarPdf = string.Empty;
+
+        // --- DADOS FISCAIS ---
+        [ObservableProperty] private long _ultimaNumeracao = 0;
+        [ObservableProperty] private int _serie = 1;
 
         // --- RESPONSÁVEL TÉCNICO ---
         [ObservableProperty] private string _respTecCnpj = string.Empty;
@@ -53,6 +74,8 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private byte[]? _logomarca;
         [ObservableProperty] private string _textoLogomarca = "Nenhuma logo selecionada";
 
+        [ObservableProperty] private string _mensagemSistema = string.Empty;
+
         public ConfiguracoesViewModel(IMediator mediator, IAppDbContext dbContext)
         {
             _mediator = mediator;
@@ -60,16 +83,48 @@ namespace CoreMDFe.Desktop.ViewModels
             _ = CarregarDadosAtuais();
         }
 
+        private void AtualizarPreviewLogo()
+        {
+            if (Logomarca == null || Logomarca.Length == 0)
+            {
+                LogoPreview = null;
+                return;
+            }
+
+            try
+            {
+                using (var ms = new MemoryStream(Logomarca))
+                {
+                    LogoPreview = new Bitmap(ms);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao gerar prévia da logo: {ex.Message}");
+                LogoPreview = null;
+            }
+        }
+
         private async Task CarregarDadosAtuais()
         {
             var empresa = await _dbContext.Empresas.Include(e => e.Configuracao).FirstOrDefaultAsync();
             if (empresa != null)
             {
+                // Dados da Empresa
                 Cnpj = empresa.Cnpj ?? string.Empty;
                 Nome = empresa.Nome ?? string.Empty;
                 Fantasia = empresa.NomeFantasia ?? string.Empty;
                 Ie = empresa.InscricaoEstadual ?? string.Empty;
                 Rntrc = empresa.RNTRC ?? string.Empty;
+                Logradouro = empresa.Logradouro ?? string.Empty;
+                NumeroEndereco = empresa.Numero ?? string.Empty;
+                Complemento = empresa.Complemento ?? string.Empty;
+                Bairro = empresa.Bairro ?? string.Empty;
+                NomeMunicipio = empresa.NomeMunicipio ?? string.Empty;
+                CodigoIbgeMunicipio = empresa.CodigoIbgeMunicipio;
+                Cep = empresa.Cep ?? string.Empty;
+                Telefone = empresa.Telefone ?? string.Empty;
+                Email = empresa.Email ?? string.Empty;
 
                 if (empresa.Configuracao != null)
                 {
@@ -78,6 +133,12 @@ namespace CoreMDFe.Desktop.ViewModels
                     ManterCertificadoCache = empresa.Configuracao.ManterCertificadoEmCache;
                     UfEmitente = empresa.Configuracao.UfEmitente ?? "SP";
                     AmbienteSelecionadoIndex = empresa.Configuracao.TipoAmbiente == 1 ? 0 : 1;
+                    UltimaNumeracao = empresa.Configuracao.UltimaNumeracao;
+                    Serie = empresa.Configuracao.Serie;
+
+                    IsSalvarXml = empresa.Configuracao.IsSalvarXml;
+                    DiretorioSalvarXml = empresa.Configuracao.DiretorioSalvarXml ?? string.Empty;
+                    DiretorioSalvarPdf = empresa.Configuracao.DiretorioSalvarPdf ?? string.Empty;
 
                     RespTecCnpj = empresa.Configuracao.RespTecCnpj ?? string.Empty;
                     RespTecNome = empresa.Configuracao.RespTecNome ?? string.Empty;
@@ -85,18 +146,75 @@ namespace CoreMDFe.Desktop.ViewModels
                     RespTecEmail = empresa.Configuracao.RespTecEmail ?? string.Empty;
 
                     GerarQrCode = empresa.Configuracao.GerarQrCode;
-                    // Conversão de volta para o ComboBox (Base 0)
                     ModalidadePadrao = Math.Max(0, empresa.Configuracao.ModalidadePadrao - 1);
                     TipoEmissaoPadrao = Math.Max(0, empresa.Configuracao.TipoEmissaoPadrao - 1);
                     TipoEmitentePadrao = Math.Max(0, empresa.Configuracao.TipoEmitentePadrao - 1);
                     TipoTransportadorPadrao = empresa.Configuracao.TipoTransportadorPadrao;
 
-                    // Carrega a Logo do Banco
                     Logomarca = empresa.Configuracao.Logomarca;
+                    AtualizarPreviewLogo();
                     if (Logomarca != null && Logomarca.Length > 0)
                         TextoLogomarca = "Logo atual carregada com sucesso!";
                 }
             }
+        }
+
+        [RelayCommand]
+        private async Task ConsultarSefaz()
+        {
+            if (string.IsNullOrWhiteSpace(Cnpj) || string.IsNullOrWhiteSpace(UfEmitente))
+            {
+                MensagemSistema = "⚠️ Preencha a UF do Emitente antes de consultar a SEFAZ.";
+                return;
+            }
+
+            MensagemSistema = "Consultando SEFAZ, aguarde...";
+            try
+            {
+                // Reutilizamos a query que criamos na fase de Onboarding!
+                var query = new ConsultarDadosSefazCommand(CaminhoCertificado, SenhaCertificado, UfEmitente);
+                var result = await _mediator.Send(query);
+
+                if (result.Sucesso)
+                {
+                    Nome = result.DadosEmpresa.RazaoSocial ?? string.Empty;
+                    Fantasia = Nome;
+                    Ie = result.DadosEmpresa.Ie ?? string.Empty;
+                    Cep = result.DadosEmpresa.Cep ?? string.Empty;
+                    Logradouro = result.DadosEmpresa.Logradouro ?? string.Empty;
+                    NumeroEndereco = result.DadosEmpresa.Numero ?? string.Empty;
+                    Complemento = string.Empty;
+                    Bairro = result.DadosEmpresa.Bairro ?? string.Empty;
+                    NomeMunicipio = result.DadosEmpresa.Municipio ?? string.Empty;
+                    CodigoIbgeMunicipio = result.DadosEmpresa.Ibge;
+
+                    MensagemSistema = "✅ Dados da SEFAZ importados com sucesso!";
+                }
+                else
+                {
+                    MensagemSistema = $"❌ Erro na consulta SEFAZ: {result.Mensagem}";
+                }
+            }
+            catch (Exception ex)
+            {
+                MensagemSistema = $"❌ Falha: {ex.Message}";
+            }
+        }
+
+        [RelayCommand]
+        private async Task ProcurarDiretorioXml() => DiretorioSalvarXml = await AbrirFolderPicker("Pasta para XMLs") ?? DiretorioSalvarXml;
+
+        [RelayCommand]
+        private async Task ProcurarDiretorioPdf() => DiretorioSalvarPdf = await AbrirFolderPicker("Pasta para PDFs") ?? DiretorioSalvarPdf;
+
+        private async Task<string?> AbrirFolderPicker(string titulo)
+        {
+            if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                var folders = await desktop.MainWindow.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = titulo, AllowMultiple = false });
+                return folders.Count > 0 ? folders[0].Path.LocalPath : null;
+            }
+            return null;
         }
 
         [RelayCommand]
@@ -132,12 +250,10 @@ namespace CoreMDFe.Desktop.ViewModels
                     try
                     {
                         Logomarca = await File.ReadAllBytesAsync(files[0].Path.LocalPath);
+                        AtualizarPreviewLogo();
                         TextoLogomarca = $"Logo selecionada: {files[0].Name}";
                     }
-                    catch (Exception ex)
-                    {
-                        MensagemSistema = $"Erro ao ler imagem: {ex.Message}";
-                    }
+                    catch (Exception ex) { MensagemSistema = $"Erro ao ler imagem: {ex.Message}"; }
                 }
             }
         }
@@ -149,23 +265,18 @@ namespace CoreMDFe.Desktop.ViewModels
 
             int tipoAmbienteSefaz = AmbienteSelecionadoIndex == 0 ? 1 : 2;
 
-            // Passamos todos os parâmetros, incluindo a Logomarca!
             var command = new SalvarConfiguracaoCommand(
                 Cnpj, Nome, Fantasia, Ie, Rntrc,
+                Logradouro, NumeroEndereco, Complemento, Bairro, NomeMunicipio, CodigoIbgeMunicipio, Cep, Telefone, Email,
                 CaminhoCertificado, SenhaCertificado, ManterCertificadoCache,
-                tipoAmbienteSefaz, UfEmitente, 0, 5000,
+                tipoAmbienteSefaz, UfEmitente, UltimaNumeracao, Serie, 5000,
                 RespTecCnpj, RespTecNome, RespTecTelefone, RespTecEmail,
-                GerarQrCode,
-                ModalidadePadrao + 1, // UI(0) -> SEFAZ(1)
-                TipoEmissaoPadrao + 1,
-                TipoEmitentePadrao + 1,
-                TipoTransportadorPadrao,
-                Logomarca // <-- AQUI ENVIAMOS PARA O COMMAND
+                GerarQrCode, ModalidadePadrao + 1, TipoEmissaoPadrao + 1, TipoEmitentePadrao + 1, TipoTransportadorPadrao,
+                Logomarca, IsSalvarXml, DiretorioSalvarXml, DiretorioSalvarPdf
             );
 
             var sucesso = await _mediator.Send(command);
-
-            MensagemSistema = sucesso ? "Configurações atualizadas com sucesso!" : "Erro ao salvar configurações.";
+            MensagemSistema = sucesso ? "✅ Configurações atualizadas com sucesso!" : "❌ Erro ao salvar configurações.";
         }
     }
 }

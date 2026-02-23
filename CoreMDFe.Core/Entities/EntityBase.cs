@@ -53,21 +53,19 @@ namespace CoreMDFe.Core.Entities
 
         // Pastas e arquivos
         public string DiretorioSalvarXml { get; set; } = string.Empty;
-        public string CaminhoSchemas { get; set; } = string.Empty;
         public bool IsSalvarXml { get; set; }
+        public string DiretorioSalvarPdf { get; set; } = string.Empty;
 
         // WebService (Ide do XSD)
         public int TipoAmbiente { get; set; } // 1 - Produção, 2 - Homologação
         [MaxLength(2)] public string UfEmitente { get; set; } = string.Empty;
-        public int VersaoLayout { get; set; } // Enum de Versão do Zeus
         public int Serie { get; set; }
         public long UltimaNumeracao { get; set; }
         public int TimeOut { get; set; } = 5000;
 
         // Certificado Digital
-        [MaxLength(100)] public string NumeroSerieCertificado { get; set; } = string.Empty;
         public string CaminhoArquivoCertificado { get; set; } = string.Empty;
-        public string SenhaCertificado { get; set; } = string.Empty; // Em um app real, idealmente deve ser criptografada no banco
+        public string SenhaCertificado { get; set; } = string.Empty;
         public bool ManterCertificadoEmCache { get; set; }
 
         // Responsável Técnico (infRespTec)
@@ -108,6 +106,8 @@ namespace CoreMDFe.Core.Entities
         public int CapacidadeM3 { get; set; }
 
         public int TipoVeiculo { get; set; } // 0 - Tração, 1 - Reboque
+        [NotMapped]
+        public string TipoVeiculoDescricao => TipoVeiculo == 0 ? "Tração" : "Reboque";
         public string TipoRodado { get; set; } = string.Empty; // 01 - Truck, 02 - Toco, etc... (tpRod)
         public string TipoCarroceria { get; set; } = string.Empty; // 00 - N/A, 01 - Aberta, 02 - Fechada (tpCar)
     }

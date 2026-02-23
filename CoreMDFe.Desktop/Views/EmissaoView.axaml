@@ -385,23 +385,89 @@
                     </StackPanel>
 
                     <StackPanel IsVisible="{Binding IsPasso4}" Spacing="20">
-                        <TextBlock Text="Pronto para Transmitir" FontSize="22" FontWeight="SemiBold"
+                        <TextBlock Text="Resumo e Transmissão" FontSize="22" FontWeight="SemiBold"
                             Foreground="#333" />
 
-                        <TextBlock Text="{Binding MensagemProcessamento}" FontSize="16"
-                            FontWeight="Bold" Foreground="#E67E22" TextWrapping="Wrap" />
+                        <Border Background="#F5F7FA" BorderBrush="#E0E0E0" BorderThickness="1"
+                            CornerRadius="8" Padding="20" IsVisible="{Binding !IsProcessando}">
+                            <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="*, *">
+
+                                <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                                    Margin="0,0,0,15">
+                                    <TextBlock Text="ROTA DA VIAGEM" FontSize="12" FontWeight="Bold"
+                                        Foreground="#673AB7" Margin="0,0,0,5" />
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="{Binding UfCarregamento}" FontWeight="Bold"
+                                            FontSize="18" />
+                                        <materialIcons:MaterialIcon Kind="ArrowRightThick"
+                                            VerticalAlignment="Center" Foreground="Gray" />
+                                        <TextBlock Text="{Binding UfDescarregamento}"
+                                            FontWeight="Bold" FontSize="18" />
+                                    </StackPanel>
+                                    <TextBlock
+                                        Text="{Binding ResumoCidadesCarregamento, StringFormat='Origem: {0}'}"
+                                        FontSize="12" Foreground="Gray" Margin="0,5,0,0" />
+                                    <TextBlock
+                                        Text="{Binding ResumoCidadesDescarregamento, StringFormat='Destino: {0}'}"
+                                        FontSize="12" Foreground="Gray" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,15">
+                                    <TextBlock Text="CARGA E DOCUMENTOS" FontSize="12"
+                                        FontWeight="Bold" Foreground="#673AB7" Margin="0,0,0,5" />
+                                    <TextBlock
+                                        Text="{Binding QuantidadeNFe, StringFormat='NF-e: {0} notas'}"
+                                        FontSize="14" Foreground="#333" />
+                                    <TextBlock
+                                        Text="{Binding QuantidadeCTe, StringFormat='CT-e: {0} notas'}"
+                                        FontSize="14" Foreground="#333" />
+                                    <TextBlock
+                                        Text="{Binding PesoTotalCarga, StringFormat='Peso Total: {0} KG'}"
+                                        FontSize="14" FontWeight="SemiBold" Foreground="#333"
+                                        Margin="0,5,0,0" />
+                                    <TextBlock
+                                        Text="{Binding ValorTotalCarga, StringFormat='Valor Total: R$ {0:N2}'}"
+                                        FontSize="14" FontWeight="SemiBold" Foreground="#4CAF50" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,15">
+                                    <TextBlock Text="VEÍCULO E MOTORISTA" FontSize="12"
+                                        FontWeight="Bold" Foreground="#673AB7" Margin="0,0,0,5" />
+                                    <TextBlock
+                                        Text="{Binding VeiculoSelecionado.Placa, StringFormat='Placa: {0}', FallbackValue='Não informado'}"
+                                        FontSize="14" FontWeight="SemiBold" Foreground="#333" />
+                                    <TextBlock
+                                        Text="{Binding CondutorSelecionado.Nome, StringFormat='Mot: {0}', FallbackValue='Não informado'}"
+                                        FontSize="14" Foreground="#333" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Border
+                            IsVisible="{Binding MensagemProcessamento, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            Background="#FFF3E0" BorderBrush="#FF9800" BorderThickness="1"
+                            CornerRadius="8" Padding="15">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <materialIcons:MaterialIcon Kind="InformationOutline" Width="24"
+                                    Height="24" Foreground="#F57C00" />
+                                <TextBlock Text="{Binding MensagemProcessamento}" FontSize="14"
+                                    FontWeight="SemiBold" Foreground="#E65100"
+                                    VerticalAlignment="Center" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
                         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsProcessando}"
                             Foreground="#673AB7" />
 
-                        <TextBox Text="{Binding XmlRetorno}" IsReadOnly="True" Height="200"
-                            AcceptsReturn="True" TextWrapping="Wrap" Background="#333"
-                            Foreground="#00FF00" FontFamily="Consolas" />
+                        <TextBox Text="{Binding XmlRetorno}" IsReadOnly="True" Height="100"
+                            AcceptsReturn="True" TextWrapping="Wrap" Background="#2B2B2B"
+                            Foreground="#A5D6A7" FontFamily="Consolas" FontSize="11"
+                            IsVisible="{Binding IsAutorizado}" Margin="0,10,0,0" />
 
-                        <Button Content="🖨️ IMPRIMIR DAMDFE"
-                            Command="{Binding ImprimirCommand}"
+                        <Button Content="🖨️ IMPRIMIR DAMDFE" Command="{Binding ImprimirCommand}"
                             IsVisible="{Binding IsAutorizado}"
-                            Background="#4CAF50" Foreground="White"
-                            FontWeight="Bold" Padding="15" Margin="0,15,0,0" />
+                            Background="#4CAF50" Foreground="White" FontWeight="Bold"
+                            Padding="20,15" HorizontalAlignment="Right" Classes="Primary" />
                     </StackPanel>
                 </Panel>
             </Border>

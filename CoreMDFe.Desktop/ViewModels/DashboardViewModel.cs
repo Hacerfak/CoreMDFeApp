@@ -15,12 +15,15 @@ namespace CoreMDFe.Desktop.ViewModels
         private readonly CurrentTenantService _tenantService;
         private readonly IServiceProvider _serviceProvider;
 
-        // Dados do cabeçalho do Menu (Heurística 1)
+        // Dados do cabeçalho do Menu
         [ObservableProperty] private string _empresaAtualNome = "Carregando...";
         [ObservableProperty] private string _empresaAtualCnpj = "";
         [ObservableProperty] private string _empresaAtualUf = "";
 
-        // O Coração da Navegação Interna: O conteúdo que vai aparecer na tela central
+        // Controle visual do Menu Lateral
+        [ObservableProperty] private string _menuAtivo = "Resumo";
+
+        // O Coração da Navegação Interna
         [ObservableProperty]
         private ObservableObject _conteudoWorkspace = null!;
 
@@ -50,22 +53,46 @@ namespace CoreMDFe.Desktop.ViewModels
         // --- COMANDOS DO MENU LATERAL ---
 
         [RelayCommand]
-        private void AbrirConfiguracoes() => ConteudoWorkspace = _serviceProvider.GetRequiredService<ConfiguracoesViewModel>();
+        private void AbrirResumo()
+        {
+            MenuAtivo = "Resumo";
+            ConteudoWorkspace = _serviceProvider.GetRequiredService<ResumoViewModel>();
+        }
 
         [RelayCommand]
-        private void AbrirResumo() => ConteudoWorkspace = _serviceProvider.GetRequiredService<ResumoViewModel>();
+        private void AbrirEmissao()
+        {
+            MenuAtivo = "Emissao";
+            ConteudoWorkspace = _serviceProvider.GetRequiredService<EmissaoViewModel>();
+        }
 
         [RelayCommand]
-        private void AbrirEmissao() => ConteudoWorkspace = _serviceProvider.GetRequiredService<EmissaoViewModel>();
+        private void AbrirHistorico()
+        {
+            MenuAtivo = "Historico";
+            ConteudoWorkspace = _serviceProvider.GetRequiredService<HistoricoViewModel>();
+        }
 
         [RelayCommand]
-        private void AbrirHistorico() => ConteudoWorkspace = _serviceProvider.GetRequiredService<HistoricoViewModel>();
+        private void AbrirVeiculos()
+        {
+            MenuAtivo = "Veiculos";
+            ConteudoWorkspace = _serviceProvider.GetRequiredService<VeiculosViewModel>();
+        }
 
         [RelayCommand]
-        private void AbrirVeiculos() => ConteudoWorkspace = _serviceProvider.GetRequiredService<VeiculosViewModel>();
+        private void AbrirCondutores()
+        {
+            MenuAtivo = "Condutores";
+            ConteudoWorkspace = _serviceProvider.GetRequiredService<CondutoresViewModel>();
+        }
 
         [RelayCommand]
-        private void AbrirCondutores() => ConteudoWorkspace = _serviceProvider.GetRequiredService<CondutoresViewModel>();
+        private void AbrirConfiguracoes()
+        {
+            MenuAtivo = "Configuracoes";
+            ConteudoWorkspace = _serviceProvider.GetRequiredService<ConfiguracoesViewModel>();
+        }
 
         [RelayCommand]
         private void VoltarAoSeletor()

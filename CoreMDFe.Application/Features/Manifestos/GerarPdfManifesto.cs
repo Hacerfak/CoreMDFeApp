@@ -94,6 +94,7 @@ namespace CoreMDFe.Application.Features.Manifestos
                 report.SetParameterValue("Desenvolvedor", respTec);
                 report.SetParameterValue("QuebrarLinhasObservacao", true);
 
+                // --- INJEÇÃO DA LOGOMARCA ---
                 var pictureObject = report.FindObject("poEmitLogo") as PictureObject;
                 if (pictureObject != null && manifesto.Empresa?.Configuracao?.Logomarca != null && manifesto.Empresa.Configuracao.Logomarca.Length > 0)
                 {
@@ -106,22 +107,38 @@ namespace CoreMDFe.Application.Features.Manifestos
                 Console.WriteLine("[PDF - ETAPA 7] Preparando o Relatório (Processamento Interno do FastReport)...");
                 report.Prepare();
 
-                string tempPdfPath = Path.Combine(Path.GetTempPath(), $"DAMDFE_{manifesto.ChaveAcesso}.pdf");
-                Console.WriteLine($"[PDF - ETAPA 8] Exportando o arquivo final para: {tempPdfPath}");
+                // --- DEFINIÇÃO DO DIRETÓRIO DE SAÍDA ---
+                Console.WriteLine("[PDF - ETAPA 8] Definindo diretório de salvamento...");
+                string diretorioBase = Path.GetTempPath(); // Padrão de segurança (Temp)
+
+                if (manifesto.Empresa?.Configuracao != null && !string.IsNullOrWhiteSpace(manifesto.Empresa.Configuracao.DiretorioSalvarPdf))
+                {
+                    diretorioBase = manifesto.Empresa.Configuracao.DiretorioSalvarPdf;
+
+                    // Garante que a pasta existe. Se não existir, o sistema cria automaticamente.
+                    if (!Directory.Exists(diretorioBase))
+                    {
+                        Directory.CreateDirectory(diretorioBase);
+                    }
+                }
+
+                string nomeArquivo = $"DAMDFE_{manifesto.ChaveAcesso}.pdf";
+                string caminhoFinalPdf = Path.Combine(diretorioBase, nomeArquivo);
+
+                Console.WriteLine($"[PDF - ETAPA 9] Exportando o arquivo final para: {caminhoFinalPdf}");
 
                 using (var pdfExport = new PDFSimpleExport())
                 {
-                    report.Export(pdfExport, tempPdfPath);
+                    report.Export(pdfExport, caminhoFinalPdf);
                 }
 
                 report.Dispose();
-                Console.WriteLine("[PDF] SUCESSO ABSOLUTO! Arquivo pronto para ser aberto.");
+                Console.WriteLine("[PDF] SUCESSO ABSOLUTO! Arquivo salvo e pronto para ser aberto.");
 
-                return new GerarPdfManifestoResult(true, "PDF gerado com sucesso!", tempPdfPath);
+                return new GerarPdfManifestoResult(true, "PDF gerado com sucesso!", caminhoFinalPdf);
             }
             catch (Exception ex)
             {
-                // Este log vai apanhar TODO o Call Stack para vermos exatamente em qual etapa "rebentou"
                 Console.WriteLine($"\n==========================================");
                 Console.WriteLine($"[PDF - EXCEPTION CRÍTICA]");
                 Console.WriteLine($"Mensagem: {ex.Message}");
