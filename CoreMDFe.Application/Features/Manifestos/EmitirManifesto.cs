@@ -17,11 +17,10 @@ using DFe.Classes.Entidades;
 
 namespace CoreMDFe.Application.Features.Manifestos
 {
-    // DTO que trafega as notas lidas na UI para o motor de emissão
     public class DocumentoMDFeDto
     {
         public string Chave { get; set; } = string.Empty;
-        public int Tipo { get; set; } // 55 = NFe, 57 = CTe
+        public int Tipo { get; set; }
         public decimal Valor { get; set; }
         public decimal Peso { get; set; }
         public long IbgeCarregamento { get; set; }
@@ -30,24 +29,24 @@ namespace CoreMDFe.Application.Features.Manifestos
         public long IbgeDescarga { get; set; }
         public string MunicipioDescarga { get; set; } = string.Empty;
         public string UfDescarga { get; set; } = string.Empty;
-        public override string ToString() => $"{(Tipo == 55 ? "NF-e" : "CT-e")} - {Chave} | Rota: {UfCarregamento} -> {UfDescarga}";
+        public override string ToString() => $"{(Tipo == 55 ? "NF-e" : "CT-e")} - {Chave}";
     }
 
-    // O Comando carrega TODA a carga que a UI coletou (Obrigatórios e Opcionais)
     public record EmitirManifestoCommand(
         Guid EmpresaId,
         List<DocumentoMDFeDto> Documentos,
         string UfCarregamento, string UfDescarregamento,
-        int TipoEmitente, int TipoTransportador, int Modal,
+        int TipoEmitente, int TipoTransportador, int Modal, int TipoEmissao,
         string UfsPercurso, DateTimeOffset? DataInicioViagem, bool IsCanalVerde, bool IsCarregamentoPosterior,
         Veiculo? VeiculoTracao, Condutor? Condutor,
         Veiculo? Reboque1, Veiculo? Reboque2, Veiculo? Reboque3,
         bool HasSeguro, string SeguradoraCnpj, string SeguradoraNome, string NumeroApolice, string NumeroAverbacao,
         bool HasProdutoPredominante, string TipoCarga, string NomeProdutoPredominante, string NcmProduto,
-        bool HasCiotValePedagio, string Ciot, string CpfCnpjCiot, string CnpjFornecedorValePedagio, string CnpjPagadorValePedagio
+        bool HasCiotValePedagio, string Ciot, string CpfCnpjCiot, string CnpjFornecedorValePedagio, string CnpjPagadorValePedagio,
+        string? RespTecCnpj = null, string? RespTecNome = null, string? RespTecTelefone = null, string? RespTecEmail = null
     ) : IRequest<EmitirManifestoResult>;
 
-    public record EmitirManifestoResult(bool Sucesso, string Mensagem, string XmlEnvio, string XmlRetorno);
+    public record EmitirManifestoResult(bool Sucesso, string Mensagem, string XmlEnvio, string XmlRetorno, Guid? ManifestoId = null);
 
     public class EmitirManifestoHandler : IRequestHandler<EmitirManifestoCommand, EmitirManifestoResult>
     {
@@ -62,14 +61,14 @@ namespace CoreMDFe.Application.Features.Manifestos
 
         public async Task<EmitirManifestoResult> Handle(EmitirManifestoCommand request, CancellationToken cancellationToken)
         {
-            // 1. Aplica e garante as configurações do certificado
+            Console.WriteLine("[EMISSÃO] Iniciando geração do MDF-e...");
+
             var configAplicada = await _mediator.Send(new Configuracoes.AplicarConfiguracaoZeusCommand(), cancellationToken);
-            if (!configAplicada) return new EmitirManifestoResult(false, "Falha ao carregar configurações da empresa (Certificado/Ambiente).", "", "");
+            if (!configAplicada) return new EmitirManifestoResult(false, "Falha nas configurações de Certificado.", "", "");
 
             var empresa = await _dbContext.Empresas.Include(e => e.Configuracao).FirstOrDefaultAsync(e => e.Id == request.EmpresaId, cancellationToken);
             if (empresa == null || empresa.Configuracao == null) return new EmitirManifestoResult(false, "Empresa não encontrada.", "", "");
 
-            // Incrementa NSU
             empresa.Configuracao.UltimaNumeracao++;
             await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -82,35 +81,29 @@ namespace CoreMDFe.Application.Features.Manifestos
 
             mdfe.InfMDFe.Ide.CUF = ufEmitente;
             mdfe.InfMDFe.Ide.TpAmb = (TipoAmbiente)empresa.Configuracao.TipoAmbiente;
-            mdfe.InfMDFe.Ide.TpEmit = (MDFeTipoEmitente)request.TipoEmitente;
+            mdfe.InfMDFe.Ide.TpEmit = request.TipoEmitente > 0 ? (MDFeTipoEmitente)request.TipoEmitente : (MDFeTipoEmitente)empresa.Configuracao.TipoEmitentePadrao;
+            mdfe.InfMDFe.Ide.Modal = request.Modal > 0 ? (MDFeModal)request.Modal : (MDFeModal)empresa.Configuracao.ModalidadePadrao;
+            mdfe.InfMDFe.Ide.TpEmis = request.TipoEmissao > 0 ? (MDFeTipoEmissao)request.TipoEmissao : (MDFeTipoEmissao)empresa.Configuracao.TipoEmissaoPadrao;
 
-            if (request.TipoTransportador > 0)
-                mdfe.InfMDFe.Ide.TpTransp = (MDFeTpTransp)request.TipoTransportador;
+            var tpTranspFinal = request.TipoTransportador > 0 ? (MDFeTpTransp)request.TipoTransportador : (MDFeTpTransp)empresa.Configuracao.TipoTransportadorPadrao;
+            if (tpTranspFinal > 0) mdfe.InfMDFe.Ide.TpTransp = tpTranspFinal;
 
             mdfe.InfMDFe.Ide.Mod = ModeloDocumento.MDFe;
             mdfe.InfMDFe.Ide.Serie = (short)empresa.Configuracao.Serie;
             mdfe.InfMDFe.Ide.NMDF = empresa.Configuracao.UltimaNumeracao;
             mdfe.InfMDFe.Ide.CMDF = new Random().Next(11111111, 99999999);
-            mdfe.InfMDFe.Ide.Modal = MDFeModal.Rodoviario; // Fixo no passo atual
             mdfe.InfMDFe.Ide.DhEmi = DateTime.Now;
-            mdfe.InfMDFe.Ide.TpEmis = MDFeTipoEmissao.Normal;
             mdfe.InfMDFe.Ide.ProcEmi = MDFeIdentificacaoProcessoEmissao.EmissaoComAplicativoContribuinte;
             mdfe.InfMDFe.Ide.VerProc = "CoreMDFe_1.0";
             mdfe.InfMDFe.Ide.UFIni = ufOrigem;
             mdfe.InfMDFe.Ide.UFFim = ufDestino;
 
-            // Agrupa Cidades de Carregamento únicas baseadas nas notas
             var carregamentos = request.Documentos.GroupBy(d => new { d.IbgeCarregamento, d.MunicipioCarregamento });
             foreach (var c in carregamentos)
-            {
                 if (c.Key.IbgeCarregamento > 0)
                     mdfe.InfMDFe.Ide.InfMunCarrega.Add(new MDFeInfMunCarrega { CMunCarrega = c.Key.IbgeCarregamento.ToString(), XMunCarrega = c.Key.MunicipioCarregamento });
-            }
 
-            // Opcionais Percurso
-            if (request.DataInicioViagem.HasValue)
-                mdfe.InfMDFe.Ide.DhIniViagem = request.DataInicioViagem.Value.DateTime;
-
+            if (request.DataInicioViagem.HasValue) mdfe.InfMDFe.Ide.DhIniViagem = request.DataInicioViagem.Value.DateTime;
             if (request.IsCanalVerde) mdfe.InfMDFe.Ide.IndCanalVerde = "1";
             if (request.IsCarregamentoPosterior) mdfe.InfMDFe.Ide.IndCarregaPosterior = "1";
 
@@ -118,10 +111,8 @@ namespace CoreMDFe.Application.Features.Manifestos
             {
                 var ufs = request.UfsPercurso.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 foreach (var uf in ufs)
-                {
                     if (Enum.TryParse(uf, out Estado estPercurso))
                         mdfe.InfMDFe.Ide.InfPercurso.Add(new MDFeInfPercurso { UFPer = estPercurso });
-                }
             }
             #endregion
 
@@ -130,7 +121,6 @@ namespace CoreMDFe.Application.Features.Manifestos
             mdfe.InfMDFe.Emit.IE = empresa.InscricaoEstadual;
             mdfe.InfMDFe.Emit.XNome = empresa.Nome;
             mdfe.InfMDFe.Emit.XFant = empresa.NomeFantasia;
-
             mdfe.InfMDFe.Emit.EnderEmit.XLgr = empresa.Logradouro;
             mdfe.InfMDFe.Emit.EnderEmit.Nro = empresa.Numero;
             mdfe.InfMDFe.Emit.EnderEmit.XCpl = string.IsNullOrWhiteSpace(empresa.Complemento) ? null : empresa.Complemento;
@@ -141,15 +131,31 @@ namespace CoreMDFe.Application.Features.Manifestos
             mdfe.InfMDFe.Emit.EnderEmit.UF = ufEmitente;
             #endregion
 
+            #region Responsável Técnico
+            string rCnpj = !string.IsNullOrEmpty(request.RespTecCnpj) ? request.RespTecCnpj : empresa.Configuracao.RespTecCnpj;
+            string rNome = !string.IsNullOrEmpty(request.RespTecNome) ? request.RespTecNome : empresa.Configuracao.RespTecNome;
+            string rFone = !string.IsNullOrEmpty(request.RespTecTelefone) ? request.RespTecTelefone : empresa.Configuracao.RespTecTelefone;
+            string rEmail = !string.IsNullOrEmpty(request.RespTecEmail) ? request.RespTecEmail : empresa.Configuracao.RespTecEmail;
+
+            if (!string.IsNullOrWhiteSpace(rCnpj))
+            {
+                mdfe.InfMDFe.InfRespTec = new MDFeInfRespTec
+                {
+                    CNPJ = rCnpj.Replace(".", "").Replace("/", "").Replace("-", ""),
+                    XContato = rNome,
+                    Email = rEmail,
+                    Fone = rFone.Replace("(", "").Replace(")", "").Replace("-", "").Replace(" ", "")
+                };
+            }
+            #endregion
+
             #region Modal Rodoviário
             mdfe.InfMDFe.InfModal.VersaoModal = MDFeVersaoModal.Versao300;
             var rodo = new MDFeRodo();
 
-            // Dados da ANTT (RNTRC, CIOT, Vale Pedagio)
             if (!string.IsNullOrWhiteSpace(empresa.RNTRC) || request.HasCiotValePedagio)
             {
                 rodo.InfANTT = new MDFeInfANTT { RNTRC = string.IsNullOrWhiteSpace(empresa.RNTRC) ? null : empresa.RNTRC };
-
                 if (request.HasCiotValePedagio)
                 {
                     if (!string.IsNullOrWhiteSpace(request.Ciot))
@@ -159,7 +165,6 @@ namespace CoreMDFe.Application.Features.Manifestos
                         else ciotObj.CPF = request.CpfCnpjCiot;
                         rodo.InfANTT.InfCIOT.Add(ciotObj);
                     }
-
                     if (!string.IsNullOrWhiteSpace(request.CnpjFornecedorValePedagio))
                     {
                         rodo.InfANTT.ValePed = new MDFeValePed();
@@ -167,7 +172,6 @@ namespace CoreMDFe.Application.Features.Manifestos
                         {
                             CNPJForn = request.CnpjFornecedorValePedagio,
                             CNPJPg = request.CnpjPagadorValePedagio,
-                            // O Zeus tem nCompra como string, o schema diz q é opcional. Preencheremos um padrao se vazio
                             NCompra = "0"
                         });
                     }
@@ -190,7 +194,6 @@ namespace CoreMDFe.Application.Features.Manifestos
                 };
             }
 
-            // Adiciona Reboques (se existirem)
             var reboques = new[] { request.Reboque1, request.Reboque2, request.Reboque3 }.Where(r => r != null).ToList();
             if (reboques.Any())
             {
@@ -209,14 +212,12 @@ namespace CoreMDFe.Application.Features.Manifestos
                     });
                 }
             }
-
             mdfe.InfMDFe.InfModal.Modal = rodo;
             #endregion
 
             #region Documentos (InfDoc)
             mdfe.InfMDFe.InfDoc.InfMunDescarga = new List<MDFeInfMunDescarga>();
             var cidadesDescarga = request.Documentos.GroupBy(d => new { d.IbgeDescarga, d.MunicipioDescarga });
-
             foreach (var cidade in cidadesDescarga)
             {
                 var descarga = new MDFeInfMunDescarga
@@ -226,17 +227,13 @@ namespace CoreMDFe.Application.Features.Manifestos
                     InfNFe = new List<MDFeInfNFe>(),
                     InfCTe = new List<MDFeInfCTe>()
                 };
-
                 foreach (var doc in cidade)
                 {
                     if (doc.Tipo == 55) descarga.InfNFe.Add(new MDFeInfNFe { ChNFe = doc.Chave });
                     else if (doc.Tipo == 57) descarga.InfCTe.Add(new MDFeInfCTe { ChCTe = doc.Chave });
                 }
-
-                // O Zeus e a Sefaz rejeitam a tag se ela estiver vazia, então anulamos.
                 if (!descarga.InfNFe.Any()) descarga.InfNFe = null;
                 if (!descarga.InfCTe.Any()) descarga.InfCTe = null;
-
                 mdfe.InfMDFe.InfDoc.InfMunDescarga.Add(descarga);
             }
             #endregion
@@ -259,9 +256,9 @@ namespace CoreMDFe.Application.Features.Manifestos
                     new MDFeSeg
                     {
                         InfResp = new MDFeInfResp { RespSeg = MDFeRespSeg.EmitenteDoMDFe, CNPJ = empresa.Cnpj },
-                        InfSeg = new MDFeInfSeg { CNPJ = request.SeguradoraCnpj, XSeg = request.SeguradoraNome },
+                        InfSeg = new MDFeInfSeg { CNPJ = request.SeguradoraCnpj.Replace(".", "").Replace("/", "").Replace("-", ""), XSeg = request.SeguradoraNome },
                         NApol = request.NumeroApolice,
-                        NAver = new List<string> { request.NumeroAverbacao }
+                        NAver = new List<string> { request.NumeroAverbacao } // Restaurado corretamente aqui
                     }
                 };
             }
@@ -270,23 +267,27 @@ namespace CoreMDFe.Application.Features.Manifestos
             #region Totais (Tot)
             mdfe.InfMDFe.Tot.QNFe = request.Documentos.Count(d => d.Tipo == 55);
             mdfe.InfMDFe.Tot.QCTe = request.Documentos.Count(d => d.Tipo == 57);
-
-            // Corrige se não houver NFe ou CTe para não gerar tag vazia/zero rejeitada
             if (mdfe.InfMDFe.Tot.QNFe == 0) mdfe.InfMDFe.Tot.QNFe = null;
             if (mdfe.InfMDFe.Tot.QCTe == 0) mdfe.InfMDFe.Tot.QCTe = null;
-
             mdfe.InfMDFe.Tot.vCarga = request.Documentos.Sum(d => d.Valor);
             mdfe.InfMDFe.Tot.CUnid = MDFeCUnid.KG;
             mdfe.InfMDFe.Tot.QCarga = request.Documentos.Sum(d => d.Peso);
             #endregion
 
-            // 5. Assinar e Transmitir!
+            try
+            {
+                Console.WriteLine("--------------------------------------------------");
+                Console.WriteLine("[DEBUG] XML GERADO (PRÉ-ASSINATURA):");
+                Console.WriteLine(mdfe);
+                Console.WriteLine("--------------------------------------------------");
+            }
+            catch (Exception ex) { Console.WriteLine($"[ERRO LOG XML] {ex.Message}"); }
+
             try
             {
                 var servicoRecepcao = new ServicoMDFeRecepcao();
                 var retornoEnvio = servicoRecepcao.MDFeRecepcaoSinc(mdfe);
 
-                // 6. Salvar Histórico
                 var historico = new ManifestoEletronico
                 {
                     EmpresaId = empresa.Id,
@@ -297,23 +298,23 @@ namespace CoreMDFe.Application.Features.Manifestos
                     UfDestino = mdfe.InfMDFe.Ide.UFFim.ToString(),
                     Modalidade = (int)mdfe.InfMDFe.Ide.Modal,
                     TipoAmbiente = empresa.Configuracao.TipoAmbiente,
-                    ChaveAcesso = mdfe.InfMDFe.Id.Substring(4),
+                    ChaveAcesso = mdfe.InfMDFe.Id?.Length >= 47 ? mdfe.InfMDFe.Id.Substring(4) : "",
                     XmlAssinado = retornoEnvio.EnvioXmlString ?? "",
                     ReciboAutorizacao = retornoEnvio.RetornoXmlString ?? "",
-                    ProtocoloAutorizacao = retornoEnvio.ProtMdFe.InfProt.NProt,
+                    ProtocoloAutorizacao = retornoEnvio.ProtMdFe?.InfProt?.NProt ?? "",
                     CodigoStatus = retornoEnvio?.CStat.ToString() ?? "0",
                     MotivoStatus = retornoEnvio?.XMotivo ?? "Sem comunicação"
                 };
 
                 historico.Status = historico.CodigoStatus == "100" ? StatusManifesto.Autorizado : StatusManifesto.Rejeitado;
-
                 _dbContext.Manifestos.Add(historico);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
-                return new EmitirManifestoResult(historico.Status == StatusManifesto.Autorizado, historico.MotivoStatus, historico.XmlAssinado, historico.ReciboAutorizacao);
+                return new EmitirManifestoResult(historico.Status == StatusManifesto.Autorizado, historico.MotivoStatus, historico.XmlAssinado, historico.ReciboAutorizacao, historico.Id);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[AÇÃO - ERRO] {ex}");
                 return new EmitirManifestoResult(false, $"Erro fatal ao emitir: {ex.Message}", "", "");
             }
         }

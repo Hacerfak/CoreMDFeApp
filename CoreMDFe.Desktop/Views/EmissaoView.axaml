@@ -396,6 +396,12 @@
                         <TextBox Text="{Binding XmlRetorno}" IsReadOnly="True" Height="200"
                             AcceptsReturn="True" TextWrapping="Wrap" Background="#333"
                             Foreground="#00FF00" FontFamily="Consolas" />
+
+                        <Button Content="🖨️ IMPRIMIR DAMDFE"
+                            Command="{Binding ImprimirCommand}"
+                            IsVisible="{Binding IsAutorizado}"
+                            Background="#4CAF50" Foreground="White"
+                            FontWeight="Bold" Padding="15" Margin="0,15,0,0" />
                     </StackPanel>
                 </Panel>
             </Border>

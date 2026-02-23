@@ -11,6 +11,7 @@ using CoreMDFe.Application.Features.Consultas;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
@@ -49,15 +50,16 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private string _ufCarregamento = "";
         [ObservableProperty] private string _ufDescarregamento = "";
 
-        public string ResumoCidadesCarregamento => string.Join(", ", DocumentosFiscais.Select(d => d.MunicipioCarregamento).Where(m => !string.IsNullOrEmpty(m)).Distinct());
-        public string ResumoCidadesDescarregamento => string.Join(", ", DocumentosFiscais.Select(d => d.MunicipioDescarga).Where(m => !string.IsNullOrEmpty(m)).Distinct());
-
         public string[] ListaUFs { get; } = { "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO" };
-        public string[] ListaTiposEmitente { get; } = { "1 - Prestador de Serviço de Transporte", "2 - Transportador de Carga Própria", "3 - CTe Globalizado" };
-        [ObservableProperty] private int _tipoEmitenteIndex = 0;
 
-        public string[] ListaTiposTransportador { get; } = { "Nenhum (Não Informar)", "1 - ETC (Empresa)", "2 - TAC (Autônomo)", "3 - CTC (Cooperativa)" };
-        [ObservableProperty] private int _tipoTransportadorIndex = 0;
+        public string[] ListaTiposEmitente { get; } = { "1 - Prestador de Serviço de Transporte", "2 - Transportador de Carga Própria", "3 - CTe Globalizado" };
+        [ObservableProperty] private int _tipoEmitenteIndex;
+
+        public string[] ListaTiposTransportador { get; } = { "0 - Não Informar", "1 - ETC (Empresa)", "2 - TAC (Autônomo)", "3 - CTC (Cooperativa)" };
+        [ObservableProperty] private int _tipoTransportadorIndex;
+
+        public string[] ListaTiposEmissao { get; } = { "1 - Normal", "2 - Contingência" };
+        [ObservableProperty] private int _tipoEmissaoIndex;
 
         [ObservableProperty] private bool _isPercursoAberto;
         [ObservableProperty] private string _ufsPercurso = string.Empty;
@@ -65,13 +67,16 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private bool _isCanalVerde;
         [ObservableProperty] private bool _isCarregamentoPosterior;
 
-        // --- PASSO 3: TRANSPORTE MULTI-MODAL ---
+        // --- PASSO 3: TRANSPORTE ---
         public string[] ListaModais { get; } = { "1 - Rodoviário", "2 - Aéreo", "3 - Aquaviário", "4 - Ferroviário" };
-
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(IsModalRodoviario))]
-        private int _modalSelecionadoIndex = 0;
+        [ObservableProperty][NotifyPropertyChangedFor(nameof(IsModalRodoviario))] private int _modalSelecionadoIndex;
         public bool IsModalRodoviario => ModalSelecionadoIndex == 0;
+
+        // Dados do Responsável Técnico
+        [ObservableProperty] private string _respTecCnpj = string.Empty;
+        [ObservableProperty] private string _respTecNome = string.Empty;
+        [ObservableProperty] private string _respTecTelefone = string.Empty;
+        [ObservableProperty] private string _respTecEmail = string.Empty;
 
         // Dados Rodoviário Básicos
         public ObservableCollection<Veiculo> VeiculosDisponiveis { get; } = new();
@@ -79,27 +84,24 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private Veiculo? _veiculoSelecionado;
         [ObservableProperty] private Condutor? _condutorSelecionado;
 
-        // Opcionais: Reboques
+        // Opcionais
         [ObservableProperty] private bool _isReboquesAberto;
         [ObservableProperty] private Veiculo? _reboque1Selecionado;
         [ObservableProperty] private Veiculo? _reboque2Selecionado;
         [ObservableProperty] private Veiculo? _reboque3Selecionado;
 
-        // Opcionais: Seguro
         [ObservableProperty] private bool _isSeguroAberto;
         [ObservableProperty] private string _seguradoraCnpj = string.Empty;
         [ObservableProperty] private string _seguradoraNome = string.Empty;
         [ObservableProperty] private string _numeroApolice = string.Empty;
         [ObservableProperty] private string _numeroAverbacao = string.Empty;
 
-        // Opcionais: Produto Predominante
         [ObservableProperty] private bool _isProdutoPredominanteAberto;
         public string[] ListaTiposCarga { get; } = { "01-Granel sólido", "02-Granel líquido", "03-Frigorificada", "04-Conteinerizada", "05-Carga Geral", "06-Neogranel", "07-Perigosa (Sólido)", "08-Perigosa (Líquido)", "09-Perigosa (Frigorificada)", "10-Perigosa (Conteinerizada)", "11-Perigosa (Carga Geral)", "12-Granel pressurizada" };
-        [ObservableProperty] private int _tipoCargaIndex = 4; // Carga Geral
+        [ObservableProperty] private int _tipoCargaIndex = 4;
         [ObservableProperty] private string _nomeProdutoPredominante = string.Empty;
         [ObservableProperty] private string _ncmProduto = string.Empty;
 
-        // Opcionais: CIOT / Vale Pedágio
         [ObservableProperty] private bool _isCiotValePedagioAberto;
         [ObservableProperty] private string _ciot = string.Empty;
         [ObservableProperty] private string _cpfCnpjCiot = string.Empty;
@@ -111,24 +113,53 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private string _mensagemProcessamento = "";
         [ObservableProperty] private string _xmlEnvio = "";
         [ObservableProperty] private string _xmlRetorno = "";
+        [ObservableProperty] private Guid? _manifestoAutorizadoId;
+        [ObservableProperty] private bool _isAutorizado;
 
         public EmissaoViewModel(IMediator mediator, IAppDbContext dbContext)
         {
             _mediator = mediator;
             _dbContext = dbContext;
-            _ = CarregarCadastrosDb();
+            _ = CarregarDadosIniciais();
         }
 
-        private async Task CarregarCadastrosDb()
+        private async Task CarregarDadosIniciais()
         {
-            var veiculos = await _mediator.Send(new ListarVeiculosQuery());
-            foreach (var v in veiculos) VeiculosDisponiveis.Add(v);
+            try
+            {
+                Console.WriteLine("[WIZARD] Carregando cadastros e configurações padrões...");
 
-            var condutores = await _mediator.Send(new ListarCondutoresQuery());
-            foreach (var c in condutores) CondutoresDisponiveis.Add(c);
+                var veiculos = await _mediator.Send(new ListarVeiculosQuery());
+                foreach (var v in veiculos) VeiculosDisponiveis.Add(v);
 
-            var empresa = await _dbContext.Empresas.FirstOrDefaultAsync();
-            if (empresa != null) _empresaAtualId = empresa.Id;
+                var condutores = await _mediator.Send(new ListarCondutoresQuery());
+                foreach (var c in condutores) CondutoresDisponiveis.Add(c);
+
+                var empresa = await _dbContext.Empresas.Include(e => e.Configuracao).FirstOrDefaultAsync();
+                if (empresa != null)
+                {
+                    _empresaAtualId = empresa.Id;
+                    if (empresa.Configuracao != null)
+                    {
+                        Console.WriteLine($"[WIZARD] Config encontrada. Emitente: {empresa.Configuracao.TipoEmitentePadrao}, Modal: {empresa.Configuracao.ModalidadePadrao}");
+
+                        // CONVERSÃO CORRETA: O banco salva 1, 2, 3... mas a UI precisa de 0, 1, 2...
+                        // Usamos Math.Max(0, valor - 1) para garantir que nunca fique negativo se o banco tiver 0
+                        TipoEmitenteIndex = Math.Max(0, empresa.Configuracao.TipoEmitentePadrao - 1);
+                        TipoEmissaoIndex = Math.Max(0, empresa.Configuracao.TipoEmissaoPadrao - 1);
+                        ModalSelecionadoIndex = Math.Max(0, empresa.Configuracao.ModalidadePadrao - 1);
+
+                        // O Tipo de Transportador costuma ser 0 (Não informar), 1, 2, 3. Aqui é 1 pra 1.
+                        TipoTransportadorIndex = empresa.Configuracao.TipoTransportadorPadrao;
+
+                        RespTecCnpj = empresa.Configuracao.RespTecCnpj ?? "";
+                        RespTecNome = empresa.Configuracao.RespTecNome ?? "";
+                        RespTecTelefone = empresa.Configuracao.RespTecTelefone ?? "";
+                        RespTecEmail = empresa.Configuracao.RespTecEmail ?? "";
+                    }
+                }
+            }
+            catch (Exception ex) { Console.WriteLine($"[WIZARD - ERRO] Falha ao inicializar: {ex.Message}"); }
         }
 
         [RelayCommand] private void Avancar() { if (PassoAtual < 4) PassoAtual++; }
@@ -145,67 +176,55 @@ namespace CoreMDFe.Desktop.ViewModels
                     AllowMultiple = true,
                     FileTypeFilter = new[] { new FilePickerFileType("Arquivos XML") { Patterns = new[] { "*.xml" } } }
                 });
-
                 foreach (var file in files) ProcessarArquivoXml(file.Path.LocalPath);
             }
         }
 
-        private void ProcessarArquivoXml(string caminhoArquivo)
+        private void ProcessarArquivoXml(string caminho)
         {
             try
             {
-                var doc = XDocument.Load(caminhoArquivo);
-                var isNFe = doc.Descendants().Any(x => x.Name.LocalName == "infNFe");
-                var isCTe = doc.Descendants().Any(x => x.Name.LocalName == "infCte");
-
-                if (isNFe) ExtrairDadosNFe(doc);
-                else if (isCTe) ExtrairDadosCTe(doc);
-
+                var doc = XDocument.Load(caminho);
+                if (doc.Descendants().Any(x => x.Name.LocalName == "infNFe")) ExtrairDadosNFe(doc);
+                else if (doc.Descendants().Any(x => x.Name.LocalName == "infCte")) ExtrairDadosCTe(doc);
                 AtualizarTotaisEResumos();
             }
-            catch (Exception ex) { Console.WriteLine($"Erro ao ler XML {caminhoArquivo}: {ex.Message}"); }
+            catch (Exception ex) { Console.WriteLine($"Erro XML: {ex.Message}"); }
         }
 
         private void ExtrairDadosNFe(XDocument doc)
         {
             var infNFe = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infNFe");
             if (infNFe == null) return;
-
             var chave = infNFe.Attribute("Id")?.Value.Replace("NFe", "");
             if (string.IsNullOrEmpty(chave) || DocumentosFiscais.Any(d => d.Chave == chave)) return;
 
             var vNf = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "vNF")?.Value;
             var pesoB = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "pesoB")?.Value;
+            var emit = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "emit")?.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderEmit");
+            var dest = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "dest")?.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderDest");
 
-            var enderEmit = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "emit")?.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderEmit");
-            var enderDest = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "dest")?.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderDest");
-
-            // === NOVO: Extrair o Produto Predominante (NFe) ===
             var prod = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "prod");
             if (prod != null && string.IsNullOrEmpty(NomeProdutoPredominante))
             {
                 NomeProdutoPredominante = prod.Elements().FirstOrDefault(x => x.Name.LocalName == "xProd")?.Value ?? "";
                 NcmProduto = prod.Elements().FirstOrDefault(x => x.Name.LocalName == "NCM")?.Value ?? "";
-
-                // Se achou, já abre a aba de Produto para o usuário ver a mágica
                 if (!string.IsNullOrEmpty(NomeProdutoPredominante)) IsProdutoPredominanteAberto = true;
             }
 
-            var dto = new DocumentoMDFeDto
+            DocumentosFiscais.Add(new DocumentoMDFeDto
             {
                 Chave = chave,
                 Tipo = 55,
                 Valor = ParseDecimal(vNf),
                 Peso = ParseDecimal(pesoB),
-                IbgeCarregamento = ParseLong(enderEmit?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value),
-                MunicipioCarregamento = enderEmit?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? "",
-                UfCarregamento = enderEmit?.Elements().FirstOrDefault(x => x.Name.LocalName == "UF")?.Value?.ToUpper() ?? "",
-                IbgeDescarga = ParseLong(enderDest?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value),
-                MunicipioDescarga = enderDest?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? "",
-                UfDescarga = enderDest?.Elements().FirstOrDefault(x => x.Name.LocalName == "UF")?.Value?.ToUpper() ?? ""
-            };
-
-            DocumentosFiscais.Add(dto);
+                IbgeCarregamento = ParseLong(emit?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value),
+                MunicipioCarregamento = emit?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? "",
+                UfCarregamento = emit?.Elements().FirstOrDefault(x => x.Name.LocalName == "UF")?.Value?.ToUpper() ?? "",
+                IbgeDescarga = ParseLong(dest?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value),
+                MunicipioDescarga = dest?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? "",
+                UfDescarga = dest?.Elements().FirstOrDefault(x => x.Name.LocalName == "UF")?.Value?.ToUpper() ?? ""
+            });
             QuantidadeNFe++;
         }
 
@@ -213,27 +232,21 @@ namespace CoreMDFe.Desktop.ViewModels
         {
             var infCte = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infCte");
             if (infCte == null) return;
-
             var chave = infCte.Attribute("Id")?.Value.Replace("CTe", "");
             if (string.IsNullOrEmpty(chave) || DocumentosFiscais.Any(d => d.Chave == chave)) return;
 
             var vCarga = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "vCarga")?.Value;
-            var infQ = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infQ" && x.Elements().Any(e => e.Name.LocalName == "cUnid" && e.Value == "01"));
-            var qCarga = infQ?.Elements().FirstOrDefault(x => x.Name.LocalName == "qCarga")?.Value;
-
+            var qCarga = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infQ" && x.Elements().Any(e => e.Name.LocalName == "cUnid" && e.Value == "01"))?.Elements().FirstOrDefault(x => x.Name.LocalName == "qCarga")?.Value;
             var ide = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "ide");
 
-            // === NOVO: Extrair o Produto Predominante (CTe) ===
             var infCarga = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infCarga");
             if (infCarga != null && string.IsNullOrEmpty(NomeProdutoPredominante))
             {
                 NomeProdutoPredominante = infCarga.Elements().FirstOrDefault(x => x.Name.LocalName == "proPred")?.Value ?? "";
-
-                // Se achou, já abre a aba de Produto
                 if (!string.IsNullOrEmpty(NomeProdutoPredominante)) IsProdutoPredominanteAberto = true;
             }
 
-            var dto = new DocumentoMDFeDto
+            DocumentosFiscais.Add(new DocumentoMDFeDto
             {
                 Chave = chave,
                 Tipo = 57,
@@ -245,28 +258,22 @@ namespace CoreMDFe.Desktop.ViewModels
                 IbgeDescarga = ParseLong(ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMunFim")?.Value),
                 MunicipioDescarga = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMunFim")?.Value?.ToUpper() ?? "",
                 UfDescarga = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "UFFim")?.Value?.ToUpper() ?? ""
-            };
-
-            DocumentosFiscais.Add(dto);
+            });
             QuantidadeCTe++;
         }
 
-        private decimal ParseDecimal(string? value) => decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) ? result : 0;
-        private long ParseLong(string? value) => long.TryParse(value, out var result) ? result : 0;
+        private decimal ParseDecimal(string? v) => decimal.TryParse(v, NumberStyles.Any, CultureInfo.InvariantCulture, out var r) ? r : 0;
+        private long ParseLong(string? v) => long.TryParse(v, out var r) ? r : 0;
 
         private void AtualizarTotaisEResumos()
         {
             ValorTotalCarga = DocumentosFiscais.Sum(d => d.Valor);
             PesoTotalCarga = DocumentosFiscais.Sum(d => d.Peso);
-
             if (DocumentosFiscais.Any())
             {
                 UfCarregamento = DocumentosFiscais.First().UfCarregamento;
                 UfDescarregamento = DocumentosFiscais.Last().UfDescarga;
             }
-
-            OnPropertyChanged(nameof(ResumoCidadesCarregamento));
-            OnPropertyChanged(nameof(ResumoCidadesDescarregamento));
         }
 
         [RelayCommand]
@@ -274,41 +281,31 @@ namespace CoreMDFe.Desktop.ViewModels
         {
             if (VeiculoSelecionado == null || CondutorSelecionado == null)
             {
-                MensagemProcessamento = "Por favor, selecione ao menos o Veículo de Tração e o Condutor Principal no Passo 3.";
-                return;
+                MensagemProcessamento = "Selecione Veículo e Condutor no Passo 3."; return;
             }
 
             IsProcessando = true;
+            MensagemProcessamento = "Verificando disponibilidade da SEFAZ...";
 
-            // ==============================================================
-            // 1. VERIFICAR STATUS DA SEFAZ (Feedback Inteligente)
-            // ==============================================================
-            MensagemProcessamento = "Verificando disponibilidade dos servidores da SEFAZ...";
-
-            // Invoca a nossa query que checa o Webservice
             var statusSefaz = await _mediator.Send(new ConsultarStatusServicoQuery());
-
             if (!statusSefaz.Online)
             {
-                // Se a sefaz tiver offline, nem tenta enviar o xml
-                MensagemProcessamento = $"⚠️ SEFAZ Indisponível no momento.\nMotivo: {statusSefaz.Mensagem}\nTente novamente em alguns minutos.";
-                IsProcessando = false;
-                return;
+                MensagemProcessamento = $"⚠️ SEFAZ Indisponível: {statusSefaz.Mensagem}";
+                IsProcessando = false; return;
             }
 
-            // ==============================================================
-            // 2. SEFAZ ONLINE: ENVIAR MANIFESTO
-            // ==============================================================
-            MensagemProcessamento = "Sefaz Operacional! Assinando e transmitindo o MDF-e...";
+            MensagemProcessamento = "Transmitindo...";
 
             var command = new EmitirManifestoCommand(
                 EmpresaId: _empresaAtualId,
                 Documentos: DocumentosFiscais.ToList(),
                 UfCarregamento: UfCarregamento,
                 UfDescarregamento: UfDescarregamento,
-                TipoEmitente: TipoEmitenteIndex + 1, // 1, 2 ou 3
-                TipoTransportador: TipoTransportadorIndex, // 0 a 3
-                Modal: 1, // Rodoviário Fixo
+                // CONVERSÃO CORRETA: UI 0 -> SEFAZ 1
+                TipoEmitente: TipoEmitenteIndex + 1,
+                TipoTransportador: TipoTransportadorIndex,
+                Modal: ModalSelecionadoIndex + 1,
+                TipoEmissao: TipoEmissaoIndex + 1,
                 UfsPercurso: UfsPercurso,
                 DataInicioViagem: DataInicioViagem,
                 IsCanalVerde: IsCanalVerde,
@@ -331,16 +328,40 @@ namespace CoreMDFe.Desktop.ViewModels
                 Ciot: Ciot,
                 CpfCnpjCiot: CpfCnpjCiot,
                 CnpjFornecedorValePedagio: CnpjFornecedorValePedagio,
-                CnpjPagadorValePedagio: CnpjPagadorValePedagio
+                CnpjPagadorValePedagio: CnpjPagadorValePedagio,
+                RespTecCnpj: RespTecCnpj,
+                RespTecNome: RespTecNome,
+                RespTecTelefone: RespTecTelefone,
+                RespTecEmail: RespTecEmail
             );
 
             var result = await _mediator.Send(command);
 
-            MensagemProcessamento = result.Sucesso ? "✅ MDF-e Autorizado com Sucesso!" : $"❌ Rejeição SEFAZ: {result.Mensagem}";
+            MensagemProcessamento = result.Sucesso ? "✅ MDF-e Autorizado!" : $"❌ Rejeição: {result.Mensagem}";
             XmlEnvio = result.XmlEnvio;
             XmlRetorno = result.XmlRetorno;
-
+            ManifestoAutorizadoId = result.ManifestoId;
+            IsAutorizado = result.Sucesso;
             IsProcessando = false;
+        }
+
+        [RelayCommand]
+        private async Task Imprimir()
+        {
+            if (ManifestoAutorizadoId == null) return;
+
+            MensagemProcessamento = "Gerando PDF...";
+            var result = await _mediator.Send(new GerarPdfManifestoCommand(ManifestoAutorizadoId.Value));
+
+            if (result.Sucesso)
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(result.CaminhoPdf) { UseShellExecute = true });
+                MensagemProcessamento = "✅ PDF Gerado com sucesso!";
+            }
+            else
+            {
+                MensagemProcessamento = $"❌ Falha ao gerar PDF: {result.Mensagem}";
+            }
         }
     }
 }

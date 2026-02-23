@@ -69,6 +69,20 @@ namespace CoreMDFe.Core.Entities
         public string CaminhoArquivoCertificado { get; set; } = string.Empty;
         public string SenhaCertificado { get; set; } = string.Empty; // Em um app real, idealmente deve ser criptografada no banco
         public bool ManterCertificadoEmCache { get; set; }
+
+        // Responsável Técnico (infRespTec)
+        [MaxLength(14)] public string RespTecCnpj { get; set; } = string.Empty;
+        [MaxLength(60)] public string RespTecNome { get; set; } = string.Empty;
+        [MaxLength(14)] public string RespTecTelefone { get; set; } = string.Empty;
+        [MaxLength(60)] public string RespTecEmail { get; set; } = string.Empty;
+
+        // Opções Padrões na Emissão
+        public bool GerarQrCode { get; set; } = true; // Por padrão o Zeus precisa disso true para o DAMDFE
+        public int ModalidadePadrao { get; set; } = 1; // 1 - Rodoviário
+        public int TipoEmissaoPadrao { get; set; } = 1; // 1 - Normal
+        public int TipoEmitentePadrao { get; set; } = 1;
+        public int TipoTransportadorPadrao { get; set; } = 1;
+        public byte[]? Logomarca { get; set; }
     }
 
     /// <summary>

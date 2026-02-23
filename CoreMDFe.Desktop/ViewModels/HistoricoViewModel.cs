@@ -98,7 +98,60 @@ namespace CoreMDFe.Desktop.ViewModels
             Console.WriteLine($"[UI - MODAL] Abriu modal de DF-e para MDF-e {m.Numero}");
         }
 
-        // --- EXECUÇÃO DOS EVENTOS ---
+        [RelayCommand]
+        private async Task Reenviar(ManifestoEletronico m)
+        {
+            try
+            {
+                Console.WriteLine($"[AÇÃO] Reenviando MDF-e {m.Numero} para a SEFAZ...");
+                EstaCarregando = true;
+                MensagemErro = "Reenviando manifesto, aguarde...";
+
+                var result = await _mediator.Send(new ReenviarManifestoCommand(m.Id));
+
+                MensagemErro = result.Sucesso ? "✅ " + result.Mensagem : "❌ " + result.Mensagem;
+                Console.WriteLine($"[AÇÃO] Resultado Reenvio: {result.Mensagem}");
+            }
+            catch (Exception ex)
+            {
+                MensagemErro = $"❌ Erro interno: {ex.Message}";
+                Console.WriteLine($"[AÇÃO - ERRO] {ex}");
+            }
+            finally
+            {
+                EstaCarregando = false;
+                await CarregarHistorico(manterMensagem: true);
+            }
+        }
+
+        [RelayCommand]
+        private async Task Imprimir(ManifestoEletronico m)
+        {
+            try
+            {
+                Console.WriteLine($"[AÇÃO] Gerando PDF para MDF-e {m.Numero}...");
+                EstaCarregando = true; MensagemErro = "Gerando DAMDFE...";
+
+                var result = await _mediator.Send(new GerarPdfManifestoCommand(m.Id));
+
+                if (result.Sucesso)
+                {
+                    // Abre o PDF nativamente no visualizador do Linux ou Windows
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(result.CaminhoPdf) { UseShellExecute = true });
+                    MensagemErro = string.Empty;
+                }
+                else
+                {
+                    MensagemErro = $"❌ {result.Mensagem}";
+                }
+            }
+            catch (Exception ex)
+            {
+                MensagemErro = $"❌ Erro interno: {ex.Message}";
+                Console.WriteLine($"[AÇÃO - ERRO] {ex}");
+            }
+            finally { EstaCarregando = false; }
+        }
 
         // --- EXECUÇÃO DOS EVENTOS ---
 

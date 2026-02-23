@@ -31,12 +31,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.Drawing.EnableUnixSupport" Value="true" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CoreMDFe.Application\CoreMDFe.Application.csproj" />
     <ProjectReference Include="..\CoreMDFe.Infrastructure\CoreMDFe.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="Schemas\**\*.xsd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\MDFeRetrato.frx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

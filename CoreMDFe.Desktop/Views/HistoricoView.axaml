@@ -99,6 +99,26 @@
                                                     VerticalAlignment="Center">
 
                                                     <Button Classes="Flat" Padding="5"
+                                                        ToolTip.Tip="Reenviar para SEFAZ"
+                                                        Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).ReenviarCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static entities:StatusManifesto.Rejeitado}}">
+                                                        <materialIcons:MaterialIcon Kind="Send"
+                                                            Width="22" Height="22"
+                                                            Foreground="#673AB7" />
+                                                    </Button>
+
+                                                    <Button Classes="Flat" Padding="5"
+                                                        ToolTip.Tip="Imprimir DAMDFE"
+                                                        Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).ImprimirCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsVisible="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static entities:StatusManifesto.Rejeitado}}">
+                                                        <materialIcons:MaterialIcon Kind="Printer"
+                                                            Width="22" Height="22"
+                                                            Foreground="#607D8B" />
+                                                    </Button>
+
+                                                    <Button Classes="Flat" Padding="5"
                                                         ToolTip.Tip="Encerrar"
                                                         Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).EncerrarCommand}"
                                                         CommandParameter="{Binding}"

@@ -62,6 +62,122 @@
                     </StackPanel>
                 </Border>
 
+                <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
+                    Padding="25">
+                    <StackPanel Spacing="20">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <materialIcons:MaterialIcon Kind="Tune" Width="24" Height="24"
+                                Foreground="#FF9800" />
+                            <TextBlock Text="Padrões de Emissão" FontSize="18" FontWeight="SemiBold"
+                                Foreground="#333333" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*, 20, *, 20, *">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Tipo de Emissão Padrão" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <ComboBox SelectedIndex="{Binding TipoEmissaoPadrao}"
+                                    HorizontalAlignment="Stretch" Classes="Outline">
+                                    <ComboBoxItem Content="1 - Normal" />
+                                    <ComboBoxItem Content="2 - Contingência" />
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Modalidade Padrão" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <ComboBox SelectedIndex="{Binding ModalidadePadrao}"
+                                    HorizontalAlignment="Stretch" Classes="Outline">
+                                    <ComboBoxItem Content="1 - Rodoviário" />
+                                    <ComboBoxItem Content="2 - Aéreo" />
+                                    <ComboBoxItem Content="3 - Aquaviário" />
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4" VerticalAlignment="Bottom">
+                                <CheckBox Content="Gerar QR Code (Obrigatório DAMDFE)"
+                                    IsChecked="{Binding GerarQrCode}" FontWeight="SemiBold"
+                                    Foreground="#444" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, 20, *">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Tipo de Emitente" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <ComboBox SelectedIndex="{Binding TipoEmitentePadrao}"
+                                    HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="1 - Prestador de Serviço" />
+                                    <ComboBoxItem Content="2 - Transportador de Carga Própria" />
+                                    <ComboBoxItem Content="3 - CTe Globalizado" />
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Tipo de Transportador" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <ComboBox SelectedIndex="{Binding TipoTransportadorPadrao}"
+                                    HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Nenhum" />
+                                    <ComboBoxItem Content="1 - ETC" />
+                                    <ComboBoxItem Content="2 - TAC" />
+                                    <ComboBoxItem Content="3 - CTC" />
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
+                    Padding="25">
+                    <StackPanel Spacing="20">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <materialIcons:MaterialIcon Kind="AccountTie" Width="24" Height="24"
+                                Foreground="#2196F3" />
+                            <TextBlock Text="Responsável Técnico (Desenvolvedor/Software House)"
+                                FontSize="18" FontWeight="SemiBold" Foreground="#333333"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <Grid ColumnDefinitions="*, 20, *">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="CNPJ da Empresa Desenvolvedora"
+                                    FontWeight="SemiBold" FontSize="12" Foreground="Gray"
+                                    Margin="0,0,0,5" />
+                                <TextBox Text="{Binding RespTecCnpj}"
+                                    Watermark="Ex: 00.000.000/0000-00" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Nome do Contato" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <TextBox Text="{Binding RespTecNome}"
+                                    Watermark="Nome do responsável" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, 20, *">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Telefone de Suporte" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <TextBox Text="{Binding RespTecTelefone}"
+                                    Watermark="Ex: (11) 99999-9999" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="E-mail de Suporte" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <TextBox Text="{Binding RespTecEmail}"
+                                    Watermark="suporte@seusoftware.com.br" Classes="Outline"
+                                    Theme="{StaticResource OutlineTextBox}" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
                 <Border Background="White" CornerRadius="8" BoxShadow="0 4 15 0 #0A000000"
                     Padding="30">
                     <StackPanel Spacing="15">
@@ -77,7 +193,7 @@
                                     IsReadOnly="True" />
                             </StackPanel>
                             <StackPanel Grid.Row="0" Grid.Column="2" Spacing="5">
-                                <TextBlock Text="RNTRC (Obrigatório para Rodoviário)"
+                                <TextBlock Text="RNTRC"
                                     FontWeight="SemiBold" Foreground="#555555" FontSize="13" />
                                 <TextBox Text="{Binding Rntrc}" Classes="Outline"
                                     Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 12345678" />
@@ -90,6 +206,17 @@
                                     Theme="{StaticResource OutlineTextBox}" />
                             </StackPanel>
                         </Grid>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Logo da Empresa (DAMDFE)" FontWeight="SemiBold"
+                                FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button Content="Procurar Logo"
+                                    Command="{Binding ProcurarLogoCommand}" Classes="Outline" />
+                                <TextBlock Text="{Binding TextoLogomarca}"
+                                    VerticalAlignment="Center" Foreground="Gray" FontSize="12" />
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
