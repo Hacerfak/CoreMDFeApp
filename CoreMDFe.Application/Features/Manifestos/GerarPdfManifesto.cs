@@ -90,7 +90,7 @@ namespace CoreMDFe.Application.Features.Manifestos
                 report.SetParameterValue("DocumentoCancelado", manifesto.Status == StatusManifesto.Cancelado);
                 report.SetParameterValue("DocumentoEncerrado", manifesto.Status == StatusManifesto.Encerrado);
 
-                string respTec = manifesto.Empresa?.Configuracao?.RespTecNome ?? "CoreMDFe";
+                string respTec = "Eder Gross Cichelero";
                 report.SetParameterValue("Desenvolvedor", respTec);
                 report.SetParameterValue("QuebrarLinhasObservacao", true);
 

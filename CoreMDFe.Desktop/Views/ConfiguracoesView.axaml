@@ -213,56 +213,6 @@
                     </StackPanel>
                 </Border>
 
-                <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
-                    Padding="25">
-                    <StackPanel Spacing="20">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <materialIcons:MaterialIcon Kind="AccountTie" Width="24" Height="24"
-                                Foreground="#2196F3" />
-                            <TextBlock Text="Responsável Técnico (Desenvolvedor/Software House)"
-                                FontSize="18" FontWeight="SemiBold" Foreground="#333333"
-                                VerticalAlignment="Center" />
-                        </StackPanel>
-
-                        <Grid ColumnDefinitions="*, 20, *">
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="CNPJ da Empresa Desenvolvedora"
-                                    FontWeight="SemiBold" FontSize="12" Foreground="Gray"
-                                    Margin="0,0,0,5" />
-                                <TextBox Text="{Binding RespTecCnpj}"
-                                    Watermark="Ex: 00.000.000/0000-00" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Nome do Contato" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding RespTecNome}"
-                                    Watermark="Nome do responsável" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" />
-                            </StackPanel>
-                        </Grid>
-
-                        <Grid ColumnDefinitions="*, 20, *">
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Telefone de Suporte" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding RespTecTelefone}"
-                                    Watermark="Ex: (11) 99999-9999" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="E-mail de Suporte" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding RespTecEmail}"
-                                    Watermark="suporte@seusoftware.com.br" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" />
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
                 <Border Classes="Card" Padding="30">
                     <StackPanel Spacing="20">
                         <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,5">

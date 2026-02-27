@@ -59,11 +59,6 @@ namespace CoreMDFe.Core.Entities
         public string SenhaCertificado { get; set; } = string.Empty;
         public bool ManterCertificadoEmCache { get; set; }
 
-        [MaxLength(14)] public string RespTecCnpj { get; set; } = string.Empty;
-        [MaxLength(60)] public string RespTecNome { get; set; } = string.Empty;
-        [MaxLength(14)] public string RespTecTelefone { get; set; } = string.Empty;
-        [MaxLength(60)] public string RespTecEmail { get; set; } = string.Empty;
-
         public bool GerarQrCode { get; set; } = true;
         public int ModalidadePadrao { get; set; } = 1;
         public int TipoEmissaoPadrao { get; set; } = 1;

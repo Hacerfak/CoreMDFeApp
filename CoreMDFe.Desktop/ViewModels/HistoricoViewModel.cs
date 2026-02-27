@@ -1,4 +1,5 @@
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage; // Necessário para o explorador de ficheiros
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Manifestos;
@@ -13,12 +14,15 @@ using System.Xml.Linq;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
-    // --- CLASSE DTO PARA A INTERFACE (Lê a placa e condutor do XML) ---
+    // --- CLASSE DTO PARA A INTERFACE ---
     public class ManifestoListItem
     {
         public ManifestoEletronico Manifesto { get; }
         public string Placa { get; }
         public string Condutor { get; }
+
+        // --- NOVA REGRA VISUAL: O botão só aparece se for Carregamento Posterior E se o MDF-e estiver Autorizado ---
+        public bool PodeIncluirDFe => Manifesto.IndicadorCarregamentoPosterior && Manifesto.Status == StatusManifesto.Autorizado;
 
         public ManifestoListItem(ManifestoEletronico manifesto)
         {
@@ -45,13 +49,9 @@ namespace CoreMDFe.Desktop.ViewModels
         private readonly IMediator _mediator;
         private readonly IServiceProvider _serviceProvider;
 
-        // CORREÇÃO DO FILTRO DE DATA: Usando DateTime? em vez de DateTimeOffset
         [ObservableProperty] private DateTime? _dataInicio = DateTime.Today.AddDays(-7);
         [ObservableProperty] private DateTime? _dataFim = DateTime.Today;
-
-        // AGORA A LISTA É DO NOSSO ITEM VISUAL
         [ObservableProperty] private ObservableCollection<ManifestoListItem> _manifestos = new();
-
         [ObservableProperty] private bool _estaCarregando;
         [ObservableProperty][NotifyPropertyChangedFor(nameof(HasErro))] private string _mensagemErro = string.Empty;
 
@@ -68,12 +68,9 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private string _novoCondutorNome = string.Empty;
         [ObservableProperty] private string _novoCondutorCpf = string.Empty;
 
+        // --- NOVO: GESTÃO DO DIÁLOGO DE INCLUSÃO DE DF-E ---
         [ObservableProperty] private bool _isDialogDFeAberto;
-        [ObservableProperty] private string _novaChaveDFe = string.Empty;
-        [ObservableProperty] private string _novoIbgeCarrega = string.Empty;
-        [ObservableProperty] private string _novoMunCarrega = string.Empty;
-        [ObservableProperty] private string _novoIbgeDescarga = string.Empty;
-        [ObservableProperty] private string _novoMunDescarga = string.Empty;
+        [ObservableProperty] private ObservableCollection<DocumentoMDFeDto> _documentosInclusao = new();
 
         public HistoricoViewModel(IMediator mediator, IServiceProvider serviceProvider)
         {
@@ -92,182 +89,247 @@ namespace CoreMDFe.Desktop.ViewModels
             {
                 var inicio = DataInicio ?? DateTime.Today.AddDays(-7);
                 var fim = DataFim ?? DateTime.Today;
-
                 var listaOrigem = await _mediator.Send(new ListarManifestosQuery(inicio, fim));
-
-                // Mapeia para o item visual que contém Placa e Condutor
-                var listaMapeada = listaOrigem.Select(m => new ManifestoListItem(m)).ToList();
-
-                Manifestos = new ObservableCollection<ManifestoListItem>(listaMapeada);
+                Manifestos = new ObservableCollection<ManifestoListItem>(listaOrigem.Select(m => new ManifestoListItem(m)));
                 OnPropertyChanged(nameof(IsListaVazia));
             }
-            catch (Exception ex)
-            {
-                MensagemErro = $"Erro ao carregar histórico: {ex.Message}";
-            }
+            catch (Exception ex) { MensagemErro = $"Erro ao carregar histórico: {ex.Message}"; }
             finally { EstaCarregando = false; }
         }
 
-        // --- NOVO: COPIAR CHAVE DE ACESSO ---
         [RelayCommand]
-        private async Task CopiarChave(string chave)
+        private void FecharDialogos()
         {
-            if (string.IsNullOrEmpty(chave)) return;
+            IsDialogCancelarAberto = false; IsDialogCondutorAberto = false; IsDialogDFeAberto = false; ManifestoSelecionado = null;
+        }
 
+        // --- EXTRATOR SEGURO (Impede Erros de Binding) ---
+        private ManifestoEletronico? ObterManifesto(object param)
+        {
+            if (param is ManifestoEletronico m) return m;
+            if (param is ManifestoListItem item) return item.Manifesto;
+            return null;
+        }
+
+        // --- ABERTURA DE DIÁLOGOS ---
+        [RelayCommand] private void AbrirDialogCancelar(object param) { if (ObterManifesto(param) is { } m) { ManifestoSelecionado = m; JustificativaCancelamento = string.Empty; IsDialogCancelarAberto = true; } }
+        [RelayCommand] private void AbrirDialogCondutor(object param) { if (ObterManifesto(param) is { } m) { ManifestoSelecionado = m; NovoCondutorNome = string.Empty; NovoCondutorCpf = string.Empty; IsDialogCondutorAberto = true; } }
+
+        [RelayCommand]
+        private void AbrirDialogDFe(object param)
+        {
+            if (ObterManifesto(param) is { } m)
+            {
+                ManifestoSelecionado = m;
+                DocumentosInclusao.Clear(); // Limpa a lista antiga ao abrir o ecrã
+                IsDialogDFeAberto = true;
+            }
+        }
+
+        // --- MÁGICA: LER XML PARA INCLUSÃO ---
+        [RelayCommand]
+        private async Task ProcurarXmlsParaInclusao()
+        {
             if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
             {
-                var clipboard = desktop.MainWindow.Clipboard;
-                if (clipboard != null)
+                var files = await desktop.MainWindow.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
-                    await clipboard.SetTextAsync(chave);
-                    MensagemErro = "✅ Chave de Acesso copiada com sucesso!";
+                    Title = "Selecione os arquivos XML (NF-e ou CT-e)",
+                    AllowMultiple = true,
+                    FileTypeFilter = new[] { new FilePickerFileType("Arquivos XML") { Patterns = new[] { "*.xml" } } }
+                });
 
-                    // Limpa a mensagem de sucesso automaticamente após 3 segundos
-                    _ = Task.Delay(3000).ContinueWith(_ =>
+                foreach (var file in files)
+                {
+                    try
                     {
-                        Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                        var doc = XDocument.Load(file.Path.LocalPath);
+                        var infNFe = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infNFe");
+                        if (infNFe != null)
                         {
-                            if (MensagemErro.Contains("copiada")) MensagemErro = string.Empty;
-                        });
-                    });
+                            var chave = infNFe.Attribute("Id")?.Value.Replace("NFe", "") ?? "";
+                            if (DocumentosInclusao.Any(d => d.Chave == chave)) continue;
+
+                            var emit = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderEmit");
+                            var dest = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderDest");
+
+                            DocumentosInclusao.Add(new DocumentoMDFeDto
+                            {
+                                Chave = chave,
+                                Tipo = 55,
+                                IbgeCarregamento = long.TryParse(emit?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value, out var mE) ? mE : 0,
+                                MunicipioCarregamento = emit?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? "",
+                                IbgeDescarga = long.TryParse(dest?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value, out var mD) ? mD : 0,
+                                MunicipioDescarga = dest?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? ""
+                            });
+                        }
+                        else
+                        {
+                            var infCte = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infCte");
+                            if (infCte != null)
+                            {
+                                var chave = infCte.Attribute("Id")?.Value.Replace("CTe", "") ?? "";
+                                if (DocumentosInclusao.Any(d => d.Chave == chave)) continue;
+
+                                var ide = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "ide");
+                                DocumentosInclusao.Add(new DocumentoMDFeDto
+                                {
+                                    Chave = chave,
+                                    Tipo = 57,
+                                    IbgeCarregamento = long.TryParse(ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMunEnv")?.Value, out var cE) ? cE : 0,
+                                    MunicipioCarregamento = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMunEnv")?.Value?.ToUpper() ?? "",
+                                    IbgeDescarga = long.TryParse(ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMunFim")?.Value, out var cF) ? cF : 0,
+                                    MunicipioDescarga = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMunFim")?.Value?.ToUpper() ?? ""
+                                });
+                            }
+                        }
+                    }
+                    catch (Exception ex) { MensagemErro = $"Erro ao ler XML: {ex.Message}"; }
                 }
             }
         }
 
-        // --- ABERTURA DOS DIÁLOGOS ---
-        [RelayCommand]
-        private void FecharDialogos()
-        {
-            IsDialogCancelarAberto = false;
-            IsDialogCondutorAberto = false;
-            IsDialogDFeAberto = false;
-            ManifestoSelecionado = null;
-        }
-
-        [RelayCommand]
-        private void AbrirDialogCancelar(ManifestoEletronico m)
-        {
-            ManifestoSelecionado = m; JustificativaCancelamento = string.Empty; IsDialogCancelarAberto = true;
-        }
-
-        [RelayCommand]
-        private void AbrirDialogCondutor(ManifestoEletronico m)
-        {
-            ManifestoSelecionado = m; NovoCondutorNome = string.Empty; NovoCondutorCpf = string.Empty; IsDialogCondutorAberto = true;
-        }
-
-        [RelayCommand]
-        private void AbrirDialogDFe(ManifestoEletronico m)
-        {
-            ManifestoSelecionado = m; NovaChaveDFe = string.Empty; NovoIbgeCarrega = string.Empty; NovoMunCarrega = string.Empty; NovoIbgeDescarga = string.Empty; NovoMunDescarga = string.Empty; IsDialogDFeAberto = true;
-        }
-
-        [RelayCommand]
-        private void EditarRejeitado(ManifestoEletronico m)
-        {
-            var emissaoVm = _serviceProvider.GetRequiredService<EmissaoViewModel>();
-            emissaoVm.CarregarRascunhoDeRejeitado(m);
-            var dashboardVm = _serviceProvider.GetRequiredService<DashboardViewModel>();
-            dashboardVm.ConteudoWorkspace = emissaoVm;
-            dashboardVm.MenuAtivo = "Emissao";
-        }
-
-        [RelayCommand]
-        private async Task Reenviar(ManifestoEletronico m)
-        {
-            try
-            {
-                EstaCarregando = true; MensagemErro = "Reenviando manifesto, aguarde...";
-                var result = await _mediator.Send(new ReenviarManifestoCommand(m.Id));
-                MensagemErro = result.Sucesso ? "✅ " + result.Mensagem : "❌ " + result.Mensagem;
-            }
-            catch (Exception ex) { MensagemErro = $"❌ Erro interno: {ex.Message}"; }
-            finally { EstaCarregando = false; await CarregarHistorico(manterMensagem: true); }
-        }
-
-        [RelayCommand]
-        private async Task Imprimir(ManifestoEletronico m)
-        {
-            try
-            {
-                EstaCarregando = true; MensagemErro = "Gerando DAMDFE...";
-                var result = await _mediator.Send(new GerarPdfManifestoCommand(m.Id));
-                if (result.Sucesso) { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(result.CaminhoPdf) { UseShellExecute = true }); MensagemErro = string.Empty; }
-                else { MensagemErro = $"❌ {result.Mensagem}"; }
-            }
-            catch (Exception ex) { MensagemErro = $"❌ Erro interno: {ex.Message}"; }
-            finally { EstaCarregando = false; }
-        }
-
-        [RelayCommand]
-        private async Task Encerrar(ManifestoEletronico m)
-        {
-            try
-            {
-                EstaCarregando = true; MensagemErro = "Enviando evento de encerramento...";
-                var result = await _mediator.Send(new EncerrarManifestoCommand(m.Id));
-                MensagemErro = result.Sucesso ? "✅ " + result.Mensagem : "❌ " + result.Mensagem;
-            }
-            catch (Exception ex) { MensagemErro = $"❌ Erro interno: {ex.Message}"; }
-            finally { EstaCarregando = false; await CarregarHistorico(manterMensagem: true); }
-        }
-
-        [RelayCommand]
-        private async Task ConfirmarCancelamento()
-        {
-            try
-            {
-                if (ManifestoSelecionado == null) return;
-                var manifestoId = ManifestoSelecionado.Id;
-                var justificativa = JustificativaCancelamento;
-
-                FecharDialogos();
-                EstaCarregando = true; MensagemErro = "Enviando cancelamento...";
-
-                var result = await _mediator.Send(new CancelarManifestoCommand(manifestoId, justificativa));
-                MensagemErro = result.Sucesso ? "✅ " + result.Mensagem : "❌ " + result.Mensagem;
-            }
-            catch (Exception ex) { MensagemErro = $"❌ Erro interno: {ex.Message}"; }
-            finally { EstaCarregando = false; await CarregarHistorico(manterMensagem: true); }
-        }
-
-        [RelayCommand]
-        private async Task ConfirmarInclusaoCondutor()
-        {
-            try
-            {
-                if (ManifestoSelecionado == null) return;
-                var manifestoId = ManifestoSelecionado.Id;
-                var nome = NovoCondutorNome; var cpf = NovoCondutorCpf;
-
-                FecharDialogos();
-                EstaCarregando = true; MensagemErro = "Incluindo condutor, aguarde...";
-
-                var result = await _mediator.Send(new IncluirCondutorManifestoCommand(manifestoId, nome, cpf));
-                MensagemErro = result.Sucesso ? "✅ " + result.Mensagem : "❌ " + result.Mensagem;
-            }
-            catch (Exception ex) { MensagemErro = $"❌ Erro interno: {ex.Message}"; }
-            finally { EstaCarregando = false; await CarregarHistorico(manterMensagem: true); }
-        }
-
+        // --- ENVIAR AS NOTAS PARA A SEFAZ ---
         [RelayCommand]
         private async Task ConfirmarInclusaoDFe()
         {
             try
             {
                 if (ManifestoSelecionado == null) return;
+                if (!DocumentosInclusao.Any())
+                {
+                    MensagemErro = "⚠️ Adicione pelo menos um XML para enviar à SEFAZ.";
+                    return;
+                }
+
                 var manifestoId = ManifestoSelecionado.Id;
-                var chave = NovaChaveDFe; var ibgeCarrega = NovoIbgeCarrega; var munCarrega = NovoMunCarrega;
-                var ibgeDescarga = NovoIbgeDescarga; var munDescarga = NovoMunDescarga;
-
                 FecharDialogos();
-                EstaCarregando = true; MensagemErro = "Incluindo DF-e...";
+                EstaCarregando = true; MensagemErro = "Enviando evento(s) de inclusão à SEFAZ...";
 
-                var result = await _mediator.Send(new IncluirDFeManifestoCommand(manifestoId, ibgeCarrega, munCarrega, ibgeDescarga, munDescarga, chave));
-                MensagemErro = result.Sucesso ? "✅ " + result.Mensagem : "❌ " + result.Mensagem;
+                int sucesso = 0; int falha = 0; string ultimaFalha = "";
+
+                // A SEFAZ exige que a inclusão seja feita nota a nota (1 evento por chave). 
+                // Então o sistema faz um laço automático de eventos para facilitar a vida do utilizador!
+                foreach (var doc in DocumentosInclusao)
+                {
+                    var result = await _mediator.Send(new IncluirDFeManifestoCommand(
+                        manifestoId, doc.IbgeCarregamento.ToString(), doc.MunicipioCarregamento,
+                        doc.IbgeDescarga.ToString(), doc.MunicipioDescarga, doc.Chave));
+
+                    if (result.Sucesso) sucesso++;
+                    else { falha++; ultimaFalha = result.Mensagem; }
+                }
+
+                MensagemErro = falha == 0
+                    ? $"✅ {sucesso} documento(s) incluído(s) com sucesso!"
+                    : $"⚠️ Finalizado com {sucesso} acertos e {falha} falhas. Último erro: {ultimaFalha}";
             }
             catch (Exception ex) { MensagemErro = $"❌ Erro interno: {ex.Message}"; }
             finally { EstaCarregando = false; await CarregarHistorico(manterMensagem: true); }
+        }
+
+        [RelayCommand]
+        private void EditarRejeitado(object param)
+        {
+            if (ObterManifesto(param) is not { } m) return;
+            try
+            {
+                var emissaoVm = _serviceProvider.GetRequiredService<EmissaoViewModel>();
+                emissaoVm.CarregarRascunhoDeRejeitado(m);
+                var dashboardVm = _serviceProvider.GetRequiredService<DashboardViewModel>();
+                dashboardVm.ConteudoWorkspace = emissaoVm;
+                dashboardVm.MenuAtivo = "Emissao";
+            }
+            catch (Exception ex) { MensagemErro = $"❌ Erro ao abrir edição: {ex.Message}"; }
+        }
+
+        [RelayCommand] private async Task Reenviar(object param) { if (ObterManifesto(param) is { } m) { EstaCarregando = true; MensagemErro = "Reenviando..."; var r = await _mediator.Send(new ReenviarManifestoCommand(m.Id)); MensagemErro = r.Sucesso ? "✅ " + r.Mensagem : "❌ " + r.Mensagem; EstaCarregando = false; await CarregarHistorico(true); } }
+        [RelayCommand] private async Task Imprimir(object param) { if (ObterManifesto(param) is { } m) { EstaCarregando = true; MensagemErro = "Gerando PDF..."; var r = await _mediator.Send(new GerarPdfManifestoCommand(m.Id)); if (r.Sucesso) { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(r.CaminhoPdf) { UseShellExecute = true }); MensagemErro = ""; } else MensagemErro = "❌ " + r.Mensagem; EstaCarregando = false; } }
+        [RelayCommand] private async Task Encerrar(object param) { if (ObterManifesto(param) is { } m) { EstaCarregando = true; MensagemErro = "Encerrando..."; var r = await _mediator.Send(new EncerrarManifestoCommand(m.Id)); MensagemErro = r.Sucesso ? "✅ " + r.Mensagem : "❌ " + r.Mensagem; EstaCarregando = false; await CarregarHistorico(true); } }
+        [RelayCommand] private async Task CopiarChave(string chave) { if (!string.IsNullOrEmpty(chave) && Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime d && d.MainWindow != null) { var c = d.MainWindow.Clipboard; if (c != null) { await c.SetTextAsync(chave); MensagemErro = "✅ Chave copiada!"; _ = Task.Delay(3000).ContinueWith(_ => Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { if (MensagemErro.Contains("copiada")) MensagemErro = ""; })); } } }
+        [RelayCommand] private async Task ConfirmarCancelamento() { if (ManifestoSelecionado != null) { var id = ManifestoSelecionado.Id; var just = JustificativaCancelamento; FecharDialogos(); EstaCarregando = true; MensagemErro = "Cancelando..."; var r = await _mediator.Send(new CancelarManifestoCommand(id, just)); MensagemErro = r.Sucesso ? "✅ " + r.Mensagem : "❌ " + r.Mensagem; EstaCarregando = false; await CarregarHistorico(true); } }
+        [RelayCommand] private async Task ConfirmarInclusaoCondutor() { if (ManifestoSelecionado != null) { var id = ManifestoSelecionado.Id; var n = NovoCondutorNome; var c = NovoCondutorCpf; FecharDialogos(); EstaCarregando = true; MensagemErro = "Incluindo condutor..."; var r = await _mediator.Send(new IncluirCondutorManifestoCommand(id, n, c)); MensagemErro = r.Sucesso ? "✅ " + r.Mensagem : "❌ " + r.Mensagem; EstaCarregando = false; await CarregarHistorico(true); } }
+
+        // --- CONTROLE DO DIÁLOGO DE EXCLUSÃO ---
+        [ObservableProperty] private bool _isDialogExcluirAberto;
+
+        [RelayCommand]
+        private void AbrirDialogExcluir(object param)
+        {
+            if (ObterManifesto(param) is { } m)
+            {
+                ManifestoSelecionado = m;
+                IsDialogExcluirAberto = true;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ConfirmarExclusao()
+        {
+            try
+            {
+                if (ManifestoSelecionado == null) return;
+                var idParaExcluir = ManifestoSelecionado.Id;
+
+                FecharDialogos(); // Fecha o modal imediatamente
+                IsDialogExcluirAberto = false;
+
+                EstaCarregando = true;
+                MensagemErro = "A excluir MDF-e do banco de dados...";
+
+                var sucesso = await _mediator.Send(new ExcluirManifestoCommand(idParaExcluir));
+
+                if (sucesso)
+                {
+                    MensagemErro = "✅ MDF-e removido com sucesso.";
+                    await CarregarHistorico(manterMensagem: true);
+                }
+                else
+                {
+                    MensagemErro = "❌ Não foi possível excluir o manifesto.";
+                }
+            }
+            catch (Exception ex)
+            {
+                MensagemErro = $"❌ Erro ao excluir: {ex.Message}";
+            }
+            finally
+            {
+                EstaCarregando = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task Excluir(ManifestoEletronico m)
+        {
+            if (m == null) return;
+
+            // Nota: Em um sistema real, você poderia abrir um diálogo de confirmação aqui
+            try
+            {
+                EstaCarregando = true;
+                MensagemErro = "A excluir MDF-e do banco de dados...";
+
+                var sucesso = await _mediator.Send(new ExcluirManifestoCommand(m.Id));
+
+                if (sucesso)
+                {
+                    MensagemErro = "✅ MDF-e removido com sucesso.";
+                    await CarregarHistorico(manterMensagem: true);
+                }
+                else
+                {
+                    MensagemErro = "❌ Não foi possível excluir o manifesto.";
+                }
+            }
+            catch (Exception ex)
+            {
+                MensagemErro = $"❌ Erro ao excluir: {ex.Message}";
+            }
+            finally
+            {
+                EstaCarregando = false;
+            }
         }
     }
 }

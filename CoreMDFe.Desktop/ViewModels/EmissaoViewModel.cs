@@ -25,6 +25,10 @@ namespace CoreMDFe.Desktop.ViewModels
         private readonly IMediator _mediator;
         private readonly IAppDbContext _dbContext;
         private Guid _empresaAtualId;
+        private string _empresaMunicipio = string.Empty;
+        private string _empresaIbge = string.Empty;
+        private string _empresaUf = string.Empty;
+        private ConfiguracaoApp? _configuracaoAtual;
 
         // --- CONTROLE DO WIZARD ---
         [ObservableProperty]
@@ -50,6 +54,11 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private string _ufCarregamento = "";
         [ObservableProperty] private string _ufDescarregamento = "";
 
+        [ObservableProperty] private string _ibgeCarregamentoManual = string.Empty;
+        [ObservableProperty] private string _municipioCarregamentoManual = string.Empty;
+        [ObservableProperty] private string _ibgeDescarregamentoManual = string.Empty;
+        [ObservableProperty] private string _municipioDescarregamentoManual = string.Empty;
+
         public string ResumoCidadesCarregamento => string.Join(", ", DocumentosFiscais.Select(d => d.MunicipioCarregamento).Where(m => !string.IsNullOrEmpty(m)).Distinct());
         public string ResumoCidadesDescarregamento => string.Join(", ", DocumentosFiscais.Select(d => d.MunicipioDescarga).Where(m => !string.IsNullOrEmpty(m)).Distinct());
 
@@ -68,18 +77,12 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private string _ufsPercurso = string.Empty;
         [ObservableProperty] private DateTimeOffset? _dataInicioViagem;
         [ObservableProperty] private bool _isCanalVerde;
-        [ObservableProperty] private bool _isCarregamentoPosterior;
+        [ObservableProperty] private bool _isCarregamentoPosterior; // Novo campo para o Passo 2
 
         // --- PASSO 3: TRANSPORTE ---
         public string[] ListaModais { get; } = { "1 - Rodoviário", "2 - Aéreo", "3 - Aquaviário", "4 - Ferroviário" };
         [ObservableProperty][NotifyPropertyChangedFor(nameof(IsModalRodoviario))] private int _modalSelecionadoIndex;
         public bool IsModalRodoviario => ModalSelecionadoIndex == 0;
-
-        // Dados do Responsável Técnico
-        [ObservableProperty] private string _respTecCnpj = string.Empty;
-        [ObservableProperty] private string _respTecNome = string.Empty;
-        [ObservableProperty] private string _respTecTelefone = string.Empty;
-        [ObservableProperty] private string _respTecEmail = string.Empty;
 
         // Dados Rodoviário Básicos
         public ObservableCollection<Veiculo> VeiculosDisponiveis { get; } = new();
@@ -87,7 +90,7 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private Veiculo? _veiculoSelecionado;
         [ObservableProperty] private Condutor? _condutorSelecionado;
 
-        // Opcionais
+        // Opcionais (Avançados)
         [ObservableProperty] private bool _isReboquesAberto;
         [ObservableProperty] private Veiculo? _reboque1Selecionado;
         [ObservableProperty] private Veiculo? _reboque2Selecionado;
@@ -130,8 +133,6 @@ namespace CoreMDFe.Desktop.ViewModels
         {
             try
             {
-                Console.WriteLine("[WIZARD] Carregando cadastros e configurações padrões...");
-
                 var veiculos = await _mediator.Send(new ListarVeiculosQuery());
                 foreach (var v in veiculos) VeiculosDisponiveis.Add(v);
 
@@ -142,31 +143,76 @@ namespace CoreMDFe.Desktop.ViewModels
                 if (empresa != null)
                 {
                     _empresaAtualId = empresa.Id;
+                    // Guarda os dados do emitente para o Carregamento Posterior
+                    _empresaMunicipio = empresa.NomeMunicipio ?? string.Empty;
+                    _empresaIbge = empresa.CodigoIbgeMunicipio.ToString();
+                    _empresaUf = empresa.SiglaUf ?? string.Empty;
                     if (empresa.Configuracao != null)
                     {
-                        Console.WriteLine($"[WIZARD] Config encontrada. Emitente: {empresa.Configuracao.TipoEmitentePadrao}, Modal: {empresa.Configuracao.ModalidadePadrao}");
+                        _configuracaoAtual = empresa.Configuracao;
 
-                        // CONVERSÃO CORRETA: O banco salva 1, 2, 3... mas a UI precisa de 0, 1, 2...
-                        // Usamos Math.Max(0, valor - 1) para garantir que nunca fique negativo se o banco tiver 0
                         TipoEmitenteIndex = Math.Max(0, empresa.Configuracao.TipoEmitentePadrao - 1);
                         TipoEmissaoIndex = Math.Max(0, empresa.Configuracao.TipoEmissaoPadrao - 1);
                         ModalSelecionadoIndex = Math.Max(0, empresa.Configuracao.ModalidadePadrao - 1);
-
-                        // O Tipo de Transportador costuma ser 0 (Não informar), 1, 2, 3. Aqui é 1 pra 1.
                         TipoTransportadorIndex = empresa.Configuracao.TipoTransportadorPadrao;
 
-                        RespTecCnpj = empresa.Configuracao.RespTecCnpj ?? "";
-                        RespTecNome = empresa.Configuracao.RespTecNome ?? "";
-                        RespTecTelefone = empresa.Configuracao.RespTecTelefone ?? "";
-                        RespTecEmail = empresa.Configuracao.RespTecEmail ?? "";
+                        // Injeção de Padrões: Veículo e Motorista
+                        if (empresa.Configuracao.VeiculoPadraoId.HasValue)
+                            VeiculoSelecionado = VeiculosDisponiveis.FirstOrDefault(v => v.Id == empresa.Configuracao.VeiculoPadraoId.Value);
+
+                        if (empresa.Configuracao.CondutorPadraoId.HasValue)
+                            CondutorSelecionado = CondutoresDisponiveis.FirstOrDefault(c => c.Id == empresa.Configuracao.CondutorPadraoId.Value);
+
+                        // Injeção de Padrões: Seguro
+                        if (!string.IsNullOrEmpty(empresa.Configuracao.SeguroCnpjSeguradoraPadrao))
+                        {
+                            SeguradoraCnpj = empresa.Configuracao.SeguroCnpjSeguradoraPadrao;
+                            SeguradoraNome = empresa.Configuracao.SeguroNomeSeguradoraPadrao ?? "";
+                            NumeroApolice = empresa.Configuracao.SeguroApolicePadrao ?? "";
+                            IsSeguroAberto = true; // Abre a aba automaticamente
+                        }
                     }
                 }
             }
             catch (Exception ex) { Console.WriteLine($"[WIZARD - ERRO] Falha ao inicializar: {ex.Message}"); }
         }
 
-        [RelayCommand] private void Avancar() { if (PassoAtual < 4) PassoAtual++; }
+        [RelayCommand]
+        private void Avancar()
+        {
+            // Validação no Passo 1
+            if (PassoAtual == 1)
+            {
+                if (IsCarregamentoPosterior && (string.IsNullOrWhiteSpace(IbgeCarregamentoManual) || IbgeCarregamentoManual == "0"))
+                {
+                    MensagemProcessamento = "⚠️ O cadastro da sua Empresa está sem o Código IBGE e Município. Edite nas Configurações primeiro.";
+                    return;
+                }
+
+                if (!IsCarregamentoPosterior && !DocumentosFiscais.Any())
+                {
+                    MensagemProcessamento = "⚠️ Importe pelo menos um XML ou marque a opção de Carregamento Posterior.";
+                    return;
+                }
+            }
+
+            if (PassoAtual < 4) PassoAtual++;
+        }
         [RelayCommand] private void Voltar() { if (PassoAtual > 1) PassoAtual--; }
+
+        [RelayCommand]
+        private void NovaEmissao()
+        {
+            DocumentosFiscais.Clear();
+            QuantidadeNFe = 0; QuantidadeCTe = 0;
+            ValorTotalCarga = 0; PesoTotalCarga = 0;
+            IsAutorizado = false; IsProcessando = false;
+            ManifestoAutorizadoId = null;
+            XmlEnvio = ""; XmlRetorno = ""; MensagemProcessamento = "";
+            NomeProdutoPredominante = ""; NcmProduto = ""; // Limpa produtos anteriores
+            PassoAtual = 1;
+            AtualizarTotaisEResumos();
+        }
 
         [RelayCommand]
         private async Task ProcurarDocumentos()
@@ -278,8 +324,39 @@ namespace CoreMDFe.Desktop.ViewModels
                 UfDescarregamento = DocumentosFiscais.Last().UfDescarga;
             }
 
+            // Fallback do Produto: Se a nota não tinha produto, usa o padrão das Configurações
+            if (string.IsNullOrEmpty(NomeProdutoPredominante) && _configuracaoAtual != null && !string.IsNullOrEmpty(_configuracaoAtual.ProdutoNomePadrao))
+            {
+                NomeProdutoPredominante = _configuracaoAtual.ProdutoNomePadrao;
+                NcmProduto = _configuracaoAtual.ProdutoNCMPadrao ?? "";
+                IsProdutoPredominanteAberto = true;
+            }
+
             OnPropertyChanged(nameof(ResumoCidadesCarregamento));
             OnPropertyChanged(nameof(ResumoCidadesDescarregamento));
+        }
+
+        // Este método mágico roda sempre que o IsCarregamentoPosterior muda (True/False)
+        partial void OnIsCarregamentoPosteriorChanged(bool value)
+        {
+            if (value)
+            {
+                // Injeta automaticamente o município do emitente
+                MunicipioCarregamentoManual = _empresaMunicipio;
+                IbgeCarregamentoManual = _empresaIbge;
+                MunicipioDescarregamentoManual = _empresaMunicipio;
+                IbgeDescarregamentoManual = _empresaIbge;
+
+                UfCarregamento = _empresaUf;
+                UfDescarregamento = _empresaUf;
+
+                // Limpa os XMLs bipados para não dar rejeição na SEFAZ
+                DocumentosFiscais.Clear();
+                QuantidadeNFe = 0;
+                QuantidadeCTe = 0;
+                ValorTotalCarga = 0;
+                PesoTotalCarga = 0;
+            }
         }
 
         [RelayCommand]
@@ -290,16 +367,14 @@ namespace CoreMDFe.Desktop.ViewModels
                 MensagemProcessamento = "Selecione Veículo e Condutor no Passo 3."; return;
             }
 
-            IsProcessando = true;
-            MensagemProcessamento = "Verificando disponibilidade da SEFAZ...";
-
-            var statusSefaz = await _mediator.Send(new ConsultarStatusServicoQuery());
-            if (!statusSefaz.Online)
+            // Impede conflito de regras na Sefaz
+            if (IsCarregamentoPosterior && DocumentosFiscais.Any())
             {
-                MensagemProcessamento = $"⚠️ SEFAZ Indisponível: {statusSefaz.Mensagem}";
-                IsProcessando = false; return;
+                MensagemProcessamento = "⚠️ SEFAZ: MDF-e com Carregamento Posterior NÃO pode conter Notas no momento da emissão. Limpe os XMLs.";
+                return;
             }
 
+            IsProcessando = true;
             MensagemProcessamento = "Transmitindo...";
 
             var command = new EmitirManifestoCommand(
@@ -307,7 +382,6 @@ namespace CoreMDFe.Desktop.ViewModels
                 Documentos: DocumentosFiscais.ToList(),
                 UfCarregamento: UfCarregamento,
                 UfDescarregamento: UfDescarregamento,
-                // CONVERSÃO CORRETA: UI 0 -> SEFAZ 1
                 TipoEmitente: TipoEmitenteIndex + 1,
                 TipoTransportador: TipoTransportadorIndex,
                 Modal: ModalSelecionadoIndex + 1,
@@ -335,22 +409,20 @@ namespace CoreMDFe.Desktop.ViewModels
                 CpfCnpjCiot: CpfCnpjCiot,
                 CnpjFornecedorValePedagio: CnpjFornecedorValePedagio,
                 CnpjPagadorValePedagio: CnpjPagadorValePedagio,
-                RespTecCnpj: RespTecCnpj,
-                RespTecNome: RespTecNome,
-                RespTecTelefone: RespTecTelefone,
-                RespTecEmail: RespTecEmail
+                IbgeCarregamentoManual: IbgeCarregamentoManual,
+                MunicipioCarregamentoManual: MunicipioCarregamentoManual,
+                IbgeDescarregamentoManual: IbgeDescarregamentoManual,
+                MunicipioDescarregamentoManual: MunicipioDescarregamentoManual
             );
 
             var result = await _mediator.Send(command);
 
             MensagemProcessamento = result.Sucesso ? "✅ MDF-e Autorizado!" : $"❌ Rejeição: {result.Mensagem}";
-            XmlEnvio = result.XmlEnvio;
             XmlRetorno = result.XmlRetorno;
             ManifestoAutorizadoId = result.ManifestoId;
             IsAutorizado = result.Sucesso;
             IsProcessando = false;
         }
-
         [RelayCommand]
         private async Task Imprimir()
         {
@@ -370,65 +442,37 @@ namespace CoreMDFe.Desktop.ViewModels
             }
         }
 
+        // --- CORREÇÃO DO BOTÃO "EDITAR REJEITADO" ---
         public void CarregarRascunhoDeRejeitado(ManifestoEletronico manifestoRejeitado)
         {
-            if (string.IsNullOrEmpty(manifestoRejeitado.XmlAssinado)) return;
+            NovaEmissao(); // Limpa a tela
 
-            try
+            // 1. Carrega Rota básica diretamente do Banco (Sempre vai ter, mesmo sem XML)
+            UfCarregamento = manifestoRejeitado.UfOrigem ?? "";
+            UfDescarregamento = manifestoRejeitado.UfDestino ?? "";
+            IsCarregamentoPosterior = manifestoRejeitado.IndicadorCarregamentoPosterior;
+
+            // 2. Só tenta extrair os XMLs das notas se o sistema tiver chegado a assinar
+            if (!string.IsNullOrEmpty(manifestoRejeitado.XmlAssinado))
             {
-                var doc = XDocument.Parse(manifestoRejeitado.XmlAssinado);
-
-                // 1. Limpa a tela atual
-                DocumentosFiscais.Clear();
-                QuantidadeNFe = 0; QuantidadeCTe = 0;
-                PassoAtual = 1;
-
-                // 2. Extrai as Notas Fiscais (NFe) do XML Rejeitado
-                var infNFes = doc.Descendants().Where(x => x.Name.LocalName == "infNFe");
-                foreach (var nfe in infNFes)
+                try
                 {
-                    DocumentosFiscais.Add(new DocumentoMDFeDto
+                    var doc = XDocument.Parse(manifestoRejeitado.XmlAssinado);
+                    var infNFes = doc.Descendants().Where(x => x.Name.LocalName == "infNFe");
+                    foreach (var nfe in infNFes)
                     {
-                        Chave = nfe.Elements().FirstOrDefault(x => x.Name.LocalName == "chNFe")?.Value ?? "",
-                        Tipo = 55,
-                        MunicipioCarregamento = "RECARREGADO", // Simplificação para reaproveitamento
-                        MunicipioDescarga = "RECARREGADO"
-                    });
-                    QuantidadeNFe++;
+                        DocumentosFiscais.Add(new DocumentoMDFeDto { Chave = nfe.Elements().FirstOrDefault(x => x.Name.LocalName == "chNFe")?.Value ?? "", Tipo = 55, MunicipioCarregamento = "RECUPERADO", MunicipioDescarga = "RECUPERADO" });
+                        QuantidadeNFe++;
+                    }
+                    var placa = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "placa")?.Value;
+                    if (placa != null) VeiculoSelecionado = VeiculosDisponiveis.FirstOrDefault(v => v.Placa == placa);
                 }
-
-                // 3. Extrai os Conhecimentos de Transporte (CTe)
-                var infCTes = doc.Descendants().Where(x => x.Name.LocalName == "infCTe");
-                foreach (var cte in infCTes)
-                {
-                    DocumentosFiscais.Add(new DocumentoMDFeDto
-                    {
-                        Chave = cte.Elements().FirstOrDefault(x => x.Name.LocalName == "chCTe")?.Value ?? "",
-                        Tipo = 57,
-                        MunicipioCarregamento = "RECARREGADO",
-                        MunicipioDescarga = "RECARREGADO"
-                    });
-                    QuantidadeCTe++;
-                }
-
-                // 4. Repopula o Roteiro
-                UfCarregamento = manifestoRejeitado.UfOrigem;
-                UfDescarregamento = manifestoRejeitado.UfDestino;
-
-                // 5. Tenta selecionar o Veículo e Motorista (Mapeando pela Placa/CPF)
-                var placa = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "placa")?.Value;
-                if (placa != null) VeiculoSelecionado = VeiculosDisponiveis.FirstOrDefault(v => v.Placa == placa);
-
-                var cpfCondutor = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "CPF")?.Value;
-                if (cpfCondutor != null) CondutorSelecionado = CondutoresDisponiveis.FirstOrDefault(c => c.Cpf == cpfCondutor);
-
-                AtualizarTotaisEResumos();
-                MensagemProcessamento = "⚠️ Dados recuperados do MDF-e rejeitado. Verifique os campos antes de retransmitir.";
+                catch { }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erro ao extrair rascunho: {ex.Message}");
-            }
+
+            AtualizarTotaisEResumos();
+            PassoAtual = 1;
+            MensagemProcessamento = "⚠️ Rascunho do MDF-e rejeitado carregado com sucesso!";
         }
     }
 }

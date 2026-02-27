@@ -175,11 +175,6 @@ namespace CoreMDFe.Desktop.ViewModels
                     DiretorioSalvarXml = empresa.Configuracao.DiretorioSalvarXml ?? string.Empty;
                     DiretorioSalvarPdf = empresa.Configuracao.DiretorioSalvarPdf ?? string.Empty;
 
-                    RespTecCnpj = empresa.Configuracao.RespTecCnpj ?? string.Empty;
-                    RespTecNome = empresa.Configuracao.RespTecNome ?? string.Empty;
-                    RespTecTelefone = empresa.Configuracao.RespTecTelefone ?? string.Empty;
-                    RespTecEmail = empresa.Configuracao.RespTecEmail ?? string.Empty;
-
                     GerarQrCode = empresa.Configuracao.GerarQrCode;
                     ModalidadePadrao = Math.Max(0, empresa.Configuracao.ModalidadePadrao - 1);
                     TipoEmissaoPadrao = Math.Max(0, empresa.Configuracao.TipoEmissaoPadrao - 1);
@@ -235,7 +230,7 @@ namespace CoreMDFe.Desktop.ViewModels
                 var query = new ConsultarDadosSefazCommand(CaminhoCertificado, SenhaCertificado, UfEmitente);
                 var result = await _mediator.Send(query);
 
-                if (result.Sucesso)
+                if (result.Sucesso && result.DadosEmpresa != null)
                 {
                     Nome = result.DadosEmpresa.RazaoSocial ?? string.Empty;
                     Fantasia = Nome;
@@ -249,6 +244,10 @@ namespace CoreMDFe.Desktop.ViewModels
                     CodigoIbgeMunicipio = result.DadosEmpresa.Ibge;
 
                     MensagemSistema = "✅ Dados da SEFAZ importados com sucesso!";
+                }
+                else if (result.Sucesso)
+                {
+                    MensagemSistema = "❌ Resultado da consulta não continha dados da empresa.";
                 }
                 else
                 {

@@ -234,12 +234,20 @@
                                                     ToolTip.Tip="Nova Carga (DF-e)" CornerRadius="8"
                                                     Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).AbrirDialogDFeCommand}"
                                                     CommandParameter="{Binding Manifesto}"
-                                                    IsVisible="{Binding Manifesto.Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static entities:StatusManifesto.Autorizado}}">
+                                                    IsVisible="{Binding PodeIncluirDFe}">
                                                     <materialIcons:MaterialIcon
                                                         Kind="FileDocumentPlus" Width="20"
                                                         Height="20" Foreground="#FF9800" />
                                                 </Button>
 
+                                                <Button Classes="Flat" Padding="6"
+                                                    ToolTip.Tip="Excluir MDF-e do Sistema"
+                                                    CornerRadius="8"
+                                                    Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).AbrirDialogExcluirCommand}"
+                                                    CommandParameter="{Binding Manifesto}">
+                                                    <materialIcons:MaterialIcon Kind="DeleteForever"
+                                                        Width="20" Height="20" Foreground="#F44336" />
+                                                </Button>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
@@ -310,43 +318,123 @@
             </Border>
         </Grid>
 
-        <Grid Background="#A0000000" IsVisible="{Binding IsDialogDFeAberto}" ZIndex="100">
-            <Border Background="White" CornerRadius="8" Padding="30" Width="500"
+        <Grid Background="#A0000000" IsVisible="{Binding IsDialogExcluirAberto}" ZIndex="110">
+            <Border Background="White" CornerRadius="8" Padding="30" Width="450"
                 VerticalAlignment="Center" HorizontalAlignment="Center"
                 BoxShadow="0 10 30 0 #50000000">
-                <StackPanel Spacing="15">
-                    <TextBlock Text="Incluir NF-e / CT-e (Nova Carga)" FontWeight="Bold"
-                        FontSize="18" Foreground="#FF9800" />
-                    <TextBlock Text="Adicione uma nova nota fiscal ao percurso em andamento."
-                        TextWrapping="Wrap" Foreground="Gray" />
-                    <TextBox Text="{Binding NovaChaveDFe}" Watermark="Chave de Acesso (44 Dígitos)"
-                        Classes="Outline" Theme="{StaticResource OutlineTextBox}" />
-                    <Grid ColumnDefinitions="*, 10, *">
-                        <TextBox Grid.Column="0" Text="{Binding NovoIbgeCarrega}"
-                            Watermark="IBGE Cód. Carregamento" Classes="Outline"
-                            Theme="{StaticResource OutlineTextBox}" />
-                        <TextBox Grid.Column="2" Text="{Binding NovoMunCarrega}"
-                            Watermark="Cidade Carregamento" Classes="Outline"
-                            Theme="{StaticResource OutlineTextBox}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="*, 10, *">
-                        <TextBox Grid.Column="0" Text="{Binding NovoIbgeDescarga}"
-                            Watermark="IBGE Cód. Descarga" Classes="Outline"
-                            Theme="{StaticResource OutlineTextBox}" />
-                        <TextBox Grid.Column="2" Text="{Binding NovoMunDescarga}"
-                            Watermark="Cidade Descarga" Classes="Outline"
-                            Theme="{StaticResource OutlineTextBox}" />
-                    </Grid>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10"
-                        Margin="0,10,0,0">
-                        <Button Content="Cancelar" Command="{Binding FecharDialogosCommand}"
-                            Classes="Flat" Foreground="Gray" />
-                        <Button Content="Incluir Documento"
-                            Command="{Binding ConfirmarInclusaoDFeCommand}" Background="#FF9800"
-                            Foreground="White" Theme="{StaticResource SolidButton}" />
+                <StackPanel Spacing="20">
+                    <StackPanel Orientation="Horizontal" Spacing="15">
+                        <materialIcons:MaterialIcon Kind="Alert" Width="32" Height="32"
+                            Foreground="#F44336" />
+                        <TextBlock Text="Confirmar Exclusão" FontWeight="Bold" FontSize="20"
+                            Foreground="#333" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <TextBlock
+                        Text="Tem certeza que deseja excluir este MDF-e? Esta ação removerá permanentemente todos os dados vinculados (notas, veículos, condutores) da base de dados local."
+                        TextWrapping="Wrap" Foreground="#555" />
+
+                    <Border Background="#F5F5F5" Padding="15" CornerRadius="6">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="MDF-e nº:" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding ManifestoSelecionado.Numero}"
+                                FontWeight="Bold" />
+                            <TextBlock Text=" - Chave:" FontWeight="SemiBold" Margin="10,0,0,0" />
+                            <TextBlock Text="{Binding ManifestoSelecionado.ChaveAcesso}"
+                                TextTrimming="CharacterEllipsis" MaxWidth="150" />
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="15">
+                        <Button Content="Não, cancelar" Command="{Binding FecharDialogosCommand}"
+                            Classes="Flat" Foreground="Gray" Padding="20,10" />
+                        <Button Content="Sim, excluir permanentemente"
+                            Command="{Binding ConfirmarExclusaoCommand}"
+                            Background="#F44336" Foreground="White"
+                            Theme="{StaticResource SolidButton}"
+                            Padding="20,10" CornerRadius="8" />
                     </StackPanel>
                 </StackPanel>
             </Border>
         </Grid>
+
+        <Border Background="#80000000" IsVisible="{Binding IsDialogDFeAberto}" ZIndex="100">
+            <Border Background="White" CornerRadius="8" Padding="30" Width="650"
+                VerticalAlignment="Center" HorizontalAlignment="Center"
+                BoxShadow="0 10 30 0 #40000000">
+                <StackPanel Spacing="20">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <materialIcons:MaterialIcon Kind="FileDocumentPlus" Width="28" Height="28"
+                            Foreground="#2196F3" />
+                        <TextBlock Text="Incluir Notas Fiscais (Carregamento Posterior)"
+                            FontSize="20" FontWeight="Bold" Foreground="#333"
+                            VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <TextBlock
+                        Text="Selecione os ficheiros XML. O sistema extrairá automaticamente a origem, o destino e as chaves para registar o evento na SEFAZ."
+                        Foreground="Gray" TextWrapping="Wrap" />
+
+                    <Button Content="Procurar XMLs (NF-e / CT-e)"
+                        Command="{Binding ProcurarXmlsParaInclusaoCommand}"
+                        Classes="Outline" Foreground="#2196F3" BorderBrush="#2196F3"
+                        HorizontalAlignment="Left" Padding="20,10">
+                        <Button.Styles>
+                            <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#E3F2FD" />
+                            </Style>
+                        </Button.Styles>
+                    </Button>
+
+                    <Border BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4"
+                        Margin="0,10,0,0">
+                        <Grid RowDefinitions="Auto, *">
+
+                            <Border Background="#EEEEEE" Padding="15,10" CornerRadius="4,4,0,0">
+                                <Grid ColumnDefinitions="60, *, 150">
+                                    <TextBlock Grid.Column="0" Text="TIPO" FontWeight="Bold"
+                                        Foreground="#555" FontSize="12" />
+                                    <TextBlock Grid.Column="1" Text="CHAVE DE ACESSO"
+                                        FontWeight="Bold" Foreground="#555" FontSize="12" />
+                                    <TextBlock Grid.Column="2" Text="DESCARREGAMENTO"
+                                        FontWeight="Bold" Foreground="#555" FontSize="12" />
+                                </Grid>
+                            </Border>
+
+                            <ListBox Grid.Row="1" ItemsSource="{Binding DocumentosInclusao}"
+                                Height="180" Background="#F8F9FA" BorderThickness="0">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="60, *, 150" Margin="0,5">
+                                            <TextBlock Grid.Column="0"
+                                                Text="{Binding Tipo, StringFormat='{}00'}"
+                                                VerticalAlignment="Center" FontWeight="Bold"
+                                                Foreground="#673AB7" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Chave}"
+                                                VerticalAlignment="Center" FontFamily="Consolas"
+                                                FontSize="13" />
+                                            <TextBlock Grid.Column="2"
+                                                Text="{Binding MunicipioDescarga}"
+                                                VerticalAlignment="Center" Foreground="#555" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="15"
+                        Margin="0,10,0,0">
+                        <Button Content="Cancelar" Command="{Binding FecharDialogosCommand}"
+                            Classes="Flat" Foreground="Gray" Padding="20,10" />
+                        <Button Content="Confirmar Inclusão na SEFAZ"
+                            Command="{Binding ConfirmarInclusaoDFeCommand}" Classes="Primary"
+                            Theme="{StaticResource SolidButton}" Background="#2196F3"
+                            Foreground="White" Padding="20,10" CornerRadius="8" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
     </Grid>
 </UserControl>

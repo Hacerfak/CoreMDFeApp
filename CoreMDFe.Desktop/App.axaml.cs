@@ -40,14 +40,15 @@ namespace CoreMDFe.Desktop
 
             // 4. Registrar ViewModels (O MainViewModel TEM que ser Singleton para a navegação funcionar)
             services.AddSingleton<MainViewModel>();
+            services.AddSingleton<DashboardViewModel>();
+            services.AddSingleton<EmissaoViewModel>();
+
             services.AddTransient<ConfiguracoesViewModel>();
             services.AddTransient<OnboardingViewModel>();
             services.AddTransient<SeletorEmpresaViewModel>();
-            services.AddTransient<DashboardViewModel>();
             services.AddTransient<ResumoViewModel>();
             services.AddTransient<VeiculosViewModel>();
             services.AddTransient<CondutoresViewModel>();
-            services.AddTransient<EmissaoViewModel>();
             services.AddTransient<HistoricoViewModel>();
 
             Services = services.BuildServiceProvider();

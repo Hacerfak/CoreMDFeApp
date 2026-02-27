@@ -69,12 +69,6 @@ namespace CoreMDFe.Application.Features.Configuracoes
             empresa.Configuracao.Serie = request.Serie;
             empresa.Configuracao.TimeOut = request.TimeOut;
 
-            // Responsável Técnico
-            empresa.Configuracao.RespTecCnpj = request.RespTecCnpj;
-            empresa.Configuracao.RespTecNome = request.RespTecNome;
-            empresa.Configuracao.RespTecTelefone = request.RespTecTelefone;
-            empresa.Configuracao.RespTecEmail = request.RespTecEmail;
-
             // Padrões de Emissão
             empresa.Configuracao.GerarQrCode = request.GerarQrCode;
             empresa.Configuracao.ModalidadePadrao = request.ModalidadePadrao;
