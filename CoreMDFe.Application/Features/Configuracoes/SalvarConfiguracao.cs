@@ -18,7 +18,11 @@ namespace CoreMDFe.Application.Features.Configuracoes
         int TipoAmbiente, string UfEmitente, long UltimaNumeracao, int Serie, int TimeOut,
         string RespTecCnpj, string RespTecNome, string RespTecTelefone, string RespTecEmail,
         bool GerarQrCode, int ModalidadePadrao, int TipoEmissaoPadrao, int TipoEmitentePadrao, int TipoTransportadorPadrao,
-        byte[]? Logomarca, bool IsSalvarXml, string DiretorioSalvarXml, string DiretorioSalvarPdf
+        byte[]? Logomarca, bool IsSalvarXml, string DiretorioSalvarXml, string DiretorioSalvarPdf, Guid? VeiculoPadraoId, Guid? CondutorPadraoId,
+        string ProdutoTipoCargaPadrao, string ProdutoNomePadrao, string ProdutoEANPadrao, string ProdutoNCMPadrao,
+        int SeguroResponsavelPadrao, string SeguroCpfCnpjPadrao, string SeguroNomeSeguradoraPadrao, string SeguroCnpjSeguradoraPadrao, string SeguroApolicePadrao,
+        string PagamentoNomeContratantePadrao, string PagamentoCpfCnpjContratantePadrao, int PagamentoIndicadorPadrao, string PagamentoCnpjInstituicaoPadrao,
+        string InfoFiscoPadrao, string InfoComplementarPadrao
     ) : IRequest<bool>;
 
     public class SalvarConfiguracaoHandler : IRequestHandler<SalvarConfiguracaoCommand, bool>
@@ -83,6 +87,28 @@ namespace CoreMDFe.Application.Features.Configuracoes
             empresa.Configuracao.IsSalvarXml = request.IsSalvarXml;
             empresa.Configuracao.DiretorioSalvarXml = request.DiretorioSalvarXml;
             empresa.Configuracao.DiretorioSalvarPdf = request.DiretorioSalvarPdf;
+
+            empresa.Configuracao.VeiculoPadraoId = request.VeiculoPadraoId;
+            empresa.Configuracao.CondutorPadraoId = request.CondutorPadraoId;
+
+            empresa.Configuracao.ProdutoTipoCargaPadrao = request.ProdutoTipoCargaPadrao;
+            empresa.Configuracao.ProdutoNomePadrao = request.ProdutoNomePadrao;
+            empresa.Configuracao.ProdutoEANPadrao = request.ProdutoEANPadrao;
+            empresa.Configuracao.ProdutoNCMPadrao = request.ProdutoNCMPadrao;
+
+            empresa.Configuracao.SeguroResponsavelPadrao = request.SeguroResponsavelPadrao;
+            empresa.Configuracao.SeguroCpfCnpjPadrao = request.SeguroCpfCnpjPadrao;
+            empresa.Configuracao.SeguroNomeSeguradoraPadrao = request.SeguroNomeSeguradoraPadrao;
+            empresa.Configuracao.SeguroCnpjSeguradoraPadrao = request.SeguroCnpjSeguradoraPadrao;
+            empresa.Configuracao.SeguroApolicePadrao = request.SeguroApolicePadrao;
+
+            empresa.Configuracao.PagamentoNomeContratantePadrao = request.PagamentoNomeContratantePadrao;
+            empresa.Configuracao.PagamentoCpfCnpjContratantePadrao = request.PagamentoCpfCnpjContratantePadrao;
+            empresa.Configuracao.PagamentoIndicadorPadrao = request.PagamentoIndicadorPadrao;
+            empresa.Configuracao.PagamentoCnpjInstituicaoPadrao = request.PagamentoCnpjInstituicaoPadrao;
+
+            empresa.Configuracao.InfoFiscoPadrao = request.InfoFiscoPadrao;
+            empresa.Configuracao.InfoComplementarPadrao = request.InfoComplementarPadrao;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
             return true;

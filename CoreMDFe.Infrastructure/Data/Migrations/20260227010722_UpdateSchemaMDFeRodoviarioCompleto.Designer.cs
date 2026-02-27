@@ -3,6 +3,7 @@ using System;
 using CoreMDFe.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoreMDFe.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260227010722_UpdateSchemaMDFeRodoviarioCompleto")]
+    partial class UpdateSchemaMDFeRodoviarioCompleto
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
@@ -51,9 +54,6 @@ namespace CoreMDFe.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid?>("CondutorPadraoId")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("DataCriacao")
                         .HasColumnType("TEXT");
 
@@ -71,16 +71,6 @@ namespace CoreMDFe.Infrastructure.Data.Migrations
                     b.Property<bool>("GerarQrCode")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("InfoComplementarPadrao")
-                        .IsRequired()
-                        .HasMaxLength(5000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("InfoFiscoPadrao")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IsSalvarXml")
                         .HasColumnType("INTEGER");
 
@@ -92,44 +82,6 @@ namespace CoreMDFe.Infrastructure.Data.Migrations
 
                     b.Property<int>("ModalidadePadrao")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("PagamentoCnpjInstituicaoPadrao")
-                        .IsRequired()
-                        .HasMaxLength(14)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PagamentoCpfCnpjContratantePadrao")
-                        .IsRequired()
-                        .HasMaxLength(14)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PagamentoIndicadorPadrao")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("PagamentoNomeContratantePadrao")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProdutoEANPadrao")
-                        .IsRequired()
-                        .HasMaxLength(14)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProdutoNCMPadrao")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProdutoNomePadrao")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProdutoTipoCargaPadrao")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("RespTecCnpj")
                         .IsRequired()
@@ -150,29 +102,6 @@ namespace CoreMDFe.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(14)
                         .HasColumnType("TEXT");
-
-                    b.Property<string>("SeguroApolicePadrao")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SeguroCnpjSeguradoraPadrao")
-                        .IsRequired()
-                        .HasMaxLength(14)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SeguroCpfCnpjPadrao")
-                        .IsRequired()
-                        .HasMaxLength(14)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SeguroNomeSeguradoraPadrao")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SeguroResponsavelPadrao")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("SenhaCertificado")
                         .IsRequired()
@@ -205,9 +134,6 @@ namespace CoreMDFe.Infrastructure.Data.Migrations
 
                     b.Property<long>("UltimaNumeracao")
                         .HasColumnType("INTEGER");
-
-                    b.Property<Guid?>("VeiculoPadraoId")
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 

@@ -6,6 +6,8 @@ using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Configuracoes;
 using CoreMDFe.Application.Features.Onboarding;
 using CoreMDFe.Core.Interfaces;
+using System.Linq;
+using CoreMDFe.Core.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -76,6 +78,32 @@ namespace CoreMDFe.Desktop.ViewModels
 
         [ObservableProperty] private string _mensagemSistema = string.Empty;
 
+        // --- NOVOS CAMPOS WIZARD RÁPIDO ---
+        [ObservableProperty] private ObservableCollection<Veiculo> _veiculosDisponiveis = new();
+        [ObservableProperty] private ObservableCollection<Condutor> _condutoresDisponiveis = new();
+
+        [ObservableProperty] private Veiculo? _veiculoPadraoSelecionado;
+        [ObservableProperty] private Condutor? _condutorPadraoSelecionado;
+
+        [ObservableProperty] private string _produtoTipoCargaPadrao = string.Empty;
+        [ObservableProperty] private string _produtoNomePadrao = string.Empty;
+        [ObservableProperty] private string _produtoEANPadrao = string.Empty;
+        [ObservableProperty] private string _produtoNCMPadrao = string.Empty;
+
+        [ObservableProperty] private int _seguroResponsavelPadraoIndex = 0; // 0=Emitente, 1=Contratante
+        [ObservableProperty] private string _seguroCpfCnpjPadrao = string.Empty;
+        [ObservableProperty] private string _seguroNomeSeguradoraPadrao = string.Empty;
+        [ObservableProperty] private string _seguroCnpjSeguradoraPadrao = string.Empty;
+        [ObservableProperty] private string _seguroApolicePadrao = string.Empty;
+
+        [ObservableProperty] private string _pagamentoNomeContratantePadrao = string.Empty;
+        [ObservableProperty] private string _pagamentoCpfCnpjContratantePadrao = string.Empty;
+        [ObservableProperty] private int _pagamentoIndicadorPadraoIndex = 0; // 0=À Vista, 1=A Prazo
+        [ObservableProperty] private string _pagamentoCnpjInstituicaoPadrao = string.Empty;
+
+        [ObservableProperty] private string _infoFiscoPadrao = string.Empty;
+        [ObservableProperty] private string _infoComplementarPadrao = string.Empty;
+
         public ConfiguracoesViewModel(IMediator mediator, IAppDbContext dbContext)
         {
             _mediator = mediator;
@@ -126,6 +154,13 @@ namespace CoreMDFe.Desktop.ViewModels
                 Telefone = empresa.Telefone ?? string.Empty;
                 Email = empresa.Email ?? string.Empty;
 
+                // Carrega listas para ComboBoxes
+                var veiculos = await _dbContext.Veiculos.ToListAsync();
+                VeiculosDisponiveis = new ObservableCollection<Veiculo>(veiculos);
+
+                var condutores = await _dbContext.Condutores.ToListAsync();
+                CondutoresDisponiveis = new ObservableCollection<Condutor>(condutores);
+
                 if (empresa.Configuracao != null)
                 {
                     CaminhoCertificado = empresa.Configuracao.CaminhoArquivoCertificado ?? string.Empty;
@@ -155,6 +190,31 @@ namespace CoreMDFe.Desktop.ViewModels
                     AtualizarPreviewLogo();
                     if (Logomarca != null && Logomarca.Length > 0)
                         TextoLogomarca = "Logo atual carregada com sucesso!";
+
+                    if (empresa.Configuracao.VeiculoPadraoId.HasValue)
+                        VeiculoPadraoSelecionado = veiculos.FirstOrDefault(v => v.Id == empresa.Configuracao.VeiculoPadraoId.Value);
+
+                    if (empresa.Configuracao.CondutorPadraoId.HasValue)
+                        CondutorPadraoSelecionado = condutores.FirstOrDefault(c => c.Id == empresa.Configuracao.CondutorPadraoId.Value);
+
+                    ProdutoTipoCargaPadrao = empresa.Configuracao.ProdutoTipoCargaPadrao ?? string.Empty;
+                    ProdutoNomePadrao = empresa.Configuracao.ProdutoNomePadrao ?? string.Empty;
+                    ProdutoEANPadrao = empresa.Configuracao.ProdutoEANPadrao ?? string.Empty;
+                    ProdutoNCMPadrao = empresa.Configuracao.ProdutoNCMPadrao ?? string.Empty;
+
+                    SeguroResponsavelPadraoIndex = empresa.Configuracao.SeguroResponsavelPadrao == 2 ? 1 : 0;
+                    SeguroCpfCnpjPadrao = empresa.Configuracao.SeguroCpfCnpjPadrao ?? string.Empty;
+                    SeguroNomeSeguradoraPadrao = empresa.Configuracao.SeguroNomeSeguradoraPadrao ?? string.Empty;
+                    SeguroCnpjSeguradoraPadrao = empresa.Configuracao.SeguroCnpjSeguradoraPadrao ?? string.Empty;
+                    SeguroApolicePadrao = empresa.Configuracao.SeguroApolicePadrao ?? string.Empty;
+
+                    PagamentoNomeContratantePadrao = empresa.Configuracao.PagamentoNomeContratantePadrao ?? string.Empty;
+                    PagamentoCpfCnpjContratantePadrao = empresa.Configuracao.PagamentoCpfCnpjContratantePadrao ?? string.Empty;
+                    PagamentoIndicadorPadraoIndex = empresa.Configuracao.PagamentoIndicadorPadrao;
+                    PagamentoCnpjInstituicaoPadrao = empresa.Configuracao.PagamentoCnpjInstituicaoPadrao ?? string.Empty;
+
+                    InfoFiscoPadrao = empresa.Configuracao.InfoFiscoPadrao ?? string.Empty;
+                    InfoComplementarPadrao = empresa.Configuracao.InfoComplementarPadrao ?? string.Empty;
                 }
             }
         }
@@ -272,7 +332,11 @@ namespace CoreMDFe.Desktop.ViewModels
                 tipoAmbienteSefaz, UfEmitente, UltimaNumeracao, Serie, 5000,
                 RespTecCnpj, RespTecNome, RespTecTelefone, RespTecEmail,
                 GerarQrCode, ModalidadePadrao + 1, TipoEmissaoPadrao + 1, TipoEmitentePadrao + 1, TipoTransportadorPadrao,
-                Logomarca, IsSalvarXml, DiretorioSalvarXml, DiretorioSalvarPdf
+                Logomarca, IsSalvarXml, DiretorioSalvarXml, DiretorioSalvarPdf, VeiculoPadraoSelecionado?.Id, CondutorPadraoSelecionado?.Id,
+                ProdutoTipoCargaPadrao, ProdutoNomePadrao, ProdutoEANPadrao, ProdutoNCMPadrao,
+                SeguroResponsavelPadraoIndex == 1 ? 2 : 1, SeguroCpfCnpjPadrao, SeguroNomeSeguradoraPadrao, SeguroCnpjSeguradoraPadrao, SeguroApolicePadrao,
+                PagamentoNomeContratantePadrao, PagamentoCpfCnpjContratantePadrao, PagamentoIndicadorPadraoIndex, PagamentoCnpjInstituicaoPadrao,
+                InfoFiscoPadrao, InfoComplementarPadrao
             );
 
             var sucesso = await _mediator.Send(command);
