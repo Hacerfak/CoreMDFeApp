@@ -41,8 +41,8 @@ namespace CoreMDFe.Application.Features.Manifestos
         Veiculo? VeiculoTracao, Condutor? Condutor,
         Veiculo? Reboque1, Veiculo? Reboque2, Veiculo? Reboque3,
         bool HasSeguro, string SeguradoraCnpj, string SeguradoraNome, string NumeroApolice, string NumeroAverbacao,
-        bool HasProdutoPredominante, string TipoCarga, string NomeProdutoPredominante, string NcmProduto,
-        bool HasCiotValePedagio, string Ciot, string CpfCnpjCiot, string CnpjFornecedorValePedagio, string CnpjPagadorValePedagio,
+        bool HasProdutoPredominante, string TipoCarga, string NomeProdutoPredominante, string GTINProdutoPredominante, string NcmProduto,
+        bool HasCiotValePedagio, string Ciot, string CpfCnpjCiot, string CnpjFornecedorValePedagio, string CnpjPagadorValePedagio, bool HasLacres, List<Lacre> Lacres,
         // --- NOVOS CAMPOS PARA CARREGAMENTO POSTERIOR ---
         string? IbgeCarregamentoManual = null, string? MunicipioCarregamentoManual = null,
         string? IbgeDescarregamentoManual = null, string? MunicipioDescarregamentoManual = null
@@ -83,29 +83,24 @@ namespace CoreMDFe.Application.Features.Manifestos
             mdfe.InfMDFe.Ide.CUF = ufEmitente;
             mdfe.InfMDFe.Ide.TpAmb = (TipoAmbiente)empresa.Configuracao.TipoAmbiente;
             mdfe.InfMDFe.Ide.TpEmit = request.TipoEmitente > 0 ? (MDFeTipoEmitente)request.TipoEmitente : (MDFeTipoEmitente)empresa.Configuracao.TipoEmitentePadrao;
-            mdfe.InfMDFe.Ide.Modal = request.Modal > 0 ? (MDFeModal)request.Modal : (MDFeModal)empresa.Configuracao.ModalidadePadrao;
-            mdfe.InfMDFe.Ide.TpEmis = request.TipoEmissao > 0 ? (MDFeTipoEmissao)request.TipoEmissao : (MDFeTipoEmissao)empresa.Configuracao.TipoEmissaoPadrao;
-
             var tpTranspFinal = request.TipoTransportador > 0 ? (MDFeTpTransp)request.TipoTransportador : (MDFeTpTransp)empresa.Configuracao.TipoTransportadorPadrao;
-            if (tpTranspFinal > 0) mdfe.InfMDFe.Ide.TpTransp = tpTranspFinal;
-
+            if (tpTranspFinal > 0) mdfe.InfMDFe.Ide.TpTransp = tpTranspFinal; // Opcional
             mdfe.InfMDFe.Ide.Mod = ModeloDocumento.MDFe;
             mdfe.InfMDFe.Ide.Serie = (short)empresa.Configuracao.Serie;
             mdfe.InfMDFe.Ide.NMDF = empresa.Configuracao.UltimaNumeracao;
             mdfe.InfMDFe.Ide.CMDF = new Random().Next(11111111, 99999999);
+            mdfe.InfMDFe.Ide.Modal = request.Modal > 0 ? (MDFeModal)request.Modal : (MDFeModal)empresa.Configuracao.ModalidadePadrao;
             mdfe.InfMDFe.Ide.DhEmi = DateTime.Now;
+            mdfe.InfMDFe.Ide.TpEmis = request.TipoEmissao > 0 ? (MDFeTipoEmissao)request.TipoEmissao : (MDFeTipoEmissao)empresa.Configuracao.TipoEmissaoPadrao;
             mdfe.InfMDFe.Ide.ProcEmi = MDFeIdentificacaoProcessoEmissao.EmissaoComAplicativoContribuinte;
             mdfe.InfMDFe.Ide.VerProc = "CoreMDFe_1.0";
             mdfe.InfMDFe.Ide.UFIni = ufOrigem;
             mdfe.InfMDFe.Ide.UFFim = ufDestino;
 
-            if (request.DataInicioViagem.HasValue) mdfe.InfMDFe.Ide.DhIniViagem = request.DataInicioViagem.Value.DateTime;
-            if (request.IsCanalVerde) mdfe.InfMDFe.Ide.IndCanalVerde = "1";
-
             // Lógica Exclusiva: Carregamento Posterior ou Normal
             if (request.IsCarregamentoPosterior)
             {
-                mdfe.InfMDFe.Ide.IndCarregaPosterior = "1";
+                mdfe.InfMDFe.Ide.IndCarregaPosterior = "1"; //Opcional
                 if (!string.IsNullOrWhiteSpace(request.IbgeCarregamentoManual))
                 {
                     mdfe.InfMDFe.Ide.InfMunCarrega.Add(new MDFeInfMunCarrega
@@ -130,31 +125,27 @@ namespace CoreMDFe.Application.Features.Manifestos
                     if (Enum.TryParse(uf, out Estado estPercurso))
                         mdfe.InfMDFe.Ide.InfPercurso.Add(new MDFeInfPercurso { UFPer = estPercurso });
             }
+
+            if (request.DataInicioViagem.HasValue) mdfe.InfMDFe.Ide.DhIniViagem = request.DataInicioViagem.Value.DateTime; //Opcional
+            if (request.IsCanalVerde) mdfe.InfMDFe.Ide.IndCanalVerde = "1"; //Opcional
             #endregion
 
             #region Emitente (Emit)
             mdfe.InfMDFe.Emit.CNPJ = empresa.Cnpj;
-            mdfe.InfMDFe.Emit.IE = empresa.InscricaoEstadual;
+            // mdfe.InfMDFe.Emit.CPF = "99999999999"; // Usar com série específica 920-969 para emitente pessoa física com inscrição estadual. Poderá ser usado também para emissão do Regime Especial da Nota Fiscal Fácil.
+            mdfe.InfMDFe.Emit.IE = empresa.InscricaoEstadual; //Opcional
             mdfe.InfMDFe.Emit.XNome = empresa.Nome;
-            mdfe.InfMDFe.Emit.XFant = empresa.NomeFantasia;
+            mdfe.InfMDFe.Emit.XFant = empresa.NomeFantasia; //Opcional
             mdfe.InfMDFe.Emit.EnderEmit.XLgr = empresa.Logradouro;
             mdfe.InfMDFe.Emit.EnderEmit.Nro = empresa.Numero;
-            mdfe.InfMDFe.Emit.EnderEmit.XCpl = string.IsNullOrWhiteSpace(empresa.Complemento) ? null : empresa.Complemento;
+            mdfe.InfMDFe.Emit.EnderEmit.XCpl = string.IsNullOrWhiteSpace(empresa.Complemento) ? null : empresa.Complemento; //Opcional
             mdfe.InfMDFe.Emit.EnderEmit.XBairro = empresa.Bairro;
             mdfe.InfMDFe.Emit.EnderEmit.CMun = empresa.CodigoIbgeMunicipio;
             mdfe.InfMDFe.Emit.EnderEmit.XMun = empresa.NomeMunicipio;
-            mdfe.InfMDFe.Emit.EnderEmit.CEP = long.Parse(empresa.Cep.Replace("-", ""));
+            mdfe.InfMDFe.Emit.EnderEmit.CEP = long.Parse(empresa.Cep.Replace("-", "")); //Opcional
             mdfe.InfMDFe.Emit.EnderEmit.UF = ufEmitente;
-            #endregion
-
-            #region Responsável Técnico
-            mdfe.InfMDFe.InfRespTec = new MDFeInfRespTec
-            {
-                CNPJ = "64615275000112", // Apenas números
-                XContato = "Eder Gross Cichelero",
-                Email = "hacerfak@hacerfak.com.br",
-                Fone = "54992221877" // Apenas números
-            };
+            mdfe.InfMDFe.Emit.EnderEmit.Fone = empresa.Telefone; //Opcional
+            mdfe.InfMDFe.Emit.EnderEmit.Email = empresa.Email; //Opcional
             #endregion
 
             #region Modal Rodoviário
@@ -264,16 +255,6 @@ namespace CoreMDFe.Application.Features.Manifestos
             #endregion
 
             #region Produto Predominante e Seguro
-            if (request.HasProdutoPredominante && !request.IsCarregamentoPosterior)
-            {
-                mdfe.InfMDFe.ProdPred = new MDFeProdPred
-                {
-                    TpCarga = (MDFeTpCarga)int.Parse(request.TipoCarga),
-                    XProd = request.NomeProdutoPredominante,
-                    Ncm = string.IsNullOrWhiteSpace(request.NcmProduto) ? null : request.NcmProduto
-                };
-            }
-
             if (request.HasSeguro)
             {
                 mdfe.InfMDFe.Seg = new List<MDFeSeg>
@@ -287,11 +268,22 @@ namespace CoreMDFe.Application.Features.Manifestos
                     }
                 };
             }
+
+            if (request.HasProdutoPredominante && !request.IsCarregamentoPosterior)
+            {
+                mdfe.InfMDFe.ProdPred = new MDFeProdPred
+                {
+                    TpCarga = (MDFeTpCarga)int.Parse(request.TipoCarga),
+                    XProd = request.NomeProdutoPredominante,
+                    CEan = string.IsNullOrWhiteSpace(request.GTINProdutoPredominante) ? null : request.GTINProdutoPredominante,
+                    Ncm = string.IsNullOrWhiteSpace(request.NcmProduto) ? null : request.NcmProduto
+                };
+            }
             #endregion
 
             #region Totais (Tot)
             mdfe.InfMDFe.Tot = new MDFeTot();
-            mdfe.InfMDFe.Tot.CUnid = MDFeCUnid.KG;
+            mdfe.InfMDFe.Tot.CUnid = (MDFeCUnid)empresa.Configuracao.CodigoUnidadePesoPadrao;
 
             if (request.IsCarregamentoPosterior)
             {
@@ -314,10 +306,50 @@ namespace CoreMDFe.Application.Features.Manifestos
             }
             #endregion
 
+            #region Lacres
+            if (((MDFeModal)request.Modal == MDFeModal.Rodoviario || (MDFeModal)request.Modal == MDFeModal.Ferroviario) && request.HasLacres)
+            {
+                mdfe.InfMDFe.Lacres = new List<MDFeLacre>();
+                foreach (var lacre in request.Lacres)
+                {
+                    mdfe.InfMDFe.Lacres.Add(new MDFeLacre { NLacre = lacre.Numero });
+
+                }
+            }
+            #endregion
+
+            #region Autorizados para Download
+            if (empresa.Configuracao.isAutorizadosDownload && empresa.Configuracao.AutorizadosDownload?.Any() == true)
+            {
+                mdfe.InfMDFe.AutXml = new List<MDFeAutXML>();
+                foreach (var autorizado in empresa.Configuracao.AutorizadosDownload)
+                {
+                    var autXml = new MDFeAutXML();
+
+                    if (!string.IsNullOrWhiteSpace(autorizado.CNPJ))
+                        autXml.CNPJ = autorizado.CNPJ.Replace(".", "").Replace("/", "").Replace("-", "");
+                    else if (!string.IsNullOrWhiteSpace(autorizado.CPF))
+                        autXml.CPF = autorizado.CPF.Replace(".", "").Replace("-", "");
+
+                    mdfe.InfMDFe.AutXml.Add(autXml);
+                }
+            }
+            #endregion
+
             #region Informações adicionais
             mdfe.InfMDFe.InfAdic = new MDFeInfAdic();
             mdfe.InfMDFe.InfAdic.InfAdFisco = "Teste 123 ao fisco";
             mdfe.InfMDFe.InfAdic.InfCpl = "Teste 123 ao complemento";
+            #endregion
+
+            #region Responsável Técnico
+            mdfe.InfMDFe.InfRespTec = new MDFeInfRespTec
+            {
+                CNPJ = "64615275000112", // Apenas números
+                XContato = "Eder Gross Cichelero",
+                Email = "hacerfak@hacerfak.com.br",
+                Fone = "54992221877" // Apenas números
+            };
             #endregion
 
             try
@@ -451,6 +483,26 @@ namespace CoreMDFe.Application.Features.Manifestos
                     historico.Ciots.Add(new ManifestoCiot { Ciot = request.Ciot, CpfCnpj = request.CpfCnpjCiot });
                 if (request.HasCiotValePedagio && !string.IsNullOrWhiteSpace(request.CnpjFornecedorValePedagio))
                     historico.ValesPedagio.Add(new ManifestoValePedagio { CnpjFornecedor = request.CnpjFornecedorValePedagio, CpfCnpjPagador = request.CnpjPagadorValePedagio });
+                // 6. Relacionamento: Lacres e Autorizados para Histórico
+                if (((MDFeModal)request.Modal == MDFeModal.Rodoviario || (MDFeModal)request.Modal == MDFeModal.Ferroviario) && request.HasLacres && request.Lacres != null)
+                {
+                    foreach (var lacre in request.Lacres)
+                    {
+                        historico.Lacres.Add(new ManifestoLacre { Numero = lacre.Numero });
+                    }
+                }
+
+                if (empresa.Configuracao.isAutorizadosDownload && empresa.Configuracao.AutorizadosDownload?.Any() == true)
+                {
+                    foreach (var aut in empresa.Configuracao.AutorizadosDownload)
+                    {
+                        // Pega o que estiver preenchido e limpa as formatações
+                        var docFormatado = !string.IsNullOrWhiteSpace(aut.CNPJ) ? aut.CNPJ : aut.CPF;
+                        docFormatado = docFormatado.Replace(".", "").Replace("/", "").Replace("-", "");
+
+                        historico.AutorizadosDownload.Add(new ManifestoAutorizadoDownload { CpfCnpj = docFormatado });
+                    }
+                }
 
                 historico.Status = historico.CodigoStatus == "100" ? StatusManifesto.Autorizado : StatusManifesto.Rejeitado;
                 if (historico.Status == StatusManifesto.Autorizado)

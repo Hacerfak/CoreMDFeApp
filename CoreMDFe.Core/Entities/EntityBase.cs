@@ -13,6 +13,17 @@ namespace CoreMDFe.Core.Entities
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
     }
 
+    public class AutorizadosDownload
+    {
+        public string CNPJ { get; set; } = string.Empty;
+        public string CPF { get; set; } = string.Empty;
+    }
+
+    public class Lacre
+    {
+        public string Numero { get; set; } = string.Empty;
+    }
+
     /// <summary>
     /// Representa os dados do Emitente (tag <emit> do XSD)
     /// </summary>
@@ -54,6 +65,8 @@ namespace CoreMDFe.Core.Entities
         public int Serie { get; set; }
         public long UltimaNumeracao { get; set; }
         public int TimeOut { get; set; } = 5000;
+        public int CodigoUnidadePesoPadrao { get; set; } = 1; // 1-KG, 2-TON
+
 
         public string CaminhoArquivoCertificado { get; set; } = string.Empty;
         public string SenhaCertificado { get; set; } = string.Empty;
@@ -69,12 +82,6 @@ namespace CoreMDFe.Core.Entities
         // --- NOVOS PADRÕES AVANÇADOS DE EMISSÃO ---
         public Guid? VeiculoPadraoId { get; set; }
         public Guid? CondutorPadraoId { get; set; }
-
-        // Produto Padrão
-        [MaxLength(2)] public string ProdutoTipoCargaPadrao { get; set; } = string.Empty; // Ex: 01-Granel
-        [MaxLength(120)] public string ProdutoNomePadrao { get; set; } = string.Empty;
-        [MaxLength(14)] public string ProdutoEANPadrao { get; set; } = string.Empty;
-        [MaxLength(8)] public string ProdutoNCMPadrao { get; set; } = string.Empty;
 
         // Seguro Padrão
         public int SeguroResponsavelPadrao { get; set; } = 1; // 1-Emitente, 2-Contratante
@@ -92,6 +99,11 @@ namespace CoreMDFe.Core.Entities
         // Textos Frequentes
         [MaxLength(2000)] public string InfoFiscoPadrao { get; set; } = string.Empty;
         [MaxLength(5000)] public string InfoComplementarPadrao { get; set; } = string.Empty;
+
+        // Autorizados para Download
+        public bool isAutorizadosDownload { get; set; } = false;
+        public ICollection<AutorizadosDownload> AutorizadosDownload { get; set; } = new List<AutorizadosDownload>();
+
     }
 
     public class Condutor : EntityBase
@@ -198,6 +210,7 @@ namespace CoreMDFe.Core.Entities
         public ICollection<ManifestoSeguro> Seguros { get; set; } = new List<ManifestoSeguro>();
         public ICollection<ManifestoPagamento> Pagamentos { get; set; } = new List<ManifestoPagamento>();
         public ICollection<ManifestoAutorizadoDownload> AutorizadosDownload { get; set; } = new List<ManifestoAutorizadoDownload>();
+        public ICollection<ManifestoLacre> Lacres { get; set; } = new List<ManifestoLacre>();
     }
 
     // --- TABELAS FILHAS DO MANIFESTO ---
@@ -339,6 +352,13 @@ namespace CoreMDFe.Core.Entities
         public Guid ManifestoId { get; set; }
         [ForeignKey(nameof(ManifestoId))] public ManifestoEletronico Manifesto { get; set; } = null!;
         [MaxLength(14)] public string CpfCnpj { get; set; } = string.Empty;
+    }
+
+    public class ManifestoLacre : EntityBase
+    {
+        public Guid ManifestoId { get; set; }
+        [ForeignKey(nameof(ManifestoId))] public ManifestoEletronico Manifesto { get; set; } = null!;
+        [MaxLength(20)] public string Numero { get; set; } = string.Empty;
     }
 
     public enum StatusManifesto
