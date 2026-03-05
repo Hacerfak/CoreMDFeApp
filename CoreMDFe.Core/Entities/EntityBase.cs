@@ -175,7 +175,6 @@ namespace CoreMDFe.Core.Entities
         [MaxLength(15)] public string ProtocoloAutorizacao { get; set; } = string.Empty;
         [MaxLength(15)] public string ProtocoloEncerramento { get; set; } = string.Empty;
         [MaxLength(15)] public string ProtocoloCancelamento { get; set; } = string.Empty;
-        [MaxLength(15)] public string Recibo { get; set; } = string.Empty;
         [MaxLength(3)] public string CodigoStatus { get; set; } = string.Empty;
         [MaxLength(255)] public string MotivoStatus { get; set; } = string.Empty;
 

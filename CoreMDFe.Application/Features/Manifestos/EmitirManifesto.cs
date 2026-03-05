@@ -45,7 +45,7 @@ namespace CoreMDFe.Application.Features.Manifestos
         Veiculo? VeiculoTracao, Condutor? Condutor,
         Veiculo? Reboque1, Veiculo? Reboque2, Veiculo? Reboque3,
         bool HasSeguro, string SeguradoraCnpj, string SeguradoraNome, string NumeroApolice, string NumeroAverbacao,
-        bool HasProdutoPredominante, string TipoCarga, string NomeProdutoPredominante, string NcmProduto,
+        bool HasProdutoPredominante, string TipoCarga, string NomeProdutoPredominante, string NcmProduto, string CeanProduto,
         bool HasCiotValePedagio, string Ciot, string CpfCnpjCiot, string CnpjFornecedorValePedagio, string CnpjPagadorValePedagio,
         // --- NOVOS CAMPOS PARA CARREGAMENTO POSTERIOR ---
         string? IbgeCarregamentoManual = null, string? MunicipioCarregamentoManual = null,
@@ -134,7 +134,7 @@ namespace CoreMDFe.Application.Features.Manifestos
             mdfe.InfMDFe.Ide.CMDF = new Random().Next(11111111, 99999999);
             mdfe.InfMDFe.Ide.DhEmi = DateTime.Now;
             mdfe.InfMDFe.Ide.ProcEmi = MDFeIdentificacaoProcessoEmissao.EmissaoComAplicativoContribuinte;
-            mdfe.InfMDFe.Ide.VerProc = "CoreMDFe_1.0";
+            mdfe.InfMDFe.Ide.VerProc = "CoreMDFe_1.1";
             mdfe.InfMDFe.Ide.UFIni = ufOrigem;
             mdfe.InfMDFe.Ide.UFFim = ufDestino;
 
@@ -184,6 +184,8 @@ namespace CoreMDFe.Application.Features.Manifestos
             mdfe.InfMDFe.Emit.EnderEmit.XMun = empresa.NomeMunicipio;
             mdfe.InfMDFe.Emit.EnderEmit.CEP = long.Parse(empresa.Cep.Replace("-", ""));
             mdfe.InfMDFe.Emit.EnderEmit.UF = ufEmitente;
+            mdfe.InfMDFe.Emit.EnderEmit.Fone = empresa.Telefone;
+            mdfe.InfMDFe.Emit.EnderEmit.Email = empresa.Email;
             #endregion
 
             #region Responsável Técnico
@@ -235,6 +237,7 @@ namespace CoreMDFe.Application.Features.Manifestos
                     UF = ufVeiculo,
                     Tara = request.VeiculoTracao.TaraKg > 0 ? request.VeiculoTracao.TaraKg : 10000,
                     CapKG = request.VeiculoTracao.CapacidadeKg > 0 ? request.VeiculoTracao.CapacidadeKg : 20000,
+                    CapM3 = request.VeiculoTracao.CapacidadeM3 > 0 ? request.VeiculoTracao.CapacidadeM3 : 20,
                     TpRod = (MDFeTpRod)int.Parse(request.VeiculoTracao.TipoRodado),
                     TpCar = (MDFeTpCar)int.Parse(request.VeiculoTracao.TipoCarroceria),
                     Condutor = new List<MDFeCondutor> { new MDFeCondutor { CPF = request.Condutor.Cpf.Replace(".", "").Replace("-", ""), XNome = request.Condutor.Nome } }
@@ -255,6 +258,7 @@ namespace CoreMDFe.Application.Features.Manifestos
                         UF = ufReb,
                         Tara = reb.TaraKg > 0 ? reb.TaraKg : 5000,
                         CapKG = reb.CapacidadeKg > 0 ? reb.CapacidadeKg : 15000,
+                        CapM3 = reb.CapacidadeM3 > 0 ? reb.CapacidadeM3 : 15,
                         TpCar = (MDFeTpCar)int.Parse(reb.TipoCarroceria)
                     });
                 }
@@ -309,7 +313,8 @@ namespace CoreMDFe.Application.Features.Manifestos
                 {
                     TpCarga = (MDFeTpCarga)int.Parse(request.TipoCarga),
                     XProd = request.NomeProdutoPredominante,
-                    Ncm = string.IsNullOrWhiteSpace(request.NcmProduto) ? null : request.NcmProduto
+                    Ncm = string.IsNullOrWhiteSpace(request.NcmProduto) ? null : request.NcmProduto,
+                    CEan = string.IsNullOrWhiteSpace(request.CeanProduto) ? null : request.CeanProduto
                 };
             }
 
@@ -355,8 +360,8 @@ namespace CoreMDFe.Application.Features.Manifestos
 
             #region Informações adicionais
             mdfe.InfMDFe.InfAdic = new MDFeInfAdic();
-            mdfe.InfMDFe.InfAdic.InfAdFisco = "Teste 123 ao fisco";
-            mdfe.InfMDFe.InfAdic.InfCpl = "Teste 123 ao complemento";
+            mdfe.InfMDFe.InfAdic.InfAdFisco = string.IsNullOrWhiteSpace(empresa.Configuracao.InfoFiscoPadrao) ? null : empresa.Configuracao.InfoFiscoPadrao;
+            mdfe.InfMDFe.InfAdic.InfCpl = string.IsNullOrWhiteSpace(empresa.Configuracao.InfoComplementarPadrao) ? null : empresa.Configuracao.InfoComplementarPadrao;
             #endregion
 
             try
@@ -391,6 +396,8 @@ namespace CoreMDFe.Application.Features.Manifestos
                     CodigoStatus = retornoEnvio?.CStat.ToString() ?? "0",
                     MotivoStatus = retornoEnvio?.XMotivo ?? "Sem comunicação",
                     IndicadorCarregamentoPosterior = request.IsCarregamentoPosterior,
+                    InformacoesComplementares = empresa.Configuracao.InfoComplementarPadrao,
+                    InformacoesFisco = empresa.Configuracao.InfoFiscoPadrao,
 
                     // Totais Básicos
                     QtdNFe = request.IsCarregamentoPosterior ? 0 : request.Documentos.Count(d => d.Tipo == 55),
@@ -401,7 +408,8 @@ namespace CoreMDFe.Application.Features.Manifestos
                     // Produto Predominante
                     ProdutoTipoCarga = request.HasProdutoPredominante && !request.IsCarregamentoPosterior ? request.TipoCarga : "",
                     ProdutoNome = request.HasProdutoPredominante && !request.IsCarregamentoPosterior ? request.NomeProdutoPredominante : "",
-                    ProdutoNCM = request.HasProdutoPredominante && !request.IsCarregamentoPosterior ? request.NcmProduto : ""
+                    ProdutoNCM = request.HasProdutoPredominante && !request.IsCarregamentoPosterior ? request.NcmProduto : "",
+                    ProdutoEAN = request.HasProdutoPredominante && !request.IsCarregamentoPosterior ? request.CeanProduto : ""
                 };
 
                 // 1. Relacionamento: Veículos (Tração e Reboques)

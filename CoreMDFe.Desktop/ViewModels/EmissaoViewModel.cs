@@ -111,6 +111,19 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private int _tipoCargaIndex = 4;
         [ObservableProperty] private string _nomeProdutoPredominante = string.Empty;
         [ObservableProperty] private string _ncmProduto = string.Empty;
+        [ObservableProperty] private string _ceanProduto = string.Empty;
+
+        // CLASSE AUXILIAR DE RANQUEAMENTO
+        private class ProdutoAgregado
+        {
+            public string ChaveDocumento { get; set; } = string.Empty;
+            public string Nome { get; set; } = string.Empty;
+            public string Ncm { get; set; } = string.Empty;
+            public string Cean { get; set; } = string.Empty;
+            public decimal Quantidade { get; set; }
+        }
+
+        private List<ProdutoAgregado> _produtosAgregados = new();
 
         [ObservableProperty] private bool _isCiotValePedagioAberto;
         [ObservableProperty] private string _ciot = string.Empty;
@@ -239,7 +252,9 @@ namespace CoreMDFe.Desktop.ViewModels
             IsAutorizado = false; IsProcessando = false;
             ManifestoAutorizadoId = null;
             XmlEnvio = ""; XmlRetorno = ""; MensagemProcessamento = "";
-            NomeProdutoPredominante = ""; NcmProduto = ""; // Limpa produtos anteriores
+            NomeProdutoPredominante = ""; NcmProduto = "";
+            _produtosAgregados.Clear();
+            CeanProduto = ""; // Limpa produtos anteriores
             PassoAtual = 1;
             AtualizarTotaisEResumos();
         }
@@ -278,11 +293,12 @@ namespace CoreMDFe.Desktop.ViewModels
             {
                 DocumentosFiscais.Remove(documento);
 
-                // Atualiza os totalizadores de quantidade
+                // Remove os produtos atrelados à nota que foi excluída
+                _produtosAgregados.RemoveAll(p => p.ChaveDocumento == documento.Chave);
+
                 if (documento.Tipo == 55) QuantidadeNFe--;
                 else if (documento.Tipo == 57) QuantidadeCTe--;
 
-                // Recalcula totais (peso, valor, origem/destino)
                 AtualizarTotaisEResumos();
             }
         }
@@ -301,12 +317,28 @@ namespace CoreMDFe.Desktop.ViewModels
             var dest = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "dest"); // Alterado para pegar a tag pai
             var enderDest = dest?.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderDest");
 
-            var prod = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "prod");
-            if (prod != null && string.IsNullOrEmpty(NomeProdutoPredominante))
+            var detNodes = doc.Descendants().Where(x => x.Name.LocalName == "det");
+            foreach (var det in detNodes)
             {
-                NomeProdutoPredominante = prod.Elements().FirstOrDefault(x => x.Name.LocalName == "xProd")?.Value ?? "";
-                NcmProduto = prod.Elements().FirstOrDefault(x => x.Name.LocalName == "NCM")?.Value ?? "";
-                if (!string.IsNullOrEmpty(NomeProdutoPredominante)) IsProdutoPredominanteAberto = true;
+                var p = det.Elements().FirstOrDefault(x => x.Name.LocalName == "prod");
+                if (p != null)
+                {
+                    var nome = p.Elements().FirstOrDefault(x => x.Name.LocalName == "xProd")?.Value ?? "";
+                    var ncm = p.Elements().FirstOrDefault(x => x.Name.LocalName == "NCM")?.Value ?? "";
+                    var cean = p.Elements().FirstOrDefault(x => x.Name.LocalName == "cEAN")?.Value ?? "";
+                    var qComStr = p.Elements().FirstOrDefault(x => x.Name.LocalName == "qCom")?.Value ?? "0";
+
+                    decimal.TryParse(qComStr, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal qCom);
+
+                    _produtosAgregados.Add(new ProdutoAgregado
+                    {
+                        ChaveDocumento = chave,
+                        Nome = nome,
+                        Ncm = ncm,
+                        Cean = cean,
+                        Quantidade = qCom
+                    });
+                }
             }
 
             DocumentosFiscais.Add(new DocumentoMDFeDto
@@ -341,10 +373,20 @@ namespace CoreMDFe.Desktop.ViewModels
             var dest = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "dest"); // Novo
 
             var infCarga = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infCarga");
-            if (infCarga != null && string.IsNullOrEmpty(NomeProdutoPredominante))
+            if (infCarga != null)
             {
-                NomeProdutoPredominante = infCarga.Elements().FirstOrDefault(x => x.Name.LocalName == "proPred")?.Value ?? "";
-                if (!string.IsNullOrEmpty(NomeProdutoPredominante)) IsProdutoPredominanteAberto = true;
+                var proPred = infCarga.Elements().FirstOrDefault(x => x.Name.LocalName == "proPred")?.Value ?? "";
+                if (!string.IsNullOrEmpty(proPred))
+                {
+                    _produtosAgregados.Add(new ProdutoAgregado
+                    {
+                        ChaveDocumento = chave,
+                        Nome = proPred,
+                        Ncm = "",
+                        Cean = "",
+                        Quantidade = ParseDecimal(qCarga) // No CTe, usamos o peso bruto/quantidade de carga
+                    });
+                }
             }
 
             DocumentosFiscais.Add(new DocumentoMDFeDto
@@ -379,12 +421,28 @@ namespace CoreMDFe.Desktop.ViewModels
                 UfDescarregamento = DocumentosFiscais.Last().UfDescarga;
             }
 
-            // Fallback do Produto: Se a nota não tinha produto, usa o padrão das Configurações
-            if (string.IsNullOrEmpty(NomeProdutoPredominante) && _configuracaoAtual != null && !string.IsNullOrEmpty(_configuracaoAtual.ProdutoNomePadrao))
+            // MAGIA DO RANQUEAMENTO (AGRUPA -> SOMA AS QTD -> PEGA O MAIOR)
+            if (_produtosAgregados.Any())
             {
-                NomeProdutoPredominante = _configuracaoAtual.ProdutoNomePadrao;
-                NcmProduto = _configuracaoAtual.ProdutoNCMPadrao ?? "";
-                IsProdutoPredominanteAberto = true;
+                var prodPredominante = _produtosAgregados
+                    .GroupBy(p => new { p.Nome, p.Ncm, p.Cean })
+                    .Select(g => new
+                    {
+                        g.Key.Nome,
+                        g.Key.Ncm,
+                        g.Key.Cean,
+                        TotalQuantidade = g.Sum(x => x.Quantidade)
+                    })
+                    .OrderByDescending(x => x.TotalQuantidade)
+                    .FirstOrDefault();
+
+                if (prodPredominante != null)
+                {
+                    NomeProdutoPredominante = prodPredominante.Nome;
+                    NcmProduto = prodPredominante.Ncm;
+                    CeanProduto = prodPredominante.Cean == "SEM GTIN" ? "" : prodPredominante.Cean;
+                    IsProdutoPredominanteAberto = true;
+                }
             }
 
             OnPropertyChanged(nameof(ResumoCidadesCarregamento));
@@ -454,7 +512,7 @@ namespace CoreMDFe.Desktop.ViewModels
                 HasSeguro: IsSeguroAberto, SeguradoraCnpj: SeguradoraCnpj, SeguradoraNome: SeguradoraNome,
                 NumeroApolice: NumeroApolice, NumeroAverbacao: NumeroAverbacao,
                 HasProdutoPredominante: IsProdutoPredominanteAberto, TipoCarga: (TipoCargaIndex + 1).ToString("D2"),
-                NomeProdutoPredominante: NomeProdutoPredominante, NcmProduto: NcmProduto,
+                NomeProdutoPredominante: NomeProdutoPredominante, NcmProduto: NcmProduto, CeanProduto: CeanProduto,
                 HasCiotValePedagio: IsCiotValePedagioAberto, Ciot: Ciot, CpfCnpjCiot: CpfCnpjCiot,
                 CnpjFornecedorValePedagio: CnpjFornecedorValePedagio, CnpjPagadorValePedagio: CnpjPagadorValePedagio,
                 IbgeCarregamentoManual: IbgeCarregamentoManual, MunicipioCarregamentoManual: MunicipioCarregamentoManual,

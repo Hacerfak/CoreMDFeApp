@@ -41,45 +41,6 @@
                                     Content="A viagem terá Carregamento Posterior (Iniciar MDF-e SEM Notas Fiscais)"
                                     IsChecked="{Binding IsCarregamentoPosterior}"
                                     FontWeight="Bold" Foreground="#1565C0" />
-
-                                <StackPanel IsVisible="{Binding IsCarregamentoPosterior}"
-                                    Spacing="10">
-                                    <TextBlock
-                                        Text="Pela regra da SEFAZ, a Origem e o Destino devem ser exatamente o Município do Emitente:"
-                                        Foreground="#555" FontSize="13" />
-
-                                    <Grid ColumnDefinitions="*, 15, *">
-                                        <StackPanel Grid.Column="0" Spacing="5">
-                                            <TextBlock Text="Origem (Nome e IBGE)" FontSize="12"
-                                                FontWeight="SemiBold" Foreground="Gray" />
-                                            <Grid ColumnDefinitions="*, 10, 100">
-                                                <TextBox
-                                                    Text="{Binding MunicipioCarregamentoManual}"
-                                                    IsReadOnly="True" Background="#EEEEEE"
-                                                    Classes="Outline" />
-                                                <TextBox Grid.Column="2"
-                                                    Text="{Binding IbgeCarregamentoManual}"
-                                                    IsReadOnly="True" Background="#EEEEEE"
-                                                    Classes="Outline" />
-                                            </Grid>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Column="2" Spacing="5">
-                                            <TextBlock Text="Destino (Nome e IBGE)" FontSize="12"
-                                                FontWeight="SemiBold" Foreground="Gray" />
-                                            <Grid ColumnDefinitions="*, 10, 100">
-                                                <TextBox
-                                                    Text="{Binding MunicipioDescarregamentoManual}"
-                                                    IsReadOnly="True" Background="#EEEEEE"
-                                                    Classes="Outline" />
-                                                <TextBox Grid.Column="2"
-                                                    Text="{Binding IbgeDescarregamentoManual}"
-                                                    IsReadOnly="True" Background="#EEEEEE"
-                                                    Classes="Outline" />
-                                            </Grid>
-                                        </StackPanel>
-                                    </Grid>
-                                </StackPanel>
                             </StackPanel>
                         </Border>
 
@@ -115,7 +76,7 @@
                                 </StackPanel>
                             </Grid>
 
-                            <ListBox ItemsSource="{Binding DocumentosFiscais}" Height="250"
+                            <ListBox ItemsSource="{Binding DocumentosFiscais}" Height="450"
                                 Background="Transparent" BorderThickness="0">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
@@ -229,12 +190,6 @@
                                     Theme="{StaticResource OutlineComboBox}" />
                             </StackPanel>
                         </Grid>
-
-                        <Separator Background="#EEEEEE" Margin="0,10" />
-                        <CheckBox
-                            Content="A viagem terá mais carregamentos de notas ao longo do caminho? (IndicadorCarregamentoPosterior)"
-                            IsChecked="{Binding IsCarregamentoPosterior}" Foreground="#555"
-                            FontWeight="SemiBold" />
                     </StackPanel>
 
                     <StackPanel IsVisible="{Binding IsPasso3}" Spacing="20">
@@ -445,10 +400,15 @@
                                                     Theme="{StaticResource OutlineTextBox}" />
                                             </StackPanel>
                                         </Grid>
-                                        <TextBox Text="{Binding NcmProduto}"
-                                            Watermark="Código NCM (Opcional)" Classes="Outline"
-                                            Theme="{StaticResource OutlineTextBox}"
-                                            HorizontalAlignment="Left" Width="200" />
+                                        <Grid ColumnDefinitions="*, 15, *">
+                                            <TextBox Grid.Column="0" Text="{Binding NcmProduto}"
+                                                Watermark="Código NCM (Opcional)" Classes="Outline"
+                                                Theme="{StaticResource OutlineTextBox}" />
+
+                                            <TextBox Grid.Column="2" Text="{Binding CeanProduto}"
+                                                Watermark="GTIN / EAN (Opcional)" Classes="Outline"
+                                                Theme="{StaticResource OutlineTextBox}" />
+                                        </Grid>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
