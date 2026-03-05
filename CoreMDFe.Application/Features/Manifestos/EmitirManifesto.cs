@@ -19,6 +19,9 @@ namespace CoreMDFe.Application.Features.Manifestos
 {
     public class DocumentoMDFeDto
     {
+        public string Numero { get; set; } = string.Empty;
+        public string Serie { get; set; } = string.Empty;
+        public string NomeDestinatario { get; set; } = string.Empty;
         public string Chave { get; set; } = string.Empty;
         public int Tipo { get; set; }
         public decimal Valor { get; set; }

@@ -115,8 +115,72 @@
                                 </StackPanel>
                             </Grid>
 
-                            <ListBox ItemsSource="{Binding DocumentosFiscais}" Height="200"
-                                Background="#F8F9FA" CornerRadius="4" />
+                            <ListBox ItemsSource="{Binding DocumentosFiscais}" Height="250"
+                                Background="Transparent" BorderThickness="0">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#F8F9FA" BorderBrush="#E0E0E0"
+                                            BorderThickness="1"
+                                            CornerRadius="6" Padding="15,10" Margin="0,0,0,8">
+                                            <Grid ColumnDefinitions="Auto, *, Auto">
+
+                                                <Border Grid.Column="0" Background="#EDE7F6"
+                                                    BorderBrush="#D1C4E9" BorderThickness="1"
+                                                    CornerRadius="4" Padding="12,6"
+                                                    Margin="0,0,15,0" VerticalAlignment="Center">
+                                                    <TextBlock
+                                                        Text="{Binding Tipo, StringFormat='Mod. {0}'}"
+                                                        FontWeight="Bold" Foreground="#673AB7"
+                                                        FontSize="13" />
+                                                </Border>
+
+                                                <StackPanel Grid.Column="1"
+                                                    VerticalAlignment="Center" Spacing="4">
+                                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                                        <TextBlock Text="Nº" FontWeight="SemiBold"
+                                                            Foreground="#333" FontSize="14" />
+                                                        <TextBlock Text="{Binding Numero}"
+                                                            FontWeight="Bold" Foreground="#333"
+                                                            FontSize="14" />
+                                                        <TextBlock Text="Série"
+                                                            FontWeight="SemiBold" Foreground="#333"
+                                                            FontSize="14" Margin="10,0,0,0" />
+                                                        <TextBlock Text="{Binding Serie}"
+                                                            FontWeight="Bold" Foreground="#333"
+                                                            FontSize="14" />
+                                                    </StackPanel>
+
+                                                    <TextBlock Text="{Binding NomeDestinatario}"
+                                                        FontSize="13" Foreground="#555"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        ToolTip.Tip="{Binding NomeDestinatario}" />
+
+                                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                                        <TextBlock
+                                                            Text="{Binding MunicipioCarregamento}"
+                                                            FontSize="12" Foreground="#888" />
+                                                        <materialIcons:MaterialIcon
+                                                            Kind="ArrowRightThin" Width="14"
+                                                            Height="14" Foreground="#888" />
+                                                        <TextBlock
+                                                            Text="{Binding MunicipioDescarga}"
+                                                            FontSize="12" Foreground="#888" />
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <Button Grid.Column="2" Classes="Flat"
+                                                    Foreground="#F44336" Padding="10"
+                                                    Command="{Binding $parent[UserControl].((vm:EmissaoViewModel)DataContext).RemoverDocumentoCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip.Tip="Remover Documento">
+                                                    <materialIcons:MaterialIcon Kind="DeleteOutline"
+                                                        Width="22" Height="22" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
                         </StackPanel>
                     </StackPanel>
 
@@ -502,13 +566,15 @@
 
                         <Border
                             IsVisible="{Binding MensagemProcessamento, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                            Background="#FFF3E0" BorderBrush="#FF9800" BorderThickness="1"
+                            Background="{Binding CorFundoMensagem}"
+                            BorderBrush="{Binding CorBordaMensagem}" BorderThickness="1"
                             CornerRadius="8" Padding="15">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <materialIcons:MaterialIcon Kind="InformationOutline" Width="24"
-                                    Height="24" Foreground="#F57C00" />
+                                <materialIcons:MaterialIcon Kind="{Binding IconeMensagem}"
+                                    Width="24"
+                                    Height="24" Foreground="{Binding CorTextoMensagem}" />
                                 <TextBlock Text="{Binding MensagemProcessamento}" FontSize="14"
-                                    FontWeight="SemiBold" Foreground="#E65100"
+                                    FontWeight="SemiBold" Foreground="{Binding CorTextoMensagem}"
                                     VerticalAlignment="Center" TextWrapping="Wrap" />
                             </StackPanel>
                         </Border>
@@ -537,26 +603,26 @@
                                     Padding="30,15" FontWeight="Bold" CornerRadius="8" />
                             </StackPanel>
                         </StackPanel>
-
-                        <TextBox Text="{Binding XmlRetorno}" IsReadOnly="True" Height="100"
-                            AcceptsReturn="True" TextWrapping="Wrap" Background="#2B2B2B"
-                            Foreground="#A5D6A7" FontFamily="Consolas" FontSize="11"
-                            IsVisible="{Binding IsAutorizado}" Margin="0,10,0,0" />
                     </StackPanel>
                 </Panel>
             </Border>
         </ScrollViewer>
 
-        <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto" IsVisible="{Binding !IsAutorizado}">
-            <Button Grid.Column="0" Content="Voltar" Command="{Binding VoltarCommand}"
+        <Grid Grid.Row="2" ColumnDefinitions="Auto, Auto, *, Auto"
+            IsVisible="{Binding !IsAutorizado}">
+
+            <Button Grid.Column="0" Content="Cancelar" Command="{Binding CancelarEmissaoCommand}"
+                Classes="Flat" Foreground="#F44336" Padding="20,10" Margin="0,0,10,0" />
+
+            <Button Grid.Column="1" Content="Voltar" Command="{Binding VoltarCommand}"
                 IsVisible="{Binding !IsPasso1}" Classes="Flat" Foreground="Gray" Padding="20,10" />
 
-            <Button Grid.Column="2" Content="Avançar" Command="{Binding AvancarCommand}"
+            <Button Grid.Column="3" Content="Avançar" Command="{Binding AvancarCommand}"
                 IsVisible="{Binding !IsPasso4}" Classes="Primary"
                 Theme="{StaticResource SolidButton}" Background="#673AB7" Foreground="White"
                 Padding="30,10" CornerRadius="20" />
 
-            <Button Grid.Column="2" Content="Emitir MDF-e" Command="{Binding EmitirCommand}"
+            <Button Grid.Column="3" Content="Emitir MDF-e" Command="{Binding EmitirCommand}"
                 IsVisible="{Binding IsPasso4}" Classes="Primary"
                 Theme="{StaticResource SolidButton}" Background="#4CAF50" Foreground="White"
                 Padding="30,10" CornerRadius="20" IsEnabled="{Binding !IsProcessando}" />

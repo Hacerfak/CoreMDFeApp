@@ -24,6 +24,10 @@ namespace CoreMDFe.Desktop.ViewModels
     {
         private readonly IMediator _mediator;
         private readonly IAppDbContext _dbContext;
+        [ObservableProperty] private string _corFundoMensagem = "Transparent";
+        [ObservableProperty] private string _corBordaMensagem = "Transparent";
+        [ObservableProperty] private string _corTextoMensagem = "Black";
+        [ObservableProperty] private string _iconeMensagem = "InformationOutline";
         private Guid _empresaAtualId;
         private string _empresaMunicipio = string.Empty;
         private string _empresaIbge = string.Empty;
@@ -127,6 +131,32 @@ namespace CoreMDFe.Desktop.ViewModels
             _mediator = mediator;
             _dbContext = dbContext;
             _ = CarregarDadosIniciais();
+        }
+
+        partial void OnMensagemProcessamentoChanged(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return;
+
+            if (value.Contains("⏳")) // Processando (Amarelo/Laranja)
+            {
+                CorFundoMensagem = "#FFF3E0"; CorBordaMensagem = "#FFB74D"; CorTextoMensagem = "#E65100"; IconeMensagem = "TimerSand";
+            }
+            else if (value.Contains("✅")) // Sucesso (Verde)
+            {
+                CorFundoMensagem = "#E8F5E9"; CorBordaMensagem = "#81C784"; CorTextoMensagem = "#2E7D32"; IconeMensagem = "CheckCircleOutline";
+            }
+            else if (value.Contains("❌")) // Erro (Vermelho)
+            {
+                CorFundoMensagem = "#FFEBEE"; CorBordaMensagem = "#E57373"; CorTextoMensagem = "#D32F2F"; IconeMensagem = "CloseCircleOutline";
+            }
+            else if (value.Contains("⚠️")) // Alerta (Amarelo Claro)
+            {
+                CorFundoMensagem = "#FFF8E1"; CorBordaMensagem = "#FFE082"; CorTextoMensagem = "#F57C00"; IconeMensagem = "AlertOutline";
+            }
+            else // Neutro (Azul)
+            {
+                CorFundoMensagem = "#E3F2FD"; CorBordaMensagem = "#90CAF9"; CorTextoMensagem = "#1565C0"; IconeMensagem = "InformationOutline";
+            }
         }
 
         private async Task CarregarDadosIniciais()
@@ -241,6 +271,22 @@ namespace CoreMDFe.Desktop.ViewModels
             catch (Exception ex) { Console.WriteLine($"Erro XML: {ex.Message}"); }
         }
 
+        [RelayCommand]
+        private void RemoverDocumento(DocumentoMDFeDto documento)
+        {
+            if (documento != null && DocumentosFiscais.Contains(documento))
+            {
+                DocumentosFiscais.Remove(documento);
+
+                // Atualiza os totalizadores de quantidade
+                if (documento.Tipo == 55) QuantidadeNFe--;
+                else if (documento.Tipo == 57) QuantidadeCTe--;
+
+                // Recalcula totais (peso, valor, origem/destino)
+                AtualizarTotaisEResumos();
+            }
+        }
+
         private void ExtrairDadosNFe(XDocument doc)
         {
             var infNFe = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infNFe");
@@ -248,10 +294,12 @@ namespace CoreMDFe.Desktop.ViewModels
             var chave = infNFe.Attribute("Id")?.Value.Replace("NFe", "");
             if (string.IsNullOrEmpty(chave) || DocumentosFiscais.Any(d => d.Chave == chave)) return;
 
+            var ide = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "ide"); // Novo
             var vNf = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "vNF")?.Value;
             var pesoB = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "pesoB")?.Value;
             var emit = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "emit")?.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderEmit");
-            var dest = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "dest")?.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderDest");
+            var dest = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "dest"); // Alterado para pegar a tag pai
+            var enderDest = dest?.Descendants().FirstOrDefault(x => x.Name.LocalName == "enderDest");
 
             var prod = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "prod");
             if (prod != null && string.IsNullOrEmpty(NomeProdutoPredominante))
@@ -264,15 +312,18 @@ namespace CoreMDFe.Desktop.ViewModels
             DocumentosFiscais.Add(new DocumentoMDFeDto
             {
                 Chave = chave,
-                Tipo = 55,
+                Tipo = 55, // Mod. 55
+                Numero = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "nNF")?.Value ?? "", // Novo
+                Serie = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "serie")?.Value ?? "", // Novo
+                NomeDestinatario = dest?.Elements().FirstOrDefault(x => x.Name.LocalName == "xNome")?.Value ?? "Não Informado", // Novo
                 Valor = ParseDecimal(vNf),
                 Peso = ParseDecimal(pesoB),
                 IbgeCarregamento = ParseLong(emit?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value),
                 MunicipioCarregamento = emit?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? "",
                 UfCarregamento = emit?.Elements().FirstOrDefault(x => x.Name.LocalName == "UF")?.Value?.ToUpper() ?? "",
-                IbgeDescarga = ParseLong(dest?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value),
-                MunicipioDescarga = dest?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? "",
-                UfDescarga = dest?.Elements().FirstOrDefault(x => x.Name.LocalName == "UF")?.Value?.ToUpper() ?? ""
+                IbgeDescarga = ParseLong(enderDest?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMun")?.Value),
+                MunicipioDescarga = enderDest?.Elements().FirstOrDefault(x => x.Name.LocalName == "xMun")?.Value?.ToUpper() ?? "",
+                UfDescarga = enderDest?.Elements().FirstOrDefault(x => x.Name.LocalName == "UF")?.Value?.ToUpper() ?? ""
             });
             QuantidadeNFe++;
         }
@@ -287,6 +338,7 @@ namespace CoreMDFe.Desktop.ViewModels
             var vCarga = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "vCarga")?.Value;
             var qCarga = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infQ" && x.Elements().Any(e => e.Name.LocalName == "cUnid" && e.Value == "01"))?.Elements().FirstOrDefault(x => x.Name.LocalName == "qCarga")?.Value;
             var ide = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "ide");
+            var dest = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "dest"); // Novo
 
             var infCarga = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "infCarga");
             if (infCarga != null && string.IsNullOrEmpty(NomeProdutoPredominante))
@@ -298,7 +350,10 @@ namespace CoreMDFe.Desktop.ViewModels
             DocumentosFiscais.Add(new DocumentoMDFeDto
             {
                 Chave = chave,
-                Tipo = 57,
+                Tipo = 57, // Mod. 57
+                Numero = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "nCT")?.Value ?? "", // Novo
+                Serie = ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "serie")?.Value ?? "", // Novo
+                NomeDestinatario = dest?.Elements().FirstOrDefault(x => x.Name.LocalName == "xNome")?.Value ?? "Não Informado", // Novo
                 Valor = ParseDecimal(vCarga),
                 Peso = ParseDecimal(qCarga),
                 IbgeCarregamento = ParseLong(ide?.Elements().FirstOrDefault(x => x.Name.LocalName == "cMunEnv")?.Value),
@@ -360,86 +415,95 @@ namespace CoreMDFe.Desktop.ViewModels
         }
 
         [RelayCommand]
+        private void CancelarEmissao()
+        {
+            // Limpa todos os dados da tela usando a estrutura já existente
+            NovaEmissao();
+
+            // Heurística 1: Visibilidade do Status do Sistema (Feedback imediato da ação)
+            MensagemProcessamento = "⚠️ Emissão cancelada. Os dados não salvos foram descartados.";
+        }
+
+        [RelayCommand]
         private async Task Emitir()
         {
             if (VeiculoSelecionado == null || CondutorSelecionado == null)
             {
-                MensagemProcessamento = "Selecione Veículo e Condutor no Passo 3."; return;
+                MensagemProcessamento = "⚠️ Selecione Veículo e Condutor no Passo 3."; return;
             }
 
-            // Impede conflito de regras na Sefaz
             if (IsCarregamentoPosterior && DocumentosFiscais.Any())
             {
-                MensagemProcessamento = "⚠️ SEFAZ: MDF-e com Carregamento Posterior NÃO pode conter Notas no momento da emissão. Limpe os XMLs.";
-                return;
+                MensagemProcessamento = "⚠️ SEFAZ: MDF-e com Carregamento Posterior NÃO pode conter Notas. Limpe os XMLs."; return;
             }
 
             IsProcessando = true;
-            MensagemProcessamento = "Transmitindo...";
+            MensagemProcessamento = "⏳ Transmitindo MDF-e para a SEFAZ. Aguarde...";
+            await Task.Delay(50); // Garante que a UI exiba a mensagem e a ProgressBar antes de "travar" a thread de comunicação
 
             var command = new EmitirManifestoCommand(
                 EmpresaId: _empresaAtualId,
                 Documentos: DocumentosFiscais.ToList(),
-                UfCarregamento: UfCarregamento,
-                UfDescarregamento: UfDescarregamento,
-                TipoEmitente: TipoEmitenteIndex + 1,
-                TipoTransportador: TipoTransportadorIndex,
-                Modal: ModalSelecionadoIndex + 1,
-                TipoEmissao: TipoEmissaoIndex + 1,
-                UfsPercurso: UfsPercurso,
-                DataInicioViagem: DataInicioViagem,
-                IsCanalVerde: IsCanalVerde,
-                IsCarregamentoPosterior: IsCarregamentoPosterior,
-                VeiculoTracao: VeiculoSelecionado,
-                Condutor: CondutorSelecionado,
-                Reboque1: Reboque1Selecionado,
-                Reboque2: Reboque2Selecionado,
-                Reboque3: Reboque3Selecionado,
-                HasSeguro: IsSeguroAberto,
-                SeguradoraCnpj: SeguradoraCnpj,
-                SeguradoraNome: SeguradoraNome,
-                NumeroApolice: NumeroApolice,
-                NumeroAverbacao: NumeroAverbacao,
-                HasProdutoPredominante: IsProdutoPredominanteAberto,
-                TipoCarga: (TipoCargaIndex + 1).ToString("D2"),
-                NomeProdutoPredominante: NomeProdutoPredominante,
-                NcmProduto: NcmProduto,
-                HasCiotValePedagio: IsCiotValePedagioAberto,
-                Ciot: Ciot,
-                CpfCnpjCiot: CpfCnpjCiot,
-                CnpjFornecedorValePedagio: CnpjFornecedorValePedagio,
-                CnpjPagadorValePedagio: CnpjPagadorValePedagio,
-                IbgeCarregamentoManual: IbgeCarregamentoManual,
-                MunicipioCarregamentoManual: MunicipioCarregamentoManual,
-                IbgeDescarregamentoManual: IbgeDescarregamentoManual,
-                MunicipioDescarregamentoManual: MunicipioDescarregamentoManual
+                UfCarregamento: UfCarregamento, UfDescarregamento: UfDescarregamento,
+                TipoEmitente: TipoEmitenteIndex + 1, TipoTransportador: TipoTransportadorIndex,
+                Modal: ModalSelecionadoIndex + 1, TipoEmissao: TipoEmissaoIndex + 1,
+                UfsPercurso: UfsPercurso, DataInicioViagem: DataInicioViagem,
+                IsCanalVerde: IsCanalVerde, IsCarregamentoPosterior: IsCarregamentoPosterior,
+                VeiculoTracao: VeiculoSelecionado, Condutor: CondutorSelecionado,
+                Reboque1: Reboque1Selecionado, Reboque2: Reboque2Selecionado, Reboque3: Reboque3Selecionado,
+                HasSeguro: IsSeguroAberto, SeguradoraCnpj: SeguradoraCnpj, SeguradoraNome: SeguradoraNome,
+                NumeroApolice: NumeroApolice, NumeroAverbacao: NumeroAverbacao,
+                HasProdutoPredominante: IsProdutoPredominanteAberto, TipoCarga: (TipoCargaIndex + 1).ToString("D2"),
+                NomeProdutoPredominante: NomeProdutoPredominante, NcmProduto: NcmProduto,
+                HasCiotValePedagio: IsCiotValePedagioAberto, Ciot: Ciot, CpfCnpjCiot: CpfCnpjCiot,
+                CnpjFornecedorValePedagio: CnpjFornecedorValePedagio, CnpjPagadorValePedagio: CnpjPagadorValePedagio,
+                IbgeCarregamentoManual: IbgeCarregamentoManual, MunicipioCarregamentoManual: MunicipioCarregamentoManual,
+                IbgeDescarregamentoManual: IbgeDescarregamentoManual, MunicipioDescarregamentoManual: MunicipioDescarregamentoManual
             );
 
-            var result = await _mediator.Send(command);
+            try
+            {
+                // Task.Run JOGA todo o processamento de XML, Assinatura e Sefaz para Background
+                var result = await Task.Run(() => _mediator.Send(command));
 
-            MensagemProcessamento = result.Sucesso ? "✅ MDF-e Autorizado!" : $"❌ Rejeição: {result.Mensagem}";
-            XmlRetorno = result.XmlRetorno;
-            ManifestoAutorizadoId = result.ManifestoId;
-            IsAutorizado = result.Sucesso;
-            IsProcessando = false;
+                MensagemProcessamento = result.Sucesso ? "✅ MDF-e Autorizado com Sucesso!" : $"❌ Rejeição SEFAZ: {result.Mensagem}";
+                XmlRetorno = result.XmlRetorno;
+                ManifestoAutorizadoId = result.ManifestoId;
+                IsAutorizado = result.Sucesso;
+            }
+            catch (Exception ex)
+            {
+                MensagemProcessamento = $"❌ Erro interno na emissão: {ex.Message}";
+            }
+            finally
+            {
+                IsProcessando = false;
+            }
         }
+
         [RelayCommand]
         private async Task Imprimir()
         {
             if (ManifestoAutorizadoId == null) return;
 
-            MensagemProcessamento = "Gerando PDF...";
-            var result = await _mediator.Send(new GerarPdfManifestoCommand(ManifestoAutorizadoId.Value));
+            MensagemProcessamento = "⏳ Gerando PDF de Impressão...";
+            await Task.Delay(50);
 
-            if (result.Sucesso)
+            try
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(result.CaminhoPdf) { UseShellExecute = true });
-                MensagemProcessamento = "✅ PDF Gerado com sucesso!";
+                var result = await Task.Run(() => _mediator.Send(new GerarPdfManifestoCommand(ManifestoAutorizadoId.Value)));
+
+                if (result.Sucesso)
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(result.CaminhoPdf) { UseShellExecute = true });
+                    MensagemProcessamento = "✅ PDF Gerado e aberto com sucesso!";
+                }
+                else
+                {
+                    MensagemProcessamento = $"❌ Falha ao gerar PDF: {result.Mensagem}";
+                }
             }
-            else
-            {
-                MensagemProcessamento = $"❌ Falha ao gerar PDF: {result.Mensagem}";
-            }
+            catch (Exception ex) { MensagemProcessamento = $"❌ Erro ao abrir PDF: {ex.Message}"; }
         }
 
         // --- CORREÇÃO DO BOTÃO "EDITAR REJEITADO" ---

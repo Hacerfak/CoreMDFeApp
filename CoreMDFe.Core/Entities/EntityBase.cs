@@ -150,6 +150,7 @@ namespace CoreMDFe.Core.Entities
         public int TipoTransportador { get; set; } // 1-ETC, 2-TAC, 3-CTC
 
         public bool IndicadorCarregamentoPosterior { get; set; }
+        public int SequencialEventoInclusao { get; set; } = 0;
 
         // --- Produto Predominante (prod) ---
         [MaxLength(2)] public string ProdutoTipoCarga { get; set; } = string.Empty;
