@@ -48,9 +48,6 @@ namespace CoreMDFe.Desktop.ViewModels
     {
         private readonly IMediator _mediator;
         private readonly IServiceProvider _serviceProvider;
-
-        [ObservableProperty] private DateTime? _dataInicio = DateTime.Today.AddDays(-7);
-        [ObservableProperty] private DateTime? _dataFim = DateTime.Today;
         [ObservableProperty] private ObservableCollection<ManifestoListItem> _manifestos = new();
         [ObservableProperty] private bool _estaCarregando;
         [ObservableProperty][NotifyPropertyChangedFor(nameof(HasMensagem))] private string _mensagemSistema = string.Empty;
@@ -116,15 +113,18 @@ namespace CoreMDFe.Desktop.ViewModels
         public async Task CarregarHistorico(bool manterMensagem = false)
         {
             EstaCarregando = true;
-            if (!manterMensagem) MensagemSistema = "⏳ Atualizando histórico de manifestos...";
+            if (!manterMensagem) MensagemSistema = "⏳ Atualizando base e limpando arquivos antigos...";
             await Task.Delay(50); // Garante que a UI renderize o loader
 
             try
             {
-                var inicio = DataInicio ?? DateTime.Today.AddDays(-7);
-                var fim = DataFim ?? DateTime.Today;
+                // Dispara a rotina de exclusão (Banco + Disco) silenciosamente
+                await Task.Run(() => _mediator.Send(new LimparManifestosAntigosCommand(30)));
 
-                // Joga a consulta do banco de dados para uma thread secundária
+                // Fixa o período de busca eternamente para os últimos 30 dias
+                var inicio = DateTime.Today.AddDays(-30);
+                var fim = DateTime.Today.AddDays(1).AddTicks(-1); // Pega até a meia-noite de hoje
+
                 var listaOrigem = await Task.Run(() => _mediator.Send(new ListarManifestosQuery(inicio, fim)));
 
                 Manifestos = new ObservableCollection<ManifestoListItem>(listaOrigem.Select(m => new ManifestoListItem(m)));
@@ -138,7 +138,7 @@ namespace CoreMDFe.Desktop.ViewModels
         [RelayCommand]
         private void FecharDialogos()
         {
-            IsDialogCancelarAberto = false; IsDialogCondutorAberto = false; IsDialogDFeAberto = false; ManifestoSelecionado = null;
+            IsDialogCancelarAberto = false; IsDialogCondutorAberto = false; IsDialogDFeAberto = false; IsDialogExcluirAberto = false; ManifestoSelecionado = null;
         }
 
         // --- EXTRATOR SEGURO (Impede Erros de Binding) ---

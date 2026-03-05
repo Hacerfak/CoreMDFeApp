@@ -14,6 +14,7 @@ using MDFe.Servicos.RecepcaoMDFe;
 using MDFeEletronico = MDFe.Classes.Informacoes.MDFe;
 using DFe.Utils;
 using DFe.Classes.Entidades;
+using CoreMDFe.Application.Features.Onboarding;
 
 namespace CoreMDFe.Application.Features.Manifestos
 {
@@ -62,6 +63,41 @@ namespace CoreMDFe.Application.Features.Manifestos
         {
             _dbContext = dbContext;
             _mediator = mediator;
+        }
+
+        private void LimparArquivosIntermediarios(string caminhoDiretorio)
+        {
+            try
+            {
+                // Se o caminho for nulo ou a pasta não existir, aborta a limpeza silenciosamente
+                if (string.IsNullOrWhiteSpace(caminhoDiretorio) || !Directory.Exists(caminhoDiretorio))
+                    return;
+
+                var arquivosXml = Directory.GetFiles(caminhoDiretorio, "*.xml");
+
+                foreach (var arquivo in arquivosXml)
+                {
+                    var nomeArquivo = Path.GetFileName(arquivo).ToLower();
+
+                    // REGRAS DE MANUTENÇÃO:
+                    // 1. Arquivo final do MDF-e autorizado (termina em -mdfe.xml)
+                    // 2. Arquivos de eventos consolidados (termina em proceventomdfe.xml)
+                    bool deveManter = nomeArquivo.EndsWith("-mdfe.xml");
+
+                    if (!deveManter)
+                    {
+                        try
+                        {
+                            File.Delete(arquivo);
+                        }
+                        catch
+                        {
+                            // Ignora silenciosamente se o SO estiver bloqueando o arquivo temporário
+                        }
+                    }
+                }
+            }
+            catch { }
         }
 
         public async Task<EmitirManifestoResult> Handle(EmitirManifestoCommand request, CancellationToken cancellationToken)
@@ -469,6 +505,10 @@ namespace CoreMDFe.Application.Features.Manifestos
             {
                 Console.WriteLine($"[AÇÃO - ERRO] {ex}");
                 return new EmitirManifestoResult(false, $"Erro fatal ao emitir: {ex.Message}", "", "");
+            }
+            finally
+            {
+                LimparArquivosIntermediarios(empresa.Configuracao.DiretorioSalvarXml);
             }
         }
     }
