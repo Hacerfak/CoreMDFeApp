@@ -69,7 +69,6 @@ namespace CoreMDFe.Application.Features.Onboarding
                     {
                         CaminhoArquivoCertificado = destinoCertificado,
                         SenhaCertificado = request.SenhaCertificado,
-                        ManterCertificadoEmCache = true,
                         UfEmitente = request.Uf,
                         TipoAmbiente = 2, // Padrão Homologação
                         TimeOut = 5000

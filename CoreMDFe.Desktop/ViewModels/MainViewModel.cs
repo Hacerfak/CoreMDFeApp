@@ -23,6 +23,11 @@ namespace CoreMDFe.Desktop.ViewModels
 
         public void NavegarParaSeletor()
         {
+            // 1. Limpa a empresa ativa da memória global
+            var tenantService = _serviceProvider.GetRequiredService<CurrentTenantService>();
+            tenantService.SetTenant(""); // Ou null, dependendo de como você implementou
+
+            // 2. Carrega o seletor
             ConteudoAtual = _serviceProvider.GetRequiredService<SeletorEmpresaViewModel>();
         }
 

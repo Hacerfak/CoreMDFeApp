@@ -40,9 +40,10 @@ namespace CoreMDFe.Desktop
 
             // 4. Registrar ViewModels (O MainViewModel TEM que ser Singleton para a navegação funcionar)
             services.AddSingleton<MainViewModel>();
-            services.AddSingleton<DashboardViewModel>();
-            services.AddSingleton<EmissaoViewModel>();
+            services.AddSingleton<SeletorEmpresaViewModel>();
 
+            services.AddTransient<DashboardViewModel>();
+            services.AddTransient<EmissaoViewModel>();
             services.AddTransient<ConfiguracoesViewModel>();
             services.AddTransient<OnboardingViewModel>();
             services.AddTransient<SeletorEmpresaViewModel>();

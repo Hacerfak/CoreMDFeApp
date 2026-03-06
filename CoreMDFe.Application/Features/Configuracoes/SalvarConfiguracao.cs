@@ -14,10 +14,10 @@ namespace CoreMDFe.Application.Features.Configuracoes
         string Logradouro, string NumeroEndereco, string Complemento, string Bairro,
         string NomeMunicipio, long CodigoIbgeMunicipio, string Cep, string Telefone, string Email,
         // RESTANTE:
-        string CaminhoCertificado, string SenhaCertificado, bool ManterCertificadoCache,
+        string CaminhoCertificado, string SenhaCertificado,
         int TipoAmbiente, string UfEmitente, long UltimaNumeracao, int Serie, int TimeOut,
         string RespTecCnpj, string RespTecNome, string RespTecTelefone, string RespTecEmail,
-        bool GerarQrCode, int ModalidadePadrao, int TipoEmissaoPadrao, int TipoEmitentePadrao, int TipoTransportadorPadrao,
+        int ModalidadePadrao, int TipoEmissaoPadrao, int TipoEmitentePadrao, int TipoTransportadorPadrao,
         byte[]? Logomarca, bool IsSalvarXml, string DiretorioSalvarXml, string DiretorioSalvarPdf, Guid? VeiculoPadraoId, Guid? CondutorPadraoId,
         string ProdutoTipoCargaPadrao, string ProdutoNomePadrao, string ProdutoEANPadrao, string ProdutoNCMPadrao,
         int SeguroResponsavelPadrao, string SeguroCpfCnpjPadrao, string SeguroNomeSeguradoraPadrao, string SeguroCnpjSeguradoraPadrao, string SeguroApolicePadrao,
@@ -62,7 +62,6 @@ namespace CoreMDFe.Application.Features.Configuracoes
             // Certificado e Ambiente
             empresa.Configuracao!.CaminhoArquivoCertificado = request.CaminhoCertificado;
             empresa.Configuracao.SenhaCertificado = request.SenhaCertificado;
-            empresa.Configuracao.ManterCertificadoEmCache = request.ManterCertificadoCache;
             empresa.Configuracao.TipoAmbiente = request.TipoAmbiente;
             empresa.Configuracao.UfEmitente = request.UfEmitente;
             empresa.Configuracao.UltimaNumeracao = request.UltimaNumeracao;
@@ -70,7 +69,6 @@ namespace CoreMDFe.Application.Features.Configuracoes
             empresa.Configuracao.TimeOut = request.TimeOut;
 
             // Padrões de Emissão
-            empresa.Configuracao.GerarQrCode = request.GerarQrCode;
             empresa.Configuracao.ModalidadePadrao = request.ModalidadePadrao;
             empresa.Configuracao.TipoEmissaoPadrao = request.TipoEmissaoPadrao;
             empresa.Configuracao.TipoEmitentePadrao = request.TipoEmitentePadrao;

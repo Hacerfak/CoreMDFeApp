@@ -529,14 +529,19 @@
                             Background="{Binding CorFundoMensagem}"
                             BorderBrush="{Binding CorBordaMensagem}" BorderThickness="1"
                             CornerRadius="8" Padding="15">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <materialIcons:MaterialIcon Kind="{Binding IconeMensagem}"
-                                    Width="24"
-                                    Height="24" Foreground="{Binding CorTextoMensagem}" />
-                                <TextBlock Text="{Binding MensagemProcessamento}" FontSize="14"
+
+                            <Grid ColumnDefinitions="Auto, *">
+                                <materialIcons:MaterialIcon Grid.Column="0"
+                                    Kind="{Binding IconeMensagem}" Width="24"
+                                    Height="24" Foreground="{Binding CorTextoMensagem}"
+                                    Margin="0,0,10,0" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Column="1" Text="{Binding MensagemProcessamento}"
+                                    FontSize="14"
                                     FontWeight="SemiBold" Foreground="{Binding CorTextoMensagem}"
                                     VerticalAlignment="Center" TextWrapping="Wrap" />
-                            </StackPanel>
+                            </Grid>
+
                         </Border>
 
                         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsProcessando}"

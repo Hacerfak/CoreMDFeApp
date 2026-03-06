@@ -56,7 +56,7 @@ namespace CoreMDFe.Application.Features.Configuracoes
                 //ArrayBytesArquivo = File.ReadAllBytes(configApp.CaminhoArquivoCertificado),
                 ArrayBytesArquivo = certData,
                 Senha = configApp.SenhaCertificado,
-                ManterDadosEmCache = configApp.ManterCertificadoEmCache
+                ManterDadosEmCache = true
             };
 
             // Determina o caminho dinâmico da pasta Schemas junto ao executável (Linux ou Windows)

@@ -57,9 +57,6 @@ namespace CoreMDFe.Core.Entities
 
         public string CaminhoArquivoCertificado { get; set; } = string.Empty;
         public string SenhaCertificado { get; set; } = string.Empty;
-        public bool ManterCertificadoEmCache { get; set; }
-
-        public bool GerarQrCode { get; set; } = true;
         public int ModalidadePadrao { get; set; } = 1;
         public int TipoEmissaoPadrao { get; set; } = 1;
         public int TipoEmitentePadrao { get; set; } = 1;

@@ -12,9 +12,12 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;
+using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using Avalonia.Media.Imaging;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
@@ -44,7 +47,7 @@ namespace CoreMDFe.Desktop.ViewModels
         // --- CERTIFICADO E AMBIENTE ---
         [ObservableProperty] private string _caminhoCertificado = string.Empty;
         [ObservableProperty] private string _senhaCertificado = string.Empty;
-        [ObservableProperty] private bool _manterCertificadoCache;
+        [ObservableProperty] private string _resumoCertificado = "Nenhum certificado selecionado.";
         [ObservableProperty] private string _ufEmitente = "SP";
 
         public ObservableCollection<string> ListaAmbientes { get; } = new() { "1 - Produção", "2 - Homologação" };
@@ -66,7 +69,6 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private string _respTecEmail = string.Empty;
 
         // --- PADRÕES DE EMISSÃO ---
-        [ObservableProperty] private bool _gerarQrCode = true;
         [ObservableProperty] private int _modalidadePadrao = 1;
         [ObservableProperty] private int _tipoEmissaoPadrao = 1;
         [ObservableProperty] private int _tipoEmitentePadrao = 1;
@@ -133,6 +135,49 @@ namespace CoreMDFe.Desktop.ViewModels
             }
         }
 
+        private void AtualizarResumoCertificado()
+        {
+            if (string.IsNullOrWhiteSpace(CaminhoCertificado) || !File.Exists(CaminhoCertificado))
+            {
+                ResumoCertificado = "Nenhum certificado selecionado.";
+                return;
+            }
+
+            try
+            {
+                // Tenta ler o certificado usando a senha informada
+                var certData = File.ReadAllBytes(CaminhoCertificado);
+                var cert = X509CertificateLoader.LoadPkcs12(certData, SenhaCertificado,
+                X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+
+                // No Brasil, o CNPJ costuma vir junto ao 'Common Name' (CN) no Subject do certificado
+                string cn = cert.Subject;
+                var match = Regex.Match(cert.Subject, @"CN=([^,]*)");
+                if (match.Success)
+                {
+                    cn = match.Groups[1].Value;
+                }
+
+                // Formata a saída bonita para o usuário
+                ResumoCertificado = $"{cn}\nVálido até: {cert.NotAfter:dd/MM/yyyy}";
+            }
+            catch
+            {
+                // Se der erro (provavelmente a senha está vazia ou incorreta)
+                ResumoCertificado = "🔒 Arquivo protegido. Digite a senha correta para validar.";
+            }
+        }
+
+        partial void OnCaminhoCertificadoChanged(string value)
+        {
+            AtualizarResumoCertificado();
+        }
+
+        partial void OnSenhaCertificadoChanged(string value)
+        {
+            AtualizarResumoCertificado();
+        }
+
         private async Task CarregarDadosAtuais()
         {
             var empresa = await _dbContext.Empresas.Include(e => e.Configuracao).FirstOrDefaultAsync();
@@ -165,7 +210,7 @@ namespace CoreMDFe.Desktop.ViewModels
                 {
                     CaminhoCertificado = empresa.Configuracao.CaminhoArquivoCertificado ?? string.Empty;
                     SenhaCertificado = empresa.Configuracao.SenhaCertificado ?? string.Empty;
-                    ManterCertificadoCache = empresa.Configuracao.ManterCertificadoEmCache;
+                    AtualizarResumoCertificado();
                     UfEmitente = empresa.Configuracao.UfEmitente ?? "SP";
                     AmbienteSelecionadoIndex = empresa.Configuracao.TipoAmbiente == 1 ? 0 : 1;
                     UltimaNumeracao = empresa.Configuracao.UltimaNumeracao;
@@ -175,7 +220,6 @@ namespace CoreMDFe.Desktop.ViewModels
                     DiretorioSalvarXml = empresa.Configuracao.DiretorioSalvarXml ?? string.Empty;
                     DiretorioSalvarPdf = empresa.Configuracao.DiretorioSalvarPdf ?? string.Empty;
 
-                    GerarQrCode = empresa.Configuracao.GerarQrCode;
                     ModalidadePadrao = Math.Max(0, empresa.Configuracao.ModalidadePadrao - 1);
                     TipoEmissaoPadrao = Math.Max(0, empresa.Configuracao.TipoEmissaoPadrao - 1);
                     TipoEmitentePadrao = Math.Max(0, empresa.Configuracao.TipoEmitentePadrao - 1);
@@ -327,10 +371,9 @@ namespace CoreMDFe.Desktop.ViewModels
             var command = new SalvarConfiguracaoCommand(
                 Cnpj, Nome, Fantasia, Ie, Rntrc,
                 Logradouro, NumeroEndereco, Complemento, Bairro, NomeMunicipio, CodigoIbgeMunicipio, Cep, Telefone, Email,
-                CaminhoCertificado, SenhaCertificado, ManterCertificadoCache,
+                CaminhoCertificado, SenhaCertificado,
                 tipoAmbienteSefaz, UfEmitente, UltimaNumeracao, Serie, 5000,
-                RespTecCnpj, RespTecNome, RespTecTelefone, RespTecEmail,
-                GerarQrCode, ModalidadePadrao + 1, TipoEmissaoPadrao + 1, TipoEmitentePadrao + 1, TipoTransportadorPadrao,
+                RespTecCnpj, RespTecNome, RespTecTelefone, RespTecEmail, ModalidadePadrao + 1, TipoEmissaoPadrao + 1, TipoEmitentePadrao + 1, TipoTransportadorPadrao,
                 Logomarca, IsSalvarXml, DiretorioSalvarXml, DiretorioSalvarPdf, VeiculoPadraoSelecionado?.Id, CondutorPadraoSelecionado?.Id,
                 ProdutoTipoCargaPadrao, ProdutoNomePadrao, ProdutoEANPadrao, ProdutoNCMPadrao,
                 SeguroResponsavelPadraoIndex == 1 ? 2 : 1, SeguroCpfCnpjPadrao, SeguroNomeSeguradoraPadrao, SeguroCnpjSeguradoraPadrao, SeguroApolicePadrao,

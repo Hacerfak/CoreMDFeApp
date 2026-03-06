@@ -30,14 +30,19 @@
                     BorderBrush="{Binding CorBordaMensagem}"
                     BorderThickness="1" Padding="15" CornerRadius="8"
                     IsVisible="{Binding HasMensagem}" Margin="0,10,0,0">
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <materialIcons:MaterialIcon Kind="{Binding IconeMensagem}"
+
+                    <Grid ColumnDefinitions="Auto, *">
+                        <materialIcons:MaterialIcon Grid.Column="0" Kind="{Binding IconeMensagem}"
                             Foreground="{Binding CorTextoMensagem}"
-                            Width="24" Height="24" />
-                        <TextBlock Text="{Binding MensagemSistema}"
+                            Width="24" Height="24" Margin="0,0,10,0"
+                            VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Column="1" Text="{Binding MensagemSistema}"
                             Foreground="{Binding CorTextoMensagem}"
-                            FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center" />
-                    </StackPanel>
+                            FontWeight="SemiBold" TextWrapping="Wrap"
+                            VerticalAlignment="Center" />
+                    </Grid>
+
                 </Border>
 
                 <Border Classes="Card" Padding="0" Margin="0,10,0,0">
@@ -105,7 +110,7 @@
                                                             FontSize="12" FontWeight="SemiBold"
                                                             Foreground="#2196F3"
                                                             TextTrimming="CharacterEllipsis"
-                                                            MaxWidth="160" />
+                                                            MaxWidth="400" />
                                                         <materialIcons:MaterialIcon
                                                             Kind="ContentCopy" Width="14"
                                                             Height="14" Foreground="#2196F3" />
@@ -220,7 +225,8 @@
                                                     ToolTip.Tip="Excluir MDF-e do Sistema"
                                                     CornerRadius="8"
                                                     Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).AbrirDialogExcluirCommand}"
-                                                    CommandParameter="{Binding Manifesto}">
+                                                    CommandParameter="{Binding Manifesto}"
+                                                    IsVisible="{Binding Manifesto.Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static entities:StatusManifesto.Autorizado}}">
                                                     <materialIcons:MaterialIcon Kind="DeleteForever"
                                                         Width="20" Height="20" Foreground="#F44336" />
                                                 </Button>

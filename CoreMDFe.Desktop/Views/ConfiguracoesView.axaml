@@ -11,7 +11,7 @@
                 <TextBlock Text="Configurações do Sistema" FontSize="28" FontWeight="Light"
                     Foreground="#222222" />
                 <TextBlock
-                    Text="Configure o certificado, o ambiente de emissão e os dados fixos da transportadora."
+                    Text="Configure o certificado, o ambiente de emissão e os dados fixos da empresa."
                     FontSize="14" Foreground="Gray" Margin="0,-15,0,10" />
 
                 <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
@@ -26,29 +26,30 @@
                         </StackPanel>
 
                         <Grid ColumnDefinitions="*, 20, Auto" RowDefinitions="Auto, 15, Auto">
-                            <StackPanel Grid.Row="0" Grid.Column="0" Spacing="5">
-                                <TextBlock Text="Caminho do Arquivo (.pfx)" FontWeight="SemiBold"
-                                    Foreground="#555555" FontSize="13" />
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <TextBox Grid.Column="0" Text="{Binding CaminhoCertificado}"
-                                        Classes="Outline" Theme="{StaticResource OutlineTextBox}"
-                                        IsReadOnly="True" Watermark="Nenhum arquivo..." />
-                                    <Button Grid.Column="1"
-                                        Command="{Binding ProcurarCertificadoCommand}"
-                                        Classes="Outline" Margin="5,0,0,0">
-                                        <materialIcons:MaterialIcon Kind="FolderOpen"
-                                            Foreground="#673AB7" Width="22" Height="22" />
-                                    </Button>
-                                </Grid>
-                            </StackPanel>
+                            <StackPanel Spacing="15">
+                                <TextBlock Text="Certificado Digital" FontWeight="SemiBold"
+                                    FontSize="13" Foreground="#555555" />
 
-                            <StackPanel Grid.Row="0" Grid.Column="2" Spacing="5">
-                                <TextBlock Text="Ambiente SEFAZ" FontWeight="SemiBold"
-                                    Foreground="#555555" FontSize="13" />
-                                <ComboBox ItemsSource="{Binding ListaAmbientes}"
-                                    SelectedIndex="{Binding AmbienteSelecionadoIndex}"
-                                    HorizontalAlignment="Stretch"
-                                    Theme="{StaticResource OutlineComboBox}" />
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <Border Grid.Column="0" Background="#F5F7FA"
+                                        BorderBrush="#E0E0E0" BorderThickness="1"
+                                        CornerRadius="6" Padding="15,10" Margin="0,0,10,0">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <materialIcons:MaterialIcon Kind="Certificate"
+                                                Width="24" Height="24" Foreground="#673AB7"
+                                                VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding ResumoCertificado}"
+                                                VerticalAlignment="Center"
+                                                Foreground="#444" FontWeight="SemiBold"
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Button Grid.Column="1" Content="Procurar Certificado"
+                                        Command="{Binding ProcurarCertificadoCommand}"
+                                        Classes="Outline" Foreground="#673AB7" BorderBrush="#673AB7"
+                                        Padding="20,10" />
+                                </Grid>
                             </StackPanel>
 
                             <StackPanel Grid.Row="2" Grid.Column="0" Spacing="5">
@@ -58,11 +59,6 @@
                                     Classes="Outline" Theme="{StaticResource OutlineTextBox}"
                                     Watermark="Digite a senha..." />
                             </StackPanel>
-
-                            <CheckBox Grid.Row="2" Grid.Column="2"
-                                Content="Manter Certificado em Cache"
-                                IsChecked="{Binding ManterCertificadoCache}" Foreground="#555555"
-                                VerticalAlignment="Center" />
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -73,7 +69,8 @@
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <materialIcons:MaterialIcon Kind="Adjust" Width="24"
                                 Height="24" Foreground="#FF9800" />
-                            <TextBlock Text="Emissão MDF-e" FontSize="18" FontWeight="SemiBold"
+                            <TextBlock Text="Padrões de Emissão do MDF-e" FontSize="18"
+                                FontWeight="SemiBold"
                                 Foreground="#333333" VerticalAlignment="Center" />
                         </StackPanel>
 
@@ -93,6 +90,157 @@
                                     Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 001" />
                             </StackPanel>
                         </Grid>
+
+                        <Grid ColumnDefinitions="*, 20, *, 20, *">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Ambiente SEFAZ" FontWeight="SemiBold"
+                                    Foreground="#555555" FontSize="13" />
+                                <ComboBox ItemsSource="{Binding ListaAmbientes}"
+                                    SelectedIndex="{Binding AmbienteSelecionadoIndex}"
+                                    HorizontalAlignment="Stretch"
+                                    Theme="{StaticResource OutlineComboBox}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Tipo de Emissão" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <ComboBox SelectedIndex="{Binding TipoEmissaoPadrao}"
+                                    HorizontalAlignment="Stretch" Classes="Outline">
+                                    <ComboBoxItem Content="1 - Normal" />
+                                    <ComboBoxItem Content="2 - Contingência" />
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Modalidade" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <ComboBox SelectedIndex="{Binding ModalidadePadrao}"
+                                    HorizontalAlignment="Stretch" Classes="Outline">
+                                    <ComboBoxItem Content="1 - Rodoviário" />
+                                    <ComboBoxItem Content="2 - Aéreo" />
+                                    <ComboBoxItem Content="3 - Aquaviário" />
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, 20, *">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Tipo de Emitente" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <ComboBox SelectedIndex="{Binding TipoEmitentePadrao}"
+                                    HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="1 - Prestador de Serviço" />
+                                    <ComboBoxItem Content="2 - Transportador de Carga Própria" />
+                                    <ComboBoxItem Content="3 - CTe Globalizado" />
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Tipo de Transportador" FontWeight="SemiBold"
+                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
+                                <ComboBox SelectedIndex="{Binding TipoTransportadorPadrao}"
+                                    HorizontalAlignment="Stretch">
+                                    <ComboBoxItem Content="Nenhum" />
+                                    <ComboBoxItem
+                                        Content="1 - Empresa de Transporte de Cargas (ETC)" />
+                                    <ComboBoxItem
+                                        Content="2 - Transportador Autonomo de Cargas (TAC)" />
+                                    <ComboBoxItem
+                                        Content="3 - Cooperativa de Transporte de Cargas (CTC)" />
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, 20, *">
+                            <StackPanel Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Veículo (Tração)" FontSize="13"
+                                    FontWeight="SemiBold" Foreground="#555" />
+                                <ComboBox ItemsSource="{Binding VeiculosDisponiveis}"
+                                    SelectedItem="{Binding VeiculoPadraoSelecionado}"
+                                    HorizontalAlignment="Stretch" Classes="Outline">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                Text="{Binding Placa, StringFormat='Placa: {0}'}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="5">
+                                <TextBlock Text="Condutor" FontSize="13"
+                                    FontWeight="SemiBold" Foreground="#555" />
+                                <ComboBox ItemsSource="{Binding CondutoresDisponiveis}"
+                                    SelectedItem="{Binding CondutorPadraoSelecionado}"
+                                    HorizontalAlignment="Stretch" Classes="Outline">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Nome}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="Seguro de Carga" FontWeight="Bold" FontSize="14"
+                                Foreground="#555" />
+                            <Border Background="#E3F2FD" CornerRadius="4" Padding="5,2">
+                                <TextBlock Text="OPCIONAL" FontSize="10" FontWeight="Bold"
+                                    Foreground="#1E88E5" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock
+                            Text="Deixe em branco caso transporte carga própria ou não utilize seguro fixo."
+                            FontSize="11" Foreground="Gray" Margin="0,-15,0,5" />
+
+                        <Grid ColumnDefinitions="*, 15, *, 15, *">
+                            <StackPanel Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Responsável pelo Seguro" FontSize="12"
+                                    Foreground="Gray" />
+                                <ComboBox SelectedIndex="{Binding SeguroResponsavelPadraoIndex}"
+                                    HorizontalAlignment="Stretch" Classes="Outline">
+                                    <ComboBoxItem Content="1 - Emitente do MDF-e" />
+                                    <ComboBoxItem Content="2 - Contratante do Serviço" />
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="5">
+                                <TextBlock Text="Nome da Seguradora" FontSize="12" Foreground="Gray" />
+                                <TextBox Text="{Binding SeguroNomeSeguradoraPadrao}"
+                                    Classes="Outline" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="4" Spacing="5">
+                                <TextBlock Text="CNPJ da Seguradora" FontSize="12" Foreground="Gray" />
+                                <TextBox Text="{Binding SeguroCnpjSeguradoraPadrao}"
+                                    Classes="Outline" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid ColumnDefinitions="*, 15, *, 15, *">
+                            <StackPanel Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Nº da Apólice" FontSize="12" Foreground="Gray" />
+                                <TextBox Text="{Binding SeguroApolicePadrao}" Classes="Outline" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="5">
+                                <TextBlock Text="CPF/CNPJ do Responsável" FontSize="12"
+                                    Foreground="Gray" />
+                                <TextBox Text="{Binding SeguroCpfCnpjPadrao}" Classes="Outline"
+                                    Watermark="Caso seja o Contratante" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*, 15, *">
+                            <StackPanel Grid.Column="0" Spacing="5">
+                                <TextBlock Text="Informações ao Fisco" FontSize="12"
+                                    Foreground="Gray" />
+                                <TextBox Text="{Binding InfoFiscoPadrao}" Height="60"
+                                    AcceptsReturn="True" TextWrapping="Wrap" Classes="Outline" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="5">
+                                <TextBlock Text="Informações Complementares" FontSize="12"
+                                    Foreground="Gray" />
+                                <TextBox Text="{Binding InfoComplementarPadrao}" Height="60"
+                                    AcceptsReturn="True" TextWrapping="Wrap" Classes="Outline" />
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
@@ -102,7 +250,8 @@
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <materialIcons:MaterialIcon Kind="FolderCogOutline" Width="24"
                                 Height="24" Foreground="#FF9800" />
-                            <TextBlock Text="Arquivos e Schemas" FontSize="18" FontWeight="SemiBold"
+                            <TextBlock Text="Arquivos XMLs e PDFs" FontSize="18"
+                                FontWeight="SemiBold"
                                 Foreground="#333333" VerticalAlignment="Center" />
                         </StackPanel>
 
@@ -147,78 +296,12 @@
                     </StackPanel>
                 </Border>
 
-                <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
-                    Padding="25">
-                    <StackPanel Spacing="20">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <materialIcons:MaterialIcon Kind="Tune" Width="24" Height="24"
-                                Foreground="#FF9800" />
-                            <TextBlock Text="Padrões de Emissão" FontSize="18" FontWeight="SemiBold"
-                                Foreground="#333333" VerticalAlignment="Center" />
-                        </StackPanel>
-
-                        <Grid ColumnDefinitions="*, 20, *, 20, *">
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Tipo de Emissão Padrão" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
-                                <ComboBox SelectedIndex="{Binding TipoEmissaoPadrao}"
-                                    HorizontalAlignment="Stretch" Classes="Outline">
-                                    <ComboBoxItem Content="1 - Normal" />
-                                    <ComboBoxItem Content="2 - Contingência" />
-                                </ComboBox>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Modalidade Padrão" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
-                                <ComboBox SelectedIndex="{Binding ModalidadePadrao}"
-                                    HorizontalAlignment="Stretch" Classes="Outline">
-                                    <ComboBoxItem Content="1 - Rodoviário" />
-                                    <ComboBoxItem Content="2 - Aéreo" />
-                                    <ComboBoxItem Content="3 - Aquaviário" />
-                                </ComboBox>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="4" VerticalAlignment="Bottom">
-                                <CheckBox Content="Gerar QR Code (Obrigatório DAMDFE)"
-                                    IsChecked="{Binding GerarQrCode}" FontWeight="SemiBold"
-                                    Foreground="#444" />
-                            </StackPanel>
-                        </Grid>
-
-                        <Grid ColumnDefinitions="*, 20, *">
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Tipo de Emitente" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
-                                <ComboBox SelectedIndex="{Binding TipoEmitentePadrao}"
-                                    HorizontalAlignment="Stretch">
-                                    <ComboBoxItem Content="1 - Prestador de Serviço" />
-                                    <ComboBoxItem Content="2 - Transportador de Carga Própria" />
-                                    <ComboBoxItem Content="3 - CTe Globalizado" />
-                                </ComboBox>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Tipo de Transportador" FontWeight="SemiBold"
-                                    FontSize="12" Foreground="Gray" Margin="0,0,0,5" />
-                                <ComboBox SelectedIndex="{Binding TipoTransportadorPadrao}"
-                                    HorizontalAlignment="Stretch">
-                                    <ComboBoxItem Content="Nenhum" />
-                                    <ComboBoxItem Content="1 - ETC" />
-                                    <ComboBoxItem Content="2 - TAC" />
-                                    <ComboBoxItem Content="3 - CTC" />
-                                </ComboBox>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
                 <Border Classes="Card" Padding="30">
                     <StackPanel Spacing="20">
                         <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,5">
                             <materialIcons:MaterialIcon Kind="Domain" Width="24" Height="24"
                                 Foreground="#673AB7" />
-                            <TextBlock Text="2. Empresa e Endereço" FontWeight="Bold"
+                            <TextBlock Text="Dados da Empresa e Endereço" FontWeight="Bold"
                                 Foreground="#673AB7" FontSize="16" VerticalAlignment="Center" />
                         </StackPanel>
 
@@ -258,8 +341,6 @@
                             <TextBox Text="{Binding Fantasia}" Classes="Outline" />
                         </StackPanel>
 
-                        <Separator Background="#EEEEEE" />
-
                         <WrapPanel Orientation="Horizontal">
                             <StackPanel Spacing="5" Width="180" Margin="0,0,15,15">
                                 <TextBlock Text="CEP" FontSize="13" FontWeight="SemiBold"
@@ -287,8 +368,6 @@
                                 <TextBox Text="{Binding NomeMunicipio}" Classes="Outline" />
                             </StackPanel>
                         </WrapPanel>
-
-                        <Separator Background="#EEEEEE" />
 
                         <UniformGrid Columns="3">
                             <StackPanel Spacing="5" Margin="0,0,10,0">
@@ -344,149 +423,6 @@
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <Border Classes="Card" Padding="30">
-                    <StackPanel Spacing="20">
-                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,0,0,5">
-                            <materialIcons:MaterialIcon Kind="FlashAuto" Width="24" Height="24"
-                                Foreground="#FF9800" />
-                            <TextBlock Text="Preenchimento Automático (Agiliza a Emissão)"
-                                FontWeight="Bold" Foreground="#333" FontSize="16"
-                                VerticalAlignment="Center" />
-                        </StackPanel>
-                        <TextBlock
-                            Text="Estes dados serão injetados automaticamente nos novos MDF-es, mas você poderá revisá-los antes de enviar."
-                            Foreground="Gray" FontSize="12" Margin="0,-15,0,5" />
-
-                        <Grid ColumnDefinitions="*, 20, *">
-                            <StackPanel Grid.Column="0" Spacing="5">
-                                <TextBlock Text="Veículo Padrão (Tração)" FontSize="13"
-                                    FontWeight="SemiBold" Foreground="#555" />
-                                <ComboBox ItemsSource="{Binding VeiculosDisponiveis}"
-                                    SelectedItem="{Binding VeiculoPadraoSelecionado}"
-                                    HorizontalAlignment="Stretch" Classes="Outline">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock
-                                                Text="{Binding Placa, StringFormat='Placa: {0}'}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="5">
-                                <TextBlock Text="Condutor Padrão" FontSize="13"
-                                    FontWeight="SemiBold" Foreground="#555" />
-                                <ComboBox ItemsSource="{Binding CondutoresDisponiveis}"
-                                    SelectedItem="{Binding CondutorPadraoSelecionado}"
-                                    HorizontalAlignment="Stretch" Classes="Outline">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Nome}" />
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                            </StackPanel>
-                        </Grid>
-
-                        <Separator Background="#EEEEEE" />
-
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="Seguro de Carga Padrão" FontWeight="Bold" FontSize="14"
-                                Foreground="#555" />
-                            <Border Background="#E3F2FD" CornerRadius="4" Padding="5,2">
-                                <TextBlock Text="OPCIONAL" FontSize="10" FontWeight="Bold"
-                                    Foreground="#1E88E5" />
-                            </Border>
-                        </StackPanel>
-                        <TextBlock
-                            Text="Deixe em branco caso transporte carga própria ou não utilize seguro fixo."
-                            FontSize="11" Foreground="Gray" Margin="0,-15,0,5" />
-
-                        <Grid ColumnDefinitions="*, 15, *, 15, *">
-                            <StackPanel Grid.Column="0" Spacing="5">
-                                <TextBlock Text="Responsável pelo Seguro" FontSize="12"
-                                    Foreground="Gray" />
-                                <ComboBox SelectedIndex="{Binding SeguroResponsavelPadraoIndex}"
-                                    HorizontalAlignment="Stretch" Classes="Outline">
-                                    <ComboBoxItem Content="1 - Emitente do MDF-e" />
-                                    <ComboBoxItem Content="2 - Contratante do Serviço" />
-                                </ComboBox>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="5">
-                                <TextBlock Text="Nome da Seguradora" FontSize="12" Foreground="Gray" />
-                                <TextBox Text="{Binding SeguroNomeSeguradoraPadrao}"
-                                    Classes="Outline" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="4" Spacing="5">
-                                <TextBlock Text="CNPJ da Seguradora" FontSize="12" Foreground="Gray" />
-                                <TextBox Text="{Binding SeguroCnpjSeguradoraPadrao}"
-                                    Classes="Outline" />
-                            </StackPanel>
-                        </Grid>
-                        <Grid ColumnDefinitions="*, 15, *, 15, *">
-                            <StackPanel Grid.Column="0" Spacing="5">
-                                <TextBlock Text="Nº da Apólice" FontSize="12" Foreground="Gray" />
-                                <TextBox Text="{Binding SeguroApolicePadrao}" Classes="Outline" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="5">
-                                <TextBlock Text="CPF/CNPJ do Responsável" FontSize="12"
-                                    Foreground="Gray" />
-                                <TextBox Text="{Binding SeguroCpfCnpjPadrao}" Classes="Outline"
-                                    Watermark="Caso seja o Contratante" />
-                            </StackPanel>
-                        </Grid>
-
-                        <Separator Background="#EEEEEE" />
-
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="Produto Predominante Padrão" FontWeight="Bold"
-                                FontSize="14" Foreground="#555" />
-                            <Border Background="#E3F2FD" CornerRadius="4" Padding="5,2">
-                                <TextBlock Text="OPCIONAL" FontSize="10" FontWeight="Bold"
-                                    Foreground="#1E88E5" />
-                            </Border>
-                        </StackPanel>
-                        <TextBlock
-                            Text="DICA: Se deixar em branco, o sistema tentará extrair o produto automaticamente das Notas Fiscais (NF-e) importadas."
-                            FontSize="11" FontWeight="SemiBold" Foreground="#4CAF50"
-                            Margin="0,-15,0,5" />
-
-                        <Grid ColumnDefinitions="150, 15, *, 15, 120">
-                            <StackPanel Grid.Column="0" Spacing="5">
-                                <TextBlock Text="Tipo de Carga" FontSize="12" Foreground="Gray" />
-                                <TextBox Text="{Binding ProdutoTipoCargaPadrao}" Classes="Outline"
-                                    Watermark="Ex: 01 (Granel)" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="5">
-                                <TextBlock Text="Nome do Produto" FontSize="12" Foreground="Gray" />
-                                <TextBox Text="{Binding ProdutoNomePadrao}" Classes="Outline"
-                                    Watermark="Ex: Milho em Grãos" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="4" Spacing="5">
-                                <TextBlock Text="Código NCM" FontSize="12" Foreground="Gray" />
-                                <TextBox Text="{Binding ProdutoNCMPadrao}" Classes="Outline" />
-                            </StackPanel>
-                        </Grid>
-
-                        <Separator Background="#EEEEEE" />
-
-                        <Grid ColumnDefinitions="*, 15, *">
-                            <StackPanel Grid.Column="0" Spacing="5">
-                                <TextBlock Text="Informações ao Fisco (Padrão)" FontSize="12"
-                                    Foreground="Gray" />
-                                <TextBox Text="{Binding InfoFiscoPadrao}" Height="60"
-                                    AcceptsReturn="True" TextWrapping="Wrap" Classes="Outline" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="5">
-                                <TextBlock Text="Informações Complementares (Padrão)" FontSize="12"
-                                    Foreground="Gray" />
-                                <TextBox Text="{Binding InfoComplementarPadrao}" Height="60"
-                                    AcceptsReturn="True" TextWrapping="Wrap" Classes="Outline" />
-                            </StackPanel>
-                        </Grid>
-
                     </StackPanel>
                 </Border>
 
