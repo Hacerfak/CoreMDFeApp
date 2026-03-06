@@ -1,0 +1,13 @@
+Copyright (c) 2026 Eder Gross Cichelero
+
+TODOS OS DIREITOS RESERVADOS.
+
+Este projeto e todo o código fonte contido nele são propriedade intelectual de Eder Gross Cichelero.
+
+1. Não é concedida permissão para usar, copiar, modificar, mesclar, publicar, distribuir, sublicenciar e/ou vender cópias deste software, seja para uso pessoal, educacional ou comercial.
+
+2. A reprodução total ou parcial deste software, por qualquer meio, é estritamente proibida sem a autorização prévia e expressa por escrito do detentor dos direitos autorais.
+
+3. Este software é fornecido "no estado em que se encontra", sem garantia de qualquer tipo, expressa ou implícita.
+
+Qualquer uso não autorizado será considerado uma violação de direitos autorais e estará sujeito às penalidades legais cabíveis.
