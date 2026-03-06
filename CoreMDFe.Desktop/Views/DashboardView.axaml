@@ -21,8 +21,9 @@
                                 FontSize="14" Foreground="#4A148C" TextTrimming="CharacterEllipsis"
                                 ToolTip.Tip="{Binding EmpresaAtualNome}" />
                             <StackPanel Orientation="Horizontal" Spacing="5">
-                                <materialIcons:MaterialIcon Kind="Identifier" Width="14" Height="14"
-                                    Foreground="#7B1FA2" />
+                                <materialIcons:MaterialIcon Kind="AccountCircle" Width="14"
+                                    Height="14"
+                                    Foreground="#7B1FA2" Animation="FadeInOut" />
                                 <TextBlock Text="{Binding EmpresaAtualCnpj}" FontSize="12"
                                     Foreground="#7B1FA2" />
                             </StackPanel>
