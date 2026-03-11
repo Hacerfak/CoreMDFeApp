@@ -19,11 +19,11 @@ O **CoreMDFe** é um sistema emissor de Manifesto Eletrônico de Documentos Fisc
 
 ## 🛠️ Tecnologias e Dependências
 
-* **Framework Base:** [.NET 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
+* **Framework Base:** [.NET 10.0](https://dotnet.microsoft.com/download/dotnet/10.0)
 * **Interface Gráfica:** [Avalonia UI](https://avaloniaui.net/) (XAML Multiplataforma)
 * **Arquitetura:** MVVM (CommunityToolkit.Mvvm) + CQRS ([MediatR](https://github.com/jbogard/MediatR))
 * **Banco de Dados:** [SQLite](https://www.sqlite.org/) via Entity Framework Core (EF Core)
-* **Comunicação SEFAZ:** Biblioteca Zeus/DFe (.NET)
+* **Comunicação SEFAZ:** Biblioteca [Zeus/DFe (.NET)](https://github.com/ZeusAutomacao/DFe.NET)
 * **Distribuição/Update:** [Velopack](https://velopack.io/)
 * **Logs:** [Serilog](https://serilog.net/) (Sinks: Console e File)
 
@@ -52,7 +52,7 @@ dotnet tool install -g vpk
 Clone o repositório, restaure os pacotes e inicie o projeto Desktop:
 
 ```bash
-git clone [https://github.com/SeuUsuario/CoreMDFeApp.git](https://github.com/SeuUsuario/CoreMDFeApp.git)
+git clone [https://github.com/Hacerfak/CoreMDFeApp.git](https://github.com/Hacerfak/CoreMDFeApp.git)
 cd CoreMDFeApp/CoreMDFe.Desktop
 dotnet restore
 dotnet run
