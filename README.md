@@ -59,6 +59,15 @@ dotnet run
 
 ```
 
+Se você for compilar e gerar as *Releases* usando um ambiente Linux, o sistema precisa de algumas bibliotecas de desenvolvimento e o `vpk` precisa de ferramentas do sistema operacional para manipular os pacotes AppImage. Instale-as via terminal:
+
+```bash
+# Em distribuições baseadas em Debian/Ubuntu:
+sudo apt update
+sudo apt install squashfs-tools libgdiplus libc6-dev
+
+```
+
 ### 3. Migrations (Banco de Dados)
 
 Sempre que alterar uma entidade no projeto `CoreMDFe.Core`, você deve gerar uma nova migration na camada de infraestrutura:
@@ -77,6 +86,8 @@ dotnet ef migrations add NomeDaSuaAlteracao --startup-project ../CoreMDFe.Deskto
 
 O processo de publicação utiliza o **Velopack** para gerar instaladores e arquivos de atualização diferencial (Delta). Siga o fluxo abaixo sempre que for lançar uma nova versão.
 
+⚠️ **A Regra de Ouro do Velopack:** O empacotamento final (`vpk pack`) **DEVE** ser feito no mesmo sistema operacional de destino. Para gerar o instalador do Windows, você deve rodar o comando no Windows. Para gerar o instalador do Linux, você deve rodar o comando no Linux.
+
 ### Passo 1: Atualizar a Versão Oficial
 
 Abra o arquivo `CoreMDFe.Desktop/CoreMDFe.Desktop.csproj` e atualize a tag de versão. Esta é a "Fonte da Verdade" do sistema.
@@ -94,14 +105,14 @@ Abra o terminal (Powershell/CMD), navegue até a pasta `CoreMDFe.Desktop` e exec
 
 1. **Publicar (Publish):**
 ```bash
-dotnet publish -c Release -o .\publish-win
+dotnet publish -c Release -r win-x64 -o ./publish-win
 
 ```
 
 
 2. **Gerar Pacotes Velopack:**
 ```bash
-vpk pack -u CoreMDFe -v 1.0.2 -p .\publish-win -e CoreMDFe.Desktop.exe
+vpk pack -u CoreMDFe -v 1.0.2 -p ./publish-win -e CoreMDFe.Desktop.exe
 
 ```
 
@@ -119,6 +130,27 @@ dotnet publish -c Release -r linux-x64 --self-contained -o ./publish-linux
 2. **Gerar Pacotes Velopack:** *(Atenção: O executável no Linux não possui `.exe`)*
 ```bash
 vpk pack -u CoreMDFe -v 1.0.2 -p ./publish-linux -e CoreMDFe.Desktop
+
+```
+
+---
+## 🐧 Aviso para Usuários Linux (Executando o AppImage)
+
+O CoreMDFe é distribuído no Linux através de um formato universal (`.AppImage`). Dependendo da sua distribuição, você pode precisar instalar a biblioteca **FUSE** para permitir a montagem e execução do aplicativo:
+
+* **Ubuntu 22.04+, Pop!_OS, Mint e derivados recentes:**
+```bash
+sudo apt install libfuse2
+
+```
+
+* **Debian 12 e derivados:**
+```bash
+sudo apt install libfuse2t64
+
+```
+
+Após instalar a dependência, basta dar permissão de execução ao arquivo (`chmod +x CoreMDFe-*.AppImage`) e dar um duplo clique para iniciar o sistema!
 
 ```
 
