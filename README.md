@@ -162,8 +162,6 @@ sudo apt install libfuse2t64
 
 Após instalar a dependência, basta dar permissão de execução ao arquivo (`chmod +x CoreMDFe-*.AppImage`) e dar um duplo clique para iniciar o sistema!
 
-```
-
 ---
 
 ## 🚀 Publicando as Atualizações (GitHub Releases)
