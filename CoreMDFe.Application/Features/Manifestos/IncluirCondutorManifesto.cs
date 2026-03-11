@@ -24,7 +24,6 @@ namespace CoreMDFe.Application.Features.Manifestos
 
         public async Task<IncluirCondutorManifestoResult> Handle(IncluirCondutorManifestoCommand request, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"[HANDLER - CONDUTOR] Preparando certificado digital...");
             await _mediator.Send(new Configuracoes.AplicarConfiguracaoZeusCommand(), cancellationToken);
 
             var manifesto = await _dbContext.Manifestos.FirstOrDefaultAsync(m => m.Id == request.ManifestoId, cancellationToken);
@@ -35,31 +34,20 @@ namespace CoreMDFe.Application.Features.Manifestos
 
             if (string.IsNullOrEmpty(cpfLimpo) || string.IsNullOrEmpty(nomeLimpo))
                 return new IncluirCondutorManifestoResult(false, "Nome e CPF do condutor são obrigatórios.");
-
-            Console.WriteLine($"[HANDLER - CONDUTOR] Dados limpos: CPF {cpfLimpo} | Nome {nomeLimpo}");
-
             try
             {
-                Console.WriteLine($"[HANDLER - CONDUTOR] Extraindo tag <MDFe> do XML Assinado...");
-
                 var docAssinado = XDocument.Parse(manifesto.XmlAssinado);
                 var nodeMDFe = docAssinado.Descendants().FirstOrDefault(x => x.Name.LocalName == "MDFe");
-
-                if (nodeMDFe == null) Console.WriteLine("[HANDLER - AVISO] Tag <MDFe> não encontrada isolada, tentando desserializar o XML raiz.");
 
                 var mdfe = FuncoesXml.XmlStringParaClasse<MDFeEletronico>(nodeMDFe != null ? nodeMDFe.ToString() : manifesto.XmlAssinado);
 
                 if (mdfe?.InfMDFe == null)
                 {
-                    Console.WriteLine("[HANDLER - CONDUTOR - ERRO] mdfe.InfMDFe ficou nulo! O Zeus não conseguiu montar a classe.");
                     return new IncluirCondutorManifestoResult(false, "Falha na leitura do XML. Estrutura inválida.");
                 }
 
-                Console.WriteLine($"[HANDLER - CONDUTOR] Chamando ServicoMDFeEvento.MDFeEventoIncluirCondutor...");
                 var evento = new ServicoMDFeEvento();
                 var retorno = evento.MDFeEventoIncluirCondutor(mdfe, 1, nomeLimpo, cpfLimpo);
-
-                Console.WriteLine($"[HANDLER - CONDUTOR] SEFAZ Respondeu: cStat {retorno.InfEvento.CStat} - {retorno.InfEvento.XMotivo}");
 
                 if (retorno.InfEvento.CStat == 135)
                     return new IncluirCondutorManifestoResult(true, "Condutor incluído com sucesso!");
@@ -68,7 +56,6 @@ namespace CoreMDFe.Application.Features.Manifestos
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[HANDLER - CONDUTOR - EXCEPTION] {ex}");
                 return new IncluirCondutorManifestoResult(false, $"Erro na montagem do evento: {ex.InnerException?.Message ?? ex.Message}");
             }
         }

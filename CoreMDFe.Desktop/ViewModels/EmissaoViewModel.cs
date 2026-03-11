@@ -17,6 +17,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Serilog;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
@@ -174,6 +175,7 @@ namespace CoreMDFe.Desktop.ViewModels
 
         private async Task CarregarDadosIniciais()
         {
+            Log.Information("[WIZARD] Carregando dados iniciais");
             try
             {
                 var veiculos = await _mediator.Send(new ListarVeiculosQuery());
@@ -217,7 +219,7 @@ namespace CoreMDFe.Desktop.ViewModels
                     }
                 }
             }
-            catch (Exception ex) { Console.WriteLine($"[WIZARD - ERRO] Falha ao inicializar: {ex.Message}"); }
+            catch (Exception ex) { Log.Error($"[WIZARD] Falha ao inicializar: {ex.Message}"); }
         }
 
         [RelayCommand]
@@ -283,7 +285,7 @@ namespace CoreMDFe.Desktop.ViewModels
                 else if (doc.Descendants().Any(x => x.Name.LocalName == "infCte")) ExtrairDadosCTe(doc);
                 AtualizarTotaisEResumos();
             }
-            catch (Exception ex) { Console.WriteLine($"Erro XML: {ex.Message}"); }
+            catch (Exception ex) { Log.Error($"Erro XML: {ex.Message}"); }
         }
 
         [RelayCommand]

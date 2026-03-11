@@ -1,6 +1,7 @@
 using CoreMDFe.Core.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using System;
 using System.IO;
 using System.Linq;
@@ -23,6 +24,7 @@ namespace CoreMDFe.Application.Features.Manifestos
 
         public async Task<bool> Handle(LimparManifestosAntigosCommand request, CancellationToken cancellationToken)
         {
+            Log.Information("[LIMPEZA] Iniciando limpeza dos arquivos/banco de dados...");
             try
             {
                 var dataLimite = DateTime.Today.AddDays(-request.DiasLimiar);
@@ -59,11 +61,12 @@ namespace CoreMDFe.Application.Features.Manifestos
                     }
                 }
 
+                Log.Information("[LIMPEZA] Limpeza concluída com sucesso!");
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[ROTINA BACKGROUND] Falha ao limpar arquivos/banco: {ex.Message}");
+                Log.Error($"[LIMPEZA] Falha ao limpar arquivos/banco: {ex.Message}");
                 return false;
             }
         }

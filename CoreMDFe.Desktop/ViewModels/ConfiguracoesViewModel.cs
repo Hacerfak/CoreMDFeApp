@@ -18,6 +18,7 @@ using System.IO;
 using Avalonia.Media.Imaging;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
+using Serilog;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
@@ -130,7 +131,7 @@ namespace CoreMDFe.Desktop.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao gerar prévia da logo: {ex.Message}");
+                Log.Error($"Erro ao gerar prévia da logo: {ex.Message}");
                 LogoPreview = null;
             }
         }

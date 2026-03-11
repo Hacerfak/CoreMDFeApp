@@ -3,6 +3,7 @@ using CoreMDFe.Application.Services;
 using CoreMDFe.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using System;
 using System.Threading.Tasks;
 
@@ -55,7 +56,7 @@ namespace CoreMDFe.Desktop.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[MainViewModel] Erro ao aplicar migrations no banco {dbPath}: {ex.Message}");
+                    Log.Error($"[MainViewModel] Erro ao aplicar migrations no banco {dbPath}: {ex.Message}");
                     // Aqui poderia ser implementado um aviso visual na UI caso a atualização do banco falhe
                 }
             }

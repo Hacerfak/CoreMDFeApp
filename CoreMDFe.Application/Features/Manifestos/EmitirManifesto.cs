@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 using CoreMDFe.Core.Entities;
 using CoreMDFe.Core.Interfaces;
 using MDFe.Classes.Flags;
@@ -102,12 +103,14 @@ namespace CoreMDFe.Application.Features.Manifestos
 
         public async Task<EmitirManifestoResult> Handle(EmitirManifestoCommand request, CancellationToken cancellationToken)
         {
-            Console.WriteLine("[EMISSÃO] Iniciando geração do MDF-e...");
+            Log.Information("[EMISSÃO] Iniciando geração do XML MDF-e...");
 
             var configAplicada = await _mediator.Send(new Configuracoes.AplicarConfiguracaoZeusCommand(), cancellationToken);
+            Log.Error("[EMISSÃO] Falha ao obter dados do certificado digital.");
             if (!configAplicada) return new EmitirManifestoResult(false, "Falha nas configurações de Certificado.", "", "");
 
             var empresa = await _dbContext.Empresas.Include(e => e.Configuracao).FirstOrDefaultAsync(e => e.Id == request.EmpresaId, cancellationToken);
+            Log.Error("[EMISSÃO] Empresa não encontrada.");
             if (empresa == null || empresa.Configuracao == null) return new EmitirManifestoResult(false, "Empresa não encontrada.", "", "");
 
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -366,12 +369,11 @@ namespace CoreMDFe.Application.Features.Manifestos
 
             try
             {
-                Console.WriteLine("--------------------------------------------------");
-                Console.WriteLine("[DEBUG] XML GERADO (PRÉ-ASSINATURA):");
-                Console.WriteLine(mdfe);
-                Console.WriteLine("--------------------------------------------------");
+                Log.Information("[EMISSÃO] XML GERADO (PRÉ-ASSINATURA) COM SUCESSO!");
             }
-            catch (Exception ex) { Console.WriteLine($"[ERRO LOG XML] {ex.Message}"); }
+            catch (Exception ex) { Log.Error($"[ERRO XML EMISSÃO] {ex.Message}"); }
+
+            Log.Information("[EMISSÃO] Iniciando envio do XML para a SEFAZ...");
 
             try
             {
@@ -503,6 +505,7 @@ namespace CoreMDFe.Application.Features.Manifestos
                 if (historico.Status == StatusManifesto.Autorizado)
                 {
                     empresa.Configuracao.UltimaNumeracao++;
+                    Log.Information("[EMISSÃO] MDF-e Autorizado com sucesso!");
                 }
                 _dbContext.Manifestos.Add(historico);
                 await _dbContext.SaveChangesAsync(cancellationToken);
@@ -511,11 +514,12 @@ namespace CoreMDFe.Application.Features.Manifestos
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[AÇÃO - ERRO] {ex}");
+                Log.Error($"[EMISSÃO] {ex}");
                 return new EmitirManifestoResult(false, $"Erro fatal ao emitir: {ex.Message}", "", "");
             }
             finally
             {
+                Log.Information("[EMISSÃO] Limpando arquivos temporários...");
                 LimparArquivosIntermediarios(empresa.Configuracao.DiretorioSalvarXml);
             }
         }

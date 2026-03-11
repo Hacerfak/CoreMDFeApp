@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Consultas;
 using MediatR;
+using Serilog;
 using System;
 using System.Threading.Tasks;
 
@@ -35,6 +36,7 @@ namespace CoreMDFe.Desktop.ViewModels
         [RelayCommand]
         public async Task CarregarDados()
         {
+            Log.Information("[RESUMO] Carregando estatísticas...");
             try
             {
                 var stats = await _mediator.Send(new ConsultarEstatisticasResumoQuery());
@@ -48,7 +50,7 @@ namespace CoreMDFe.Desktop.ViewModels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[RESUMO - ERRO] Falha ao carregar estatísticas: {ex.Message}");
+                Log.Error($"[RESUMO] Falha ao carregar estatísticas: {ex.Message}");
             }
         }
     }
