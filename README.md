@@ -175,7 +175,6 @@ O sistema de auto-update do CoreMDFe lê diretamente as *Releases* do GitHub.
 * `Setup.exe` (Instalador Windows)
 * `CoreMDFe-1.0.2-linux-x64.AppImage` (Instalador/Portable Linux)
 * `CoreMDFe-1.0.2-win-x64-Portable.zip` (Portable Windows)
-* `CoreMDFe-1.0.2-linux-x64-Portable.tar.gz` (Portable Linux)
 * `CoreMDFe-1.0.2-win-x64-full.nupkg` e `CoreMDFe-1.0.2-linux-x64-full.nupkg` (Pacotes de Atualização)
 * Arquivos `RELEASES` e `RELEASES-linux` (Índices do Velopack)
 
