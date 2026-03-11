@@ -103,12 +103,21 @@ Abra o arquivo `CoreMDFe.Desktop/CoreMDFe.Desktop.csproj` e atualize a tag de ve
 
 Abra o terminal (Powershell/CMD), navegue até a pasta `CoreMDFe.Desktop` e execute:
 
-1. **Publicar (Publish):**
+1. **Publicar (CMD):**
+
 ```bash
-dotnet publish -c Release -r win-x64 -o ./publish-win
+set DOTNET_ROLL_FORWARD=Major
+vpk pack -u CoreMDFe -v 1.0.2 -p .\publish-win -e CoreMDFe.Desktop.exe
 
 ```
 
+1. **Publicar (PowerShell):**
+
+```powershell
+$env:DOTNET_ROLL_FORWARD="Major"
+vpk pack -u CoreMDFe -v 1.0.2 -p .\publish-win -e CoreMDFe.Desktop.exe
+
+```
 
 2. **Gerar Pacotes Velopack:**
 ```bash
@@ -122,6 +131,7 @@ Abra o terminal de um ambiente Linux (ou WSL no Windows), navegue até a pasta `
 
 1. **Publicar (Publish Auto-contido):**
 ```bash
+export DOTNET_ROLL_FORWARD=Major
 dotnet publish -c Release -r linux-x64 --self-contained -o ./publish-linux
 
 ```
