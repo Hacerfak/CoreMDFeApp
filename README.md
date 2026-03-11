@@ -52,7 +52,7 @@ dotnet tool install -g vpk
 Clone o repositório, restaure os pacotes e inicie o projeto Desktop:
 
 ```bash
-git clone [https://github.com/Hacerfak/CoreMDFeApp.git](https://github.com/Hacerfak/CoreMDFeApp.git)
+git clone https://github.com/Hacerfak/CoreMDFeApp.git
 cd CoreMDFeApp/CoreMDFe.Desktop
 dotnet restore
 dotnet run
