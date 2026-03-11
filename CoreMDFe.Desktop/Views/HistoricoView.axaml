@@ -184,6 +184,16 @@
                                                 </Button>
 
                                                 <Button Classes="Flat" Padding="6"
+                                                    ToolTip.Tip="Consultar Situação na Sefaz"
+                                                    Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).ConsultarSefazCommand}"
+                                                    CommandParameter="{Binding Manifesto}"
+                                                    IsVisible="{Binding Manifesto.Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static entities:StatusManifesto.Rejeitado}}">
+                                                    <materialIcons:MaterialIcon
+                                                        Kind="CloudSearch" Width="20"
+                                                        Height="20" Foreground="#2196F3" />
+                                                </Button>
+
+                                                <Button Classes="Flat" Padding="6"
                                                     ToolTip.Tip="Encerrar Viagem" CornerRadius="8"
                                                     Command="{Binding #RootControl.((vm:HistoricoViewModel)DataContext).EncerrarCommand}"
                                                     CommandParameter="{Binding Manifesto}"
@@ -279,23 +289,45 @@
             <Border Background="White" CornerRadius="8" Padding="30" Width="400"
                 VerticalAlignment="Center" HorizontalAlignment="Center"
                 BoxShadow="0 10 30 0 #50000000">
-                <StackPanel Spacing="15">
-                    <TextBlock Text="Incluir Novo Condutor" FontWeight="Bold" FontSize="18"
-                        Foreground="#2196F3" />
-                    <TextBlock Text="Preencha os dados do motorista que assumirá o MDF-e."
-                        TextWrapping="Wrap" Foreground="Gray" />
-                    <TextBox Text="{Binding NovoCondutorNome}" Watermark="Nome Completo"
-                        Classes="Outline" Theme="{StaticResource OutlineTextBox}" />
-                    <TextBox Text="{Binding NovoCondutorCpf}" Watermark="CPF (Somente Números)"
-                        Classes="Outline" Theme="{StaticResource OutlineTextBox}" />
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10"
-                        Margin="0,10,0,0">
-                        <Button Content="Cancelar" Command="{Binding FecharDialogosCommand}"
-                            Classes="Flat" Foreground="Gray" />
-                        <Button Content="Adicionar Condutor"
-                            Command="{Binding ConfirmarInclusaoCondutorCommand}"
-                            Background="#2196F3" Foreground="White"
-                            Theme="{StaticResource SolidButton}" />
+                <StackPanel Spacing="15" Margin="0,15,0,20">
+
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="Selecionar Condutor Cadastrado"
+                            FontWeight="SemiBold" FontSize="13" Foreground="Gray" />
+                        <ComboBox ItemsSource="{Binding CondutoresSalvos}"
+                            SelectedItem="{Binding CondutorSelecionado}"
+                            HorizontalAlignment="Stretch"
+                            PlaceholderText="Clique para selecionar...">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Nome}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <TextBlock Text="Ou preencha manualmente:" FontSize="12" Foreground="#9E9E9E"
+                        HorizontalAlignment="Center" />
+
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="Incluir Novo Condutor" FontWeight="Bold" FontSize="18"
+                            Foreground="#2196F3" />
+                        <TextBlock Text="Preencha os dados do motorista que assumirá o MDF-e."
+                            TextWrapping="Wrap" Foreground="Gray" />
+                        <TextBox Text="{Binding NovoCondutorNome}" Watermark="Nome Completo"
+                            Classes="Outline" Theme="{StaticResource OutlineTextBox}" />
+                        <TextBox Text="{Binding NovoCondutorCpf}" Watermark="CPF (Somente Números)"
+                            Classes="Outline" Theme="{StaticResource OutlineTextBox}" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                            Spacing="10"
+                            Margin="0,10,0,0">
+                            <Button Content="Cancelar" Command="{Binding FecharDialogosCommand}"
+                                Classes="Flat" Foreground="Gray" />
+                            <Button Content="Adicionar Condutor"
+                                Command="{Binding ConfirmarInclusaoCondutorCommand}"
+                                Background="#2196F3" Foreground="White"
+                                Theme="{StaticResource SolidButton}" />
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Border>

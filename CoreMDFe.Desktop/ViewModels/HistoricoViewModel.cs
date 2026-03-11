@@ -1,5 +1,5 @@
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Platform.Storage; // Necessário para o explorador de ficheiros
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Manifestos;
@@ -11,6 +11,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.EntityFrameworkCore;
+using CoreMDFe.Core.Interfaces;
+using Serilog;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
@@ -23,7 +26,6 @@ namespace CoreMDFe.Desktop.ViewModels
 
         // --- NOVA REGRA VISUAL: O botão só aparece se for Carregamento Posterior E se o MDF-e estiver Autorizado ---
         public bool PodeIncluirDFe => Manifesto.IndicadorCarregamentoPosterior && Manifesto.Status == StatusManifesto.Autorizado;
-
         public ManifestoListItem(ManifestoEletronico manifesto)
         {
             Manifesto = manifesto;
@@ -75,12 +77,23 @@ namespace CoreMDFe.Desktop.ViewModels
         // --- NOVO: GESTÃO DO DIÁLOGO DE INCLUSÃO DE DF-E ---
         [ObservableProperty] private bool _isDialogDFeAberto;
         [ObservableProperty] private ObservableCollection<DocumentoMDFeDto> _documentosInclusao = new();
+        [ObservableProperty] private ObservableCollection<Condutor> _condutoresSalvos = new();
+        [ObservableProperty] private Condutor? _condutorSelecionado;
 
         public HistoricoViewModel(IMediator mediator, IServiceProvider serviceProvider)
         {
             _mediator = mediator;
             _serviceProvider = serviceProvider;
             _ = CarregarHistorico();
+        }
+
+        partial void OnCondutorSelecionadoChanged(Condutor? value)
+        {
+            if (value != null)
+            {
+                NovoCondutorNome = value.Nome;
+                NovoCondutorCpf = value.Cpf;
+            }
         }
 
         partial void OnMensagemSistemaChanged(string value)
@@ -151,7 +164,57 @@ namespace CoreMDFe.Desktop.ViewModels
 
         // --- ABERTURA DE DIÁLOGOS ---
         [RelayCommand] private void AbrirDialogCancelar(object param) { if (ObterManifesto(param) is { } m) { ManifestoSelecionado = m; JustificativaCancelamento = string.Empty; IsDialogCancelarAberto = true; } }
-        [RelayCommand] private void AbrirDialogCondutor(object param) { if (ObterManifesto(param) is { } m) { ManifestoSelecionado = m; NovoCondutorNome = string.Empty; NovoCondutorCpf = string.Empty; IsDialogCondutorAberto = true; } }
+
+        [RelayCommand]
+        private async Task AbrirDialogCondutor(object param)
+        {
+            if (ObterManifesto(param) is { } m)
+            {
+                ManifestoSelecionado = m;
+                NovoCondutorNome = string.Empty;
+                NovoCondutorCpf = string.Empty;
+                CondutorSelecionado = null; // Limpa a combobox
+                IsDialogCondutorAberto = true;
+
+                try
+                {
+                    // Como o banco de dados já é o da empresa logada, basta listar tudo!
+                    var dbContext = _serviceProvider.GetRequiredService<IAppDbContext>();
+                    var condutores = await dbContext.Condutores.ToListAsync();
+
+                    CondutoresSalvos = new ObservableCollection<Condutor>(condutores);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Erro ao carregar condutores: {ex.Message}");
+                }
+            }
+        }
+
+        private async Task SalvarCondutorAutomaticamenteAsync(string nome, string cpf)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(cpf)) return;
+
+                var cpfLimpo = System.Text.RegularExpressions.Regex.Replace(cpf, "[^0-9]", "");
+                var dbContext = _serviceProvider.GetRequiredService<IAppDbContext>();
+
+                // Verifica pelo CPF se já existe cadastrado NO BANCO DESTA EMPRESA
+                var existe = await dbContext.Condutores.AnyAsync(c => c.Cpf == cpfLimpo);
+
+                if (!existe)
+                {
+                    var novo = new Condutor { Nome = nome, Cpf = cpfLimpo };
+                    dbContext.Condutores.Add(novo);
+                    await dbContext.SaveChangesAsync(default);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao salvar condutor: {ex.Message}");
+            }
+        }
 
         [RelayCommand]
         private void AbrirDialogDFe(object param)
@@ -369,12 +432,31 @@ namespace CoreMDFe.Desktop.ViewModels
         {
             if (ManifestoSelecionado != null)
             {
-                var id = ManifestoSelecionado.Id; var n = NovoCondutorNome; var c = NovoCondutorCpf;
+                var id = ManifestoSelecionado.Id;
+                var n = NovoCondutorNome;
+                var c = NovoCondutorCpf;
+
                 FecharDialogos();
-                EstaCarregando = true; MensagemSistema = "⏳ Registrando novo condutor na SEFAZ..."; await Task.Delay(50);
+                EstaCarregando = true;
+                MensagemSistema = "⏳ Registrando novo condutor na SEFAZ...";
+                await Task.Delay(50);
+
                 var r = await Task.Run(() => _mediator.Send(new IncluirCondutorManifestoCommand(id, n, c)));
-                MensagemSistema = r.Sucesso ? $"✅ {r.Mensagem}" : $"❌ Erro ao adicionar condutor: {r.Mensagem}";
-                EstaCarregando = false; await CarregarHistorico(true);
+
+                if (r.Sucesso)
+                {
+                    MensagemSistema = $"✅ {r.Mensagem}";
+
+                    // GRAVA O CONDUTOR NO BANCO LOCAL PARA USO FUTURO
+                    await SalvarCondutorAutomaticamenteAsync(n, c);
+                }
+                else
+                {
+                    MensagemSistema = $"❌ Erro ao adicionar condutor: {r.Mensagem}";
+                }
+
+                EstaCarregando = false;
+                await CarregarHistorico(true);
             }
         }
 
@@ -406,6 +488,32 @@ namespace CoreMDFe.Desktop.ViewModels
                 await CarregarHistorico(manterMensagem: true);
             }
             catch (Exception ex) { MensagemSistema = $"❌ Erro ao excluir: {ex.Message}"; EstaCarregando = false; }
+        }
+
+        [RelayCommand]
+        private async Task ConsultarSefaz(object param)
+        {
+            if (ObterManifesto(param) is { } m)
+            {
+                EstaCarregando = true;
+                MensagemSistema = "⏳ Consultando situação do MDF-e na base da SEFAZ...";
+                await Task.Delay(50); // Força renderização da UI
+
+                var resultado = await Task.Run(() => _mediator.Send(new ConsultarSituacaoManifestoCommand(m.Id)));
+
+                if (resultado.Sucesso)
+                {
+                    // Usa a cor Neutra (Azul) para avisos informativos
+                    MensagemSistema = $"ℹ️ {resultado.Mensagem}";
+                    await CarregarHistorico(manterMensagem: true); // Recarrega a tabela caso o status tenha atualizado
+                }
+                else
+                {
+                    MensagemSistema = $"❌ Erro ao consultar: {resultado.Mensagem}";
+                }
+
+                EstaCarregando = false;
+            }
         }
 
         [RelayCommand]

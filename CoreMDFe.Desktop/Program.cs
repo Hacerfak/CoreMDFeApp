@@ -13,11 +13,7 @@ namespace CoreMDFe.Desktop
         [STAThread]
         public static void Main(string[] args)
         {
-            // 1. INICIALIZAÇÃO DO VELOPACK (Deve ser a PRIMEIRA coisa a rodar)
-            // Ele verifica se há atualizações pendentes para aplicar antes do app abrir.
-            VelopackApp.Build().Run();
-
-            // 2. CONFIGURAÇÃO GLOBAL DO SERILOG
+            // 1. CONFIGURAÇÃO GLOBAL DO SERILOG
             Log.Logger = new LoggerConfiguration()
 #if DEBUG
                 .MinimumLevel.Debug() // Se estiver no Visual Studio, regista tudo
@@ -35,6 +31,10 @@ namespace CoreMDFe.Desktop
             try
             {
                 Log.Information("Iniciando a aplicação CoreMDFe...");
+
+                // 2. INICIALIZAÇÃO DO VELOPACK (Deve ser a PRIMEIRA coisa a rodar)
+                // Ele verifica se há atualizações pendentes para aplicar antes do app abrir.
+                VelopackApp.Build().Run();
 
                 // 3. CONTROLE DE INSTÂNCIA ÚNICA (Mutex)
                 const string appName = "CoreMDFeApp_SingleInstance_GlobalMutex";

@@ -35,7 +35,8 @@ namespace CoreMDFe.Desktop
                 return new AppDbContext(path);
             });
 
-            // 3. Configura MediatR
+            // 3. Configura o Logging e o MediatR
+            services.AddLogging();
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(global::CoreMDFe.Application.Features.Configuracoes.SalvarConfiguracaoCommand).Assembly));
 
             // 4. Registrar ViewModels (O MainViewModel TEM que ser Singleton para a navegação funcionar)
@@ -46,7 +47,6 @@ namespace CoreMDFe.Desktop
             services.AddTransient<EmissaoViewModel>();
             services.AddTransient<ConfiguracoesViewModel>();
             services.AddTransient<OnboardingViewModel>();
-            services.AddTransient<SeletorEmpresaViewModel>();
             services.AddTransient<ResumoViewModel>();
             services.AddTransient<VeiculosViewModel>();
             services.AddTransient<CondutoresViewModel>();
