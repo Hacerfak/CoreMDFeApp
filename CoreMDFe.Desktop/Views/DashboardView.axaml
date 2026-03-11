@@ -13,14 +13,24 @@
 
                 <StackPanel Grid.Row="0" Margin="0, 25, 0, 10">
                     <materialIcons:MaterialIcon Kind="TruckFast" Width="48" Height="48"
-                        Foreground="#673AB7" HorizontalAlignment="Center" Margin="0,0,0,15" />
+                        Foreground="#673AB7" HorizontalAlignment="Center" Margin="0,0,0,5" />
+                    <TextBlock Text="CoreMDF-e" FontWeight="Bold"
+                        FontSize="16" Foreground="#4A148C" TextTrimming="CharacterEllipsis"
+                        ToolTip.Tip="CoreMDF-e" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding VersaoSistema}"
+                        Foreground="Gray"
+                        FontSize="12"
+                        HorizontalAlignment="Center"
+                        Margin="0,5,0,10" />
 
                     <Border Background="#F3E5F5" CornerRadius="8" Padding="15" Margin="20,0,20,10">
                         <StackPanel Spacing="5">
                             <TextBlock Text="{Binding EmpresaAtualNome}" FontWeight="Bold"
                                 FontSize="14" Foreground="#4A148C" TextTrimming="CharacterEllipsis"
+                                HorizontalAlignment="Center"
                                 ToolTip.Tip="{Binding EmpresaAtualNome}" />
-                            <StackPanel Orientation="Horizontal" Spacing="5">
+                            <StackPanel Orientation="Horizontal" Spacing="5"
+                                HorizontalAlignment="Center">
                                 <materialIcons:MaterialIcon Kind="AccountCircle" Width="14"
                                     Height="14"
                                     Foreground="#7B1FA2" Animation="FadeInOut" />

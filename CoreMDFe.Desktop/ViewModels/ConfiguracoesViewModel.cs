@@ -14,6 +14,8 @@ using System;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
+using Velopack;
+using Velopack.Sources;
 using System.IO;
 using Avalonia.Media.Imaging;
 using System.Security.Cryptography.X509Certificates;
@@ -79,8 +81,6 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private byte[]? _logomarca;
         [ObservableProperty] private string _textoLogomarca = "Nenhuma logo selecionada";
 
-        [ObservableProperty] private string _mensagemSistema = string.Empty;
-
         // --- NOVOS CAMPOS WIZARD RÁPIDO ---
         [ObservableProperty] private ObservableCollection<Veiculo> _veiculosDisponiveis = new();
         [ObservableProperty] private ObservableCollection<Condutor> _condutoresDisponiveis = new();
@@ -107,11 +107,69 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private string _infoFiscoPadrao = string.Empty;
         [ObservableProperty] private string _infoComplementarPadrao = string.Empty;
 
+        // --- SISTEMA DE MENSAGENS (O mesmo que fizemos nas outras telas) ---
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(HasMensagem))]
+        private string _mensagemSistema = string.Empty;
+
+        public bool HasMensagem => !string.IsNullOrEmpty(MensagemSistema);
+
+        [ObservableProperty] private string _corFundoMensagem = "Transparent";
+        [ObservableProperty] private string _corBordaMensagem = "Transparent";
+        [ObservableProperty] private string _corTextoMensagem = "Black";
+        [ObservableProperty] private string _iconeMensagem = "InformationOutline";
+
         public ConfiguracoesViewModel(IMediator mediator, IAppDbContext dbContext)
         {
             _mediator = mediator;
             _dbContext = dbContext;
             _ = CarregarDadosAtuais();
+        }
+
+        partial void OnMensagemSistemaChanged(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return;
+
+            if (value.Contains("⏳")) { CorFundoMensagem = "#FFF3E0"; CorBordaMensagem = "#FFB74D"; CorTextoMensagem = "#E65100"; IconeMensagem = "TimerSand"; }
+            else if (value.Contains("✅")) { CorFundoMensagem = "#E8F5E9"; CorBordaMensagem = "#81C784"; CorTextoMensagem = "#2E7D32"; IconeMensagem = "CheckCircleOutline"; }
+            else if (value.Contains("❌")) { CorFundoMensagem = "#FFEBEE"; CorBordaMensagem = "#E57373"; CorTextoMensagem = "#D32F2F"; IconeMensagem = "CloseCircleOutline"; }
+            else { CorFundoMensagem = "#E3F2FD"; CorBordaMensagem = "#90CAF9"; CorTextoMensagem = "#1565C0"; IconeMensagem = "InformationOutline"; }
+        }
+
+        // --- ROTINA DE ATUALIZAÇÃO ---
+        [RelayCommand]
+        public async Task VerificarAtualizacoes()
+        {
+            try
+            {
+                MensagemSistema = "⏳ Buscando atualizações no servidor...";
+                await Task.Delay(50);
+
+                // Substitua pela URL do seu repositório
+                var source = new GithubSource("https://github.com/Hacerfak/CoreMDFeApp", accessToken: null, prerelease: false);
+                var mgr = new UpdateManager(source);
+
+                var novaVersao = await Task.Run(() => mgr.CheckForUpdatesAsync());
+                if (novaVersao == null)
+                {
+                    MensagemSistema = "✅ O sistema já está na versão mais recente!";
+                    return;
+                }
+
+                MensagemSistema = $"⏳ Baixando nova versão {novaVersao.TargetFullRelease.Version}...";
+                await Task.Delay(50);
+
+                await Task.Run(() => mgr.DownloadUpdatesAsync(novaVersao));
+
+                MensagemSistema = "⏳ Instalando... O sistema será reiniciado em instantes.";
+                await Task.Delay(2000);
+
+                mgr.ApplyUpdatesAndRestart(novaVersao);
+            }
+            catch (Exception ex)
+            {
+                MensagemSistema = $"❌ Erro ao buscar atualizações: {ex.Message}";
+            }
         }
 
         private void AtualizarPreviewLogo()

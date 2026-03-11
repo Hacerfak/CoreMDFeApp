@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
+using System.Reflection;
+using Velopack;
+using Velopack.Sources;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
@@ -19,6 +22,8 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private string _empresaAtualNome = "Carregando...";
         [ObservableProperty] private string _empresaAtualCnpj = "";
         [ObservableProperty] private string _empresaAtualUf = "";
+
+        public string VersaoSistema => $"Versão {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)}";
 
         // Controle visual do Menu Lateral
         [ObservableProperty] private string _menuAtivo = "Resumo";

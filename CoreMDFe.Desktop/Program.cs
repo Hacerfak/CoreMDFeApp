@@ -2,6 +2,7 @@
 using Serilog;
 using System;
 using System.Threading;
+using Velopack;
 
 namespace CoreMDFe.Desktop
 {
@@ -12,7 +13,11 @@ namespace CoreMDFe.Desktop
         [STAThread]
         public static void Main(string[] args)
         {
-            // 1. CONFIGURAÇÃO GLOBAL DO SERILOG
+            // 1. INICIALIZAÇÃO DO VELOPACK (Deve ser a PRIMEIRA coisa a rodar)
+            // Ele verifica se há atualizações pendentes para aplicar antes do app abrir.
+            VelopackApp.Build().Run();
+
+            // 2. CONFIGURAÇÃO GLOBAL DO SERILOG
             Log.Logger = new LoggerConfiguration()
 #if DEBUG
                 .MinimumLevel.Debug() // Se estiver no Visual Studio, regista tudo
@@ -31,7 +36,7 @@ namespace CoreMDFe.Desktop
             {
                 Log.Information("Iniciando a aplicação CoreMDFe...");
 
-                // 2. CONTROLO DE INSTÂNCIA ÚNICA (Mutex)
+                // 3. CONTROLE DE INSTÂNCIA ÚNICA (Mutex)
                 const string appName = "CoreMDFeApp_SingleInstance_GlobalMutex";
                 bool isNovaInstancia;
 
@@ -45,7 +50,7 @@ namespace CoreMDFe.Desktop
 
                 try
                 {
-                    // 3. INICIA A INTERFACE GRÁFICA
+                    // 4. INICIA A INTERFACE GRÁFICA
                     BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
                 }
                 finally
