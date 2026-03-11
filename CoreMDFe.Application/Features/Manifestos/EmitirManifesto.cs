@@ -137,7 +137,7 @@ namespace CoreMDFe.Application.Features.Manifestos
             mdfe.InfMDFe.Ide.CMDF = new Random().Next(11111111, 99999999);
             mdfe.InfMDFe.Ide.DhEmi = DateTime.Now;
             mdfe.InfMDFe.Ide.ProcEmi = MDFeIdentificacaoProcessoEmissao.EmissaoComAplicativoContribuinte;
-            mdfe.InfMDFe.Ide.VerProc = "CoreMDFe_1.1";
+            mdfe.InfMDFe.Ide.VerProc = "CoreMDFe_v1.2";
             mdfe.InfMDFe.Ide.UFIni = ufOrigem;
             mdfe.InfMDFe.Ide.UFFim = ufDestino;
 
