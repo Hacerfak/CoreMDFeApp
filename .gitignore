@@ -20,6 +20,8 @@ zeus_mdfe_app.db
 *.bak
 TestResults/
 *.TestResults/
+Logs/
+
 
 # Publish e pacotes
 [Pp]ublish/
