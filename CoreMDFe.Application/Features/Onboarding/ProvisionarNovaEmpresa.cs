@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CoreMDFe.Core.Entities;
+using CoreMDFe.Core.Security;
 using CoreMDFe.Infrastructure.Data;
 
 namespace CoreMDFe.Application.Features.Onboarding
@@ -31,9 +32,14 @@ namespace CoreMDFe.Application.Features.Onboarding
                 Directory.CreateDirectory(empresaFolder);
                 Directory.CreateDirectory(certsFolder);
 
-                // 2. Copia o certificado para a pasta isolada
-                var fileName = Path.GetFileName(request.CaminhoCertificadoOriginal);
-                var destinoCertificado = Path.Combine(certsFolder, fileName);
+                // =========================================================================
+                // 2. RENOMEAR O CERTIFICADO
+                // Copia o certificado para a pasta isolada com um nome genérico.
+                // Isso protege contra o péssimo hábito de colocar a senha no nome do arquivo.
+                // =========================================================================
+                var extensao = Path.GetExtension(request.CaminhoCertificadoOriginal); // Mantém .pfx ou .p12
+                var novoNomeCertificado = $"certificado_digital{extensao}";
+                var destinoCertificado = Path.Combine(certsFolder, novoNomeCertificado);
 
                 if (request.CaminhoCertificadoOriginal != destinoCertificado)
                 {
@@ -68,7 +74,7 @@ namespace CoreMDFe.Application.Features.Onboarding
                     Configuracao = new ConfiguracaoApp
                     {
                         CaminhoArquivoCertificado = destinoCertificado,
-                        SenhaCertificado = request.SenhaCertificado,
+                        SenhaCertificado = CryptoService.Encrypt(request.SenhaCertificado),
                         UfEmitente = request.Uf,
                         TipoAmbiente = 2, // Padrão Homologação
                         TimeOut = 5000

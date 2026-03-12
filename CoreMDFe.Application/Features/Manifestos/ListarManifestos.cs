@@ -24,10 +24,10 @@ namespace CoreMDFe.Application.Features.Manifestos
 
         public async Task<List<ManifestoEletronico>> Handle(ListarManifestosQuery request, CancellationToken cancellationToken)
         {
-            // Ajustamos a data final para incluir todo o dia até às 23:59:59
             var dataFimAjustada = request.DataFim.Date.AddDays(1).AddTicks(-1);
 
             return await _dbContext.Manifestos
+                .AsNoTracking() // <-- MAGIA ACONTECE AQUI!
                 .Where(m => m.DataEmissao >= request.DataInicio.Date && m.DataEmissao <= dataFimAjustada)
                 .OrderByDescending(m => m.DataEmissao)
                 .ToListAsync(cancellationToken);

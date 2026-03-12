@@ -106,11 +106,9 @@ namespace CoreMDFe.Application.Features.Manifestos
             Log.Information("[EMISSÃO] Iniciando geração do XML MDF-e...");
 
             var configAplicada = await _mediator.Send(new Configuracoes.AplicarConfiguracaoZeusCommand(), cancellationToken);
-            Log.Error("[EMISSÃO] Falha ao obter dados do certificado digital.");
             if (!configAplicada) return new EmitirManifestoResult(false, "Falha nas configurações de Certificado.", "", "");
 
             var empresa = await _dbContext.Empresas.Include(e => e.Configuracao).FirstOrDefaultAsync(e => e.Id == request.EmpresaId, cancellationToken);
-            Log.Error("[EMISSÃO] Empresa não encontrada.");
             if (empresa == null || empresa.Configuracao == null) return new EmitirManifestoResult(false, "Empresa não encontrada.", "", "");
 
             await _dbContext.SaveChangesAsync(cancellationToken);

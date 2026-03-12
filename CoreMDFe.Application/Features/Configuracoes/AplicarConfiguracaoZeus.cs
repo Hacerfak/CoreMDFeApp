@@ -11,6 +11,7 @@ using CoreMDFe.Core.Interfaces;
 using VersaoServico = MDFe.Utils.Flags.VersaoServico;
 using System.Net.Security;
 using System.Net;
+using CoreMDFe.Core.Security;
 
 namespace CoreMDFe.Application.Features.Configuracoes
 {
@@ -33,21 +34,44 @@ namespace CoreMDFe.Application.Features.Configuracoes
 
             if (configApp == null) return false;
 
-            // 1. DESATIVAR VALIDAÇÃO DE CADEIA (ROOT CA)
-            // Isso resolve o erro no Linux de "The SSL connection could not be established"
-            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+            // IGNORAR AVISO DE OBSOLETO (SYSLIB0014)
+            // Motivo: A biblioteca Zeus ainda utiliza HttpWebRequest internamente para
+            // a comunicação SOAP com a SEFAZ. Portanto, o uso do ServicePointManager
+            // continua a ser obrigatório para configurar o TLS e contornar erros no Linux.
+
+#pragma warning disable SYSLIB0014
+
+            // 1. VALIDAÇÃO DE CADEIA CONTROLADA (Proteção MITM)
+            ServicePointManager.ServerCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
+            {
+                if (sslPolicyErrors == SslPolicyErrors.None) return true;
+
+                if (sender is HttpWebRequest req)
+                {
+                    var host = req.RequestUri.Host.ToLower();
+                    if (host.Contains("sefaz") || host.Contains("svrs") || host.Contains("fazenda"))
+                    {
+                        return true;
+                    }
+                }
+                return false; // Rejeita interceções de terceiros
+            };
 
             // Forçar TLS 1.2 explicitamente (Sefaz não aceita inferior)
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
+#pragma warning restore SYSLIB0014
+
             // Transforma a UF salva em string para o Enum Estado do Zeus
             _ = System.Enum.TryParse(configApp.UfEmitente, out Estado estado);
+
+            var senhaReal = CryptoService.Decrypt(configApp.SenhaCertificado);
 
             // NO LINUX: Precisamos garantir que o certificado seja carregado com permissões de exportação
             // para que o HttpClient consiga usar a chave privada no handshake TLS.
             var certData = await File.ReadAllBytesAsync(configApp.CaminhoArquivoCertificado, cancellationToken);
             // Loader moderno para arquivos PKS12 (.pfx)
-            using var certificadoNativo = X509CertificateLoader.LoadPkcs12(certData, configApp.SenhaCertificado,
+            using var certificadoNativo = X509CertificateLoader.LoadPkcs12(certData, senhaReal,
                 X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
 
             var configuracaoCertificado = new ConfiguracaoCertificado
@@ -55,7 +79,7 @@ namespace CoreMDFe.Application.Features.Configuracoes
                 TipoCertificado = TipoCertificado.A1ByteArray,
                 //ArrayBytesArquivo = File.ReadAllBytes(configApp.CaminhoArquivoCertificado),
                 ArrayBytesArquivo = certData,
-                Senha = configApp.SenhaCertificado,
+                Senha = senhaReal,
                 ManterDadosEmCache = true
             };
 

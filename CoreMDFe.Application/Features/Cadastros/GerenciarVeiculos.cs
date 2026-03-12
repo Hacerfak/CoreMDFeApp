@@ -30,7 +30,7 @@ namespace CoreMDFe.Application.Features.Cadastros
 
         public async Task<List<Veiculo>> Handle(ListarVeiculosQuery request, CancellationToken cancellationToken)
         {
-            return await _dbContext.Veiculos.ToListAsync(cancellationToken);
+            return await _dbContext.Veiculos.AsNoTracking().ToListAsync(cancellationToken);
         }
 
         public async Task<bool> Handle(SalvarVeiculoCommand request, CancellationToken cancellationToken)

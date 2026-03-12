@@ -1,19 +1,19 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.IO; // Adicionado para podermos criar as pastas e copiar o arquivo
 using System.Threading;
 using System.Threading.Tasks;
 using CoreMDFe.Core.Entities;
 using CoreMDFe.Core.Interfaces;
+using CoreMDFe.Core.Security;
 
 namespace CoreMDFe.Application.Features.Configuracoes
 {
     public record SalvarConfiguracaoCommand(
         string Cnpj, string Nome, string Fantasia, string Ie, string Rntrc,
-        // NOVOS CAMPOS DA EMPRESA:
         string Logradouro, string NumeroEndereco, string Complemento, string Bairro,
         string NomeMunicipio, long CodigoIbgeMunicipio, string Cep, string Telefone, string Email,
-        // RESTANTE:
         string CaminhoCertificado, string SenhaCertificado,
         int TipoAmbiente, string UfEmitente, long UltimaNumeracao, int Serie, int TimeOut,
         string RespTecCnpj, string RespTecNome, string RespTecTelefone, string RespTecEmail,
@@ -59,9 +59,39 @@ namespace CoreMDFe.Application.Features.Configuracoes
             empresa.Telefone = request.Telefone;
             empresa.Email = request.Email;
 
+            // =========================================================================
+            // SEGURANÇA: RENOMEAR E PROTEGER O CERTIFICADO (Igual ao Onboarding)
+            // Garante que não ficamos dependentes de um arquivo na pasta "Downloads" do cliente
+            // =========================================================================
+            string caminhoFinalCertificado = request.CaminhoCertificado;
+
+            if (!string.IsNullOrWhiteSpace(request.CaminhoCertificado) && File.Exists(request.CaminhoCertificado))
+            {
+                var basePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                var empresaFolder = Path.Combine(basePath, "CoreMDFe", request.Cnpj);
+                var certsFolder = Path.Combine(empresaFolder, "Certificados");
+
+                Directory.CreateDirectory(empresaFolder);
+                Directory.CreateDirectory(certsFolder);
+
+                var extensao = Path.GetExtension(request.CaminhoCertificado); // Mantém .pfx ou .p12
+                var novoNomeCertificado = $"certificado_digital{extensao}";
+                var destinoCertificado = Path.Combine(certsFolder, novoNomeCertificado);
+
+                // Só copia se o caminho de origem for diferente do destino 
+                // (Isso evita erro se o usuário clicar em "Salvar" sem ter alterado o certificado)
+                if (!request.CaminhoCertificado.Equals(destinoCertificado, StringComparison.OrdinalIgnoreCase))
+                {
+                    File.Copy(request.CaminhoCertificado, destinoCertificado, true);
+                }
+
+                // Atualizamos a variável com o caminho interno e isolado para salvar no banco
+                caminhoFinalCertificado = destinoCertificado;
+            }
+
             // Certificado e Ambiente
-            empresa.Configuracao!.CaminhoArquivoCertificado = request.CaminhoCertificado;
-            empresa.Configuracao.SenhaCertificado = request.SenhaCertificado;
+            empresa.Configuracao!.CaminhoArquivoCertificado = caminhoFinalCertificado;
+            empresa.Configuracao.SenhaCertificado = CryptoService.Encrypt(request.SenhaCertificado);
             empresa.Configuracao.TipoAmbiente = request.TipoAmbiente;
             empresa.Configuracao.UfEmitente = request.UfEmitente;
             empresa.Configuracao.UltimaNumeracao = request.UltimaNumeracao;

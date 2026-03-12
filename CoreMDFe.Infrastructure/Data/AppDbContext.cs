@@ -44,7 +44,8 @@ namespace CoreMDFe.Infrastructure.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlite($"Data Source={_databasePath}");
+                // Timeout de 10 segundos para lidar com concorrência e Cache Shared para otimização de leitura
+                optionsBuilder.UseSqlite($"Data Source={_databasePath};Cache=Shared;Default Timeout=10;");
             }
         }
 

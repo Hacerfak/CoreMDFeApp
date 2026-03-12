@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Configuracoes;
 using CoreMDFe.Application.Features.Onboarding;
 using CoreMDFe.Core.Interfaces;
+using CoreMDFe.Core.Security;
 using System.Linq;
 using CoreMDFe.Core.Entities;
 using MediatR;
@@ -268,7 +269,7 @@ namespace CoreMDFe.Desktop.ViewModels
                 if (empresa.Configuracao != null)
                 {
                     CaminhoCertificado = empresa.Configuracao.CaminhoArquivoCertificado ?? string.Empty;
-                    SenhaCertificado = empresa.Configuracao.SenhaCertificado ?? string.Empty;
+                    SenhaCertificado = CryptoService.Decrypt(empresa.Configuracao.SenhaCertificado) ?? string.Empty;
                     AtualizarResumoCertificado();
                     UfEmitente = empresa.Configuracao.UfEmitente ?? "SP";
                     AmbienteSelecionadoIndex = empresa.Configuracao.TipoAmbiente == 1 ? 0 : 1;

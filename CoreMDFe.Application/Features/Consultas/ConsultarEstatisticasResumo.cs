@@ -34,8 +34,9 @@ namespace CoreMDFe.Application.Features.Consultas
         {
             var dataInicioMes = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
 
-            // Pega apenas os manifestos do mês atual
+            // Adicionado AsNoTracking() na recolha dos dados do mês
             var manifestosDoMes = await _dbContext.Manifestos
+                .AsNoTracking()
                 .Where(m => m.DataEmissao >= dataInicioMes)
                 .ToListAsync(cancellationToken);
 
@@ -48,8 +49,9 @@ namespace CoreMDFe.Application.Features.Consultas
                 Rejeitados = manifestosDoMes.Count(m => m.Status == StatusManifesto.Rejeitado),
             };
 
-            // "Em Aberto" são todos os que estão no status Autorizado (independente do mês de emissão)
+            // "Em Aberto" (O EF Core já otimiza funções agregadas como CountAsync, mas é boa prática)
             dto.EmAberto = await _dbContext.Manifestos
+                .AsNoTracking()
                 .CountAsync(m => m.Status == StatusManifesto.Autorizado, cancellationToken);
 
             return dto;

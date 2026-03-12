@@ -30,7 +30,7 @@ namespace CoreMDFe.Application.Features.Cadastros
 
         public async Task<List<Condutor>> Handle(ListarCondutoresQuery request, CancellationToken cancellationToken)
         {
-            return await _dbContext.Condutores.ToListAsync(cancellationToken);
+            return await _dbContext.Condutores.AsNoTracking().ToListAsync(cancellationToken);
         }
 
         public async Task<bool> Handle(SalvarCondutorCommand request, CancellationToken cancellationToken)

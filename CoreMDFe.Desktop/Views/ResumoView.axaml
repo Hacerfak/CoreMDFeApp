@@ -2,6 +2,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
     xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
     x:Class="CoreMDFe.Desktop.Views.ResumoView"
     x:DataType="vm:ResumoViewModel">
 
@@ -12,9 +13,6 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="Resumo Operacional" FontSize="28" FontWeight="Light"
                         Foreground="#222222" />
-                    <TextBlock
-                        Text="{Binding MesAtualTexto, StringFormat='Estatísticas referentes a {0}'}"
-                        FontSize="14" Foreground="Gray" Margin="0,5,0,0" />
                 </StackPanel>
                 <Button Grid.Column="1" Command="{Binding CarregarDadosCommand}" Classes="Outline"
                     ToolTip.Tip="Atualizar Dados">
@@ -26,21 +24,20 @@
             <Border Background="#FFF3E0" BorderBrush="#FF9800" BorderThickness="1" CornerRadius="8"
                 Padding="20" IsVisible="{Binding TemManifestosEmAberto}">
                 <Grid ColumnDefinitions="Auto, *">
-                    <materialIcons:MaterialIcon Grid.Column="0" Kind="AlertCircleOutline" Width="40"
-                        Height="40" Foreground="#F57C00" VerticalAlignment="Center"
+                    <materialIcons:MaterialIcon Grid.Column="0" Kind="AlertCircleOutline" Width="32"
+                        Height="32" Foreground="#FF9800" VerticalAlignment="Center"
                         Margin="0,0,15,0" />
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="Atenção: MDF-es Pendentes de Encerramento!"
-                            FontWeight="Bold" FontSize="16" Foreground="#E65100" />
+                        <TextBlock Text="Atenção: Existem MDF-es em aberto" FontWeight="Bold"
+                            FontSize="16" Foreground="#E65100" />
                         <TextBlock
-                            Text="{Binding EmAberto, StringFormat='Você tem {0} MDF-e(s) autorizado(s) que ainda não foram encerrados. Lembre-se que a SEFAZ bloqueia novas emissões para o mesmo veículo se houver viagens em aberto.'}"
-                            Foreground="#EF6C00" TextWrapping="Wrap" Margin="0,5,0,0" />
+                            Text="{Binding EmAberto, StringFormat='Você possui {0} manifesto(s) autorizado(s) que ainda não foram encerrados. Lembre-se de encerrar ao fim da viagem.'}"
+                            Foreground="#F57C00" TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <UniformGrid Columns="4" Rows="1" Margin="0,10,0,0">
-
+            <UniformGrid Columns="4" Margin="0,10,0,0">
                 <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
                     Padding="20" Margin="0,0,15,0">
                     <StackPanel>
@@ -49,11 +46,11 @@
                                 <materialIcons:MaterialIcon Kind="FileDocumentMultipleOutline"
                                     Width="20" Height="20" Foreground="#2196F3" />
                             </Border>
-                            <TextBlock Text="Total Emitido" VerticalAlignment="Center"
+                            <TextBlock Text="Total Emitidos" VerticalAlignment="Center"
                                 FontWeight="SemiBold" Foreground="Gray" />
                         </StackPanel>
                         <TextBlock Text="{Binding TotalMesAtual}" FontSize="36" FontWeight="Bold"
-                            Foreground="#333" Margin="0,15,0,0" />
+                            Foreground="#2196F3" Margin="0,15,0,0" />
                     </StackPanel>
                 </Border>
 
@@ -62,13 +59,13 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Border Background="#E8F5E9" CornerRadius="20" Width="40" Height="40">
-                                <materialIcons:MaterialIcon Kind="CheckDecagramOutline" Width="20"
+                                <materialIcons:MaterialIcon Kind="CheckCircleOutline" Width="20"
                                     Height="20" Foreground="#4CAF50" />
                             </Border>
-                            <TextBlock Text="Autorizados" VerticalAlignment="Center"
+                            <TextBlock Text="Encerrados" VerticalAlignment="Center"
                                 FontWeight="SemiBold" Foreground="Gray" />
                         </StackPanel>
-                        <TextBlock Text="{Binding Autorizados}" FontSize="36" FontWeight="Bold"
+                        <TextBlock Text="{Binding Encerrados}" FontSize="36" FontWeight="Bold"
                             Foreground="#4CAF50" Margin="0,15,0,0" />
                     </StackPanel>
                 </Border>
@@ -78,13 +75,13 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="10">
                             <Border Background="#F3E5F5" CornerRadius="20" Width="40" Height="40">
-                                <materialIcons:MaterialIcon Kind="FlagCheckered" Width="20"
+                                <materialIcons:MaterialIcon Kind="ClockOutline" Width="20"
                                     Height="20" Foreground="#9C27B0" />
                             </Border>
-                            <TextBlock Text="Encerrados" VerticalAlignment="Center"
+                            <TextBlock Text="Em Trânsito" VerticalAlignment="Center"
                                 FontWeight="SemiBold" Foreground="Gray" />
                         </StackPanel>
-                        <TextBlock Text="{Binding Encerrados}" FontSize="36" FontWeight="Bold"
+                        <TextBlock Text="{Binding Autorizados}" FontSize="36" FontWeight="Bold"
                             Foreground="#9C27B0" Margin="0,15,0,0" />
                     </StackPanel>
                 </Border>
@@ -109,8 +106,92 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
-
             </UniformGrid>
+
+            <TextBlock Text="Desempenho do mês atual" FontSize="20" FontWeight="Light"
+                Foreground="#222222" Margin="0,20,0,0" />
+
+            <Grid ColumnDefinitions="2*, 1*" Margin="0,10,0,0">
+
+                <StackPanel Grid.Column="0" Margin="0,0,15,0">
+
+                    <UniformGrid Columns="3" Margin="0,0,0,15">
+                        <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,10,0"
+                            BoxShadow="0 2 10 0 #0A000000">
+                            <StackPanel>
+                                <TextBlock Text="Média Diária (Peso)" FontSize="12"
+                                    Foreground="Gray" />
+                                <TextBlock Text="{Binding MediaDiariaPeso}" FontSize="18"
+                                    FontWeight="Bold" Foreground="#424242" />
+                                <TextBlock
+                                    Text="{Binding TotalPesoPeriodo, StringFormat='Total: {0}'}"
+                                    FontSize="11" Foreground="#9C27B0" Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,10,0"
+                            BoxShadow="0 2 10 0 #0A000000">
+                            <StackPanel>
+                                <TextBlock Text="Média Diária (Valor)" FontSize="12"
+                                    Foreground="Gray" />
+                                <TextBlock Text="{Binding MediaDiariaValor}" FontSize="18"
+                                    FontWeight="Bold" Foreground="#424242" />
+                                <TextBlock
+                                    Text="{Binding TotalValorPeriodo, StringFormat='Total: {0}'}"
+                                    FontSize="11" Foreground="#4CAF50" Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Background="White" CornerRadius="8" Padding="15"
+                            BoxShadow="0 2 10 0 #0A000000">
+                            <StackPanel>
+                                <TextBlock Text="Média NFe/CTe" FontSize="12" Foreground="Gray" />
+                                <TextBlock Text="{Binding MediaDiariaDFes}" FontSize="18"
+                                    FontWeight="Bold" Foreground="#424242" />
+                                <TextBlock Text="Por dia" FontSize="11" Foreground="#2196F3"
+                                    Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <Border Background="White" CornerRadius="8" Padding="20"
+                        BoxShadow="0 2 10 0 #0A000000">
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Text="Volume de Emissões" FontSize="14" FontWeight="SemiBold"
+                                Foreground="Gray" Margin="0,0,0,15" />
+                            <lvc:CartesianChart Grid.Row="1" Height="220"
+                                Series="{Binding SeriesGrafico}" XAxes="{Binding EixosXGrafico}" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="20"
+                    BoxShadow="0 2 10 0 #0A000000" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="Top Cidades Destino" FontSize="14" FontWeight="SemiBold"
+                            Foreground="Gray" Margin="0,0,0,15" />
+
+                        <ItemsControl ItemsSource="{Binding CidadesRanking}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,10">
+                                        <TextBlock Grid.Column="0" Text="{Binding Cidade}"
+                                            FontSize="14" Foreground="#424242"
+                                            VerticalAlignment="Center"
+                                            TextTrimming="CharacterEllipsis" Margin="0,0,10,0" />
+                                        <Border Grid.Column="1" Background="#F3E5F5"
+                                            CornerRadius="4" Padding="8,4">
+                                            <TextBlock Text="{Binding QuantidadeDescargas}"
+                                                FontSize="12" FontWeight="Bold" Foreground="#9C27B0" />
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="Nenhum dado registrado." Foreground="Gray" FontSize="12"
+                            FontStyle="Italic" IsVisible="{Binding !CidadesRanking.Count}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
 
         </StackPanel>
     </ScrollViewer>
