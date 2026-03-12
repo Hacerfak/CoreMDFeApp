@@ -121,7 +121,7 @@ vpk pack -u CoreMDFe -v 1.0.2 -p .\publish-win -e CoreMDFe.Desktop.exe
 
 2. **Gerar Pacotes Velopack:**
 ```bash
-vpk pack -u CoreMDFe -v 1.0.2 -p ./publish-win -e CoreMDFe.Desktop.exe
+vpk pack -u CoreMDFe -v 1.3.2 -p ./publish-win -e CoreMDFe.Desktop --packAuthors "Eder Gross Cichelero" --packTitle "CoreMDFe" -i ./CoreMDFe.Desktop/Assets/icon.png
 
 ```
 
@@ -139,7 +139,7 @@ dotnet publish -c Release -r linux-x64 --self-contained -o ./publish-linux
 
 2. **Gerar Pacotes Velopack:** *(Atenção: O executável no Linux não possui `.exe`)*
 ```bash
-vpk pack -u CoreMDFe -v 1.0.2 -p ./publish-linux -e CoreMDFe.Desktop
+vpk pack -u CoreMDFe -v 1.3.2 -p ./publish-linux -e CoreMDFe.Desktop --packAuthors "Eder Gross Cichelero" --packTitle "CoreMDFe" -i ./CoreMDFe.Desktop/Assets/icon.png
 
 ```
 
