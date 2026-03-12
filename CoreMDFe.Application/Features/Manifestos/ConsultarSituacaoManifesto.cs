@@ -1,7 +1,7 @@
 using CoreMDFe.Core.Entities;
 using CoreMDFe.Core.Interfaces;
 using MDFe.Servicos.ConsultaProtocoloMDFe;
-using MDFe.Wsdl.MDFeConsultaProtoloco;
+using MDFe.Utils.Configuracoes; // Adicionado para acessar a MDFeConfiguracao
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -42,11 +42,24 @@ namespace CoreMDFe.Application.Features.Manifestos
             if (string.IsNullOrEmpty(manifesto.ChaveAcesso))
                 return new ConsultarSituacaoManifestoResult(false, "MDF-e não possui Chave de Acesso para consulta na SEFAZ.");
 
+            // Limpa a chave de acesso para evitar rejeições do validador interno
+            string chaveLimpa = manifesto.ChaveAcesso.Replace("MDFe", "").Replace("NFe", "").Replace("CTe", "").Trim();
+
+            // =====================================================================
+            // WORKAROUND: Bug do Zeus com extração de Eventos na Consulta
+            // =====================================================================
+            // Salva o estado atual da configuração
+            bool salvarXmlOriginal = MDFeConfiguracao.Instancia.IsSalvarXml;
+
+            // DESLIGA o salvamento para impedir que o Zeus tente gerar arquivos
+            // dos eventos de Encerramento/Cancelamento (o que causa o erro de Versão)
+            MDFeConfiguracao.Instancia.IsSalvarXml = false;
+
             try
             {
                 // 3. Conecta na SEFAZ via Zeus
                 var servicoConsulta = new ServicoMDFeConsultaProtocolo();
-                var retorno = servicoConsulta.MDFeConsultaProtocolo(manifesto.ChaveAcesso);
+                var retorno = servicoConsulta.MDFeConsultaProtocolo(chaveLimpa);
 
                 if (retorno == null)
                     return new ConsultarSituacaoManifestoResult(false, "Sem resposta da SEFAZ.");
@@ -92,10 +105,10 @@ namespace CoreMDFe.Application.Features.Manifestos
                 if (bancoFoiSincronizado)
                 {
                     await _dbContext.SaveChangesAsync(cancellationToken);
-                    return new ConsultarSituacaoManifestoResult(true, $"SEFAZ retornou: {cStat} - {xMotivo}\n(ℹ️ O status no sistema estava defasado e foi corrigido automaticamente!)");
+                    return new ConsultarSituacaoManifestoResult(true, $"Status do MDF-e: {cStat} - {xMotivo}\n(ℹ️ O status no sistema estava defasado e foi corrigido automaticamente!)");
                 }
 
-                return new ConsultarSituacaoManifestoResult(true, $"SEFAZ retornou: {cStat} - {xMotivo}");
+                return new ConsultarSituacaoManifestoResult(true, $"Status do MDF-e: {cStat} - {xMotivo}");
             }
             catch (Exception ex)
             {
@@ -105,7 +118,13 @@ namespace CoreMDFe.Application.Features.Manifestos
 
                 Log.Error($"Erro ao consultar situação do manifesto: {erroDescritivo}");
                 return new ConsultarSituacaoManifestoResult(false, $"{erroDescritivo}");
-
+            }
+            finally
+            {
+                // =====================================================================
+                // RESTAURA a configuração para não quebrar a emissão de novos manifestos!
+                // =====================================================================
+                MDFeConfiguracao.Instancia.IsSalvarXml = salvarXmlOriginal;
             }
         }
     }
