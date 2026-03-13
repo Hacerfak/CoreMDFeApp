@@ -5,17 +5,35 @@ using CoreMDFe.Core.Entities;
 using MediatR;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations; // Necessário para as tags [Required]
+using CoreMDFe.Core.Validations;
 using System.Threading.Tasks;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
-    public partial class CondutoresViewModel : ObservableObject
+    // 1. Mudamos para ObservableValidator
+    public partial class CondutoresViewModel : ObservableValidator
     {
         private readonly IMediator _mediator;
 
         [ObservableProperty] private ObservableCollection<Condutor> _condutores = new();
         [ObservableProperty] private bool _isModalAberto;
-        [ObservableProperty] private Condutor _novoCondutor = new();
+
+        private Guid _condutorEmEdicaoId = Guid.Empty;
+
+        // ====================================================================
+        // 2. AQUI ESTÃO AS VARIÁVEIS COM OS TEXTOS DE ERRO EM PORTUGUÊS!
+        // Elas substituem o antigo "NovoCondutor"
+        // ====================================================================
+        [ObservableProperty]
+        [Required(ErrorMessage = "O preenchimento do Nome é obrigatório.")]
+        [MinLength(3, ErrorMessage = "O Nome deve ter pelo menos 3 caracteres.")]
+        private string _nome = string.Empty;
+
+        [ObservableProperty]
+        [Required(ErrorMessage = "O preenchimento do CPF é obrigatório.")]
+        [Cpf(ErrorMessage = "O CPF informado não é válido. Verifique os números.")]
+        private string _cpf = string.Empty;
 
         public CondutoresViewModel(IMediator mediator)
         {
@@ -32,7 +50,13 @@ namespace CoreMDFe.Desktop.ViewModels
         [RelayCommand]
         private void AbrirModal()
         {
-            NovoCondutor = new Condutor();
+            _condutorEmEdicaoId = Guid.Empty;
+            Nome = string.Empty;
+            Cpf = string.Empty;
+
+            // 3. Força a validação ao abrir para já pintar os campos de vermelho
+            ValidateAllProperties();
+
             IsModalAberto = true;
         }
 
@@ -42,9 +66,21 @@ namespace CoreMDFe.Desktop.ViewModels
         [RelayCommand]
         private async Task Salvar()
         {
-            if (string.IsNullOrWhiteSpace(NovoCondutor.Nome) || string.IsNullOrWhiteSpace(NovoCondutor.Cpf)) return;
+            // Dispara a validação antes de tentar salvar
+            ValidateAllProperties();
 
-            await _mediator.Send(new SalvarCondutorCommand(NovoCondutor));
+            // Se ainda houver erros (campos vermelhos), não faz nada
+            if (HasErrors) return;
+
+            // Se passou na validação, montamos o objeto Condutor para mandar pro Banco
+            var condutor = new Condutor
+            {
+                Id = _condutorEmEdicaoId,
+                Nome = Nome,
+                Cpf = Cpf
+            };
+
+            await _mediator.Send(new SalvarCondutorCommand(condutor));
             await CarregarListaAsync();
             IsModalAberto = false;
         }
@@ -59,14 +95,12 @@ namespace CoreMDFe.Desktop.ViewModels
         [RelayCommand]
         private void Editar(Condutor condutor)
         {
-            // Cria uma cópia para edição segura
-            NovoCondutor = new Condutor
-            {
-                Id = condutor.Id,
-                Nome = condutor.Nome,
-                Cpf = condutor.Cpf,
-                DataCriacao = condutor.DataCriacao
-            };
+            _condutorEmEdicaoId = condutor.Id;
+            Nome = condutor.Nome;
+            Cpf = condutor.Cpf;
+
+            ValidateAllProperties();
+
             IsModalAberto = true;
         }
     }

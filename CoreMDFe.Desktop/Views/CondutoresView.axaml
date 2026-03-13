@@ -9,11 +9,13 @@
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Border Padding="40">
                 <StackPanel Spacing="20">
+
                     <Grid ColumnDefinitions="*, Auto">
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="Condutores" FontSize="28" FontWeight="Light"
                                 Foreground="#222222" />
-                            <TextBlock Text="Cadastre os motoristas responsáveis pelo transporte."
+                            <TextBlock
+                                Text="Cadastre os motoristas responsáveis pelo transporte da carga."
                                 FontSize="14" Foreground="Gray" Margin="0,5,0,0" />
                         </StackPanel>
                         <Button Grid.Column="1" Content="+ Novo Condutor"
@@ -26,7 +28,8 @@
                     <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
                         Margin="0,10,0,0" Padding="0,0,0,10">
                         <StackPanel>
-                            <Border Background="#F8F9FA" Padding="20,15" Margin="0,0,0,10">
+                            <Border Background="#F8F9FA" CornerRadius="8,8,0,0" Padding="20,15"
+                                Margin="0,0,0,10">
                                 <Grid ColumnDefinitions="3*, 2*, *">
                                     <TextBlock Grid.Column="0" Text="NOME COMPLETO"
                                         FontWeight="SemiBold" Foreground="#777777" FontSize="12" />
@@ -53,15 +56,16 @@
                                                         VerticalAlignment="Center"
                                                         Foreground="#333333" />
                                                 </StackPanel>
+
                                                 <TextBlock Grid.Column="1" Text="{Binding Cpf}"
                                                     VerticalAlignment="Center" Foreground="Gray" />
+
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal"
                                                     Spacing="5" HorizontalAlignment="Right">
                                                     <Button
                                                         Command="{Binding $parent[UserControl].((vm:CondutoresViewModel)DataContext).EditarCommand}"
-                                                        CommandParameter="{Binding}"
-                                                        Classes="Flat" Padding="5"
-                                                        Foreground="#2196F3"
+                                                        CommandParameter="{Binding}" Classes="Flat"
+                                                        Padding="5" Foreground="#2196F3"
                                                         ToolTip.Tip="Editar Condutor">
                                                         <materialIcons:MaterialIcon Kind="Edit" />
                                                     </Button>
@@ -81,9 +85,9 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <TextBlock Text="Nenhum condutor registrado."
+                            <TextBlock Text="Nenhum condutor registrado no momento."
                                 IsVisible="{Binding !Condutores.Count}" Foreground="Gray"
-                                HorizontalAlignment="Center" Margin="0,30,0,20" />
+                                HorizontalAlignment="Center" Margin="0,30,0,20" FontStyle="Italic" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -94,14 +98,14 @@
             <Border Background="White" CornerRadius="12" Width="450" VerticalAlignment="Center"
                 HorizontalAlignment="Center" Padding="30" BoxShadow="0 10 30 0 #40000000">
                 <StackPanel Spacing="20">
-                    <TextBlock Text="Cadastrar Condutor" FontSize="20" FontWeight="Bold"
+                    <TextBlock Text="Ficha do Condutor" FontSize="20" FontWeight="Bold"
                         Foreground="#333333" />
 
                     <StackPanel Spacing="15">
                         <StackPanel>
                             <TextBlock Text="Nome Completo" FontWeight="SemiBold"
                                 Foreground="#555555" Margin="0,0,0,5" FontSize="13" />
-                            <TextBox Text="{Binding NovoCondutor.Nome}" Classes="Outline"
+                            <TextBox Text="{Binding Nome}" Classes="Outline"
                                 Theme="{StaticResource OutlineTextBox}"
                                 Watermark="Nome conforme CNH" />
                         </StackPanel>
@@ -109,18 +113,21 @@
                         <StackPanel>
                             <TextBlock Text="CPF" FontWeight="SemiBold" Foreground="#555555"
                                 Margin="0,0,0,5" FontSize="13" />
-                            <TextBox Text="{Binding NovoCondutor.Cpf}" Classes="Outline"
-                                Theme="{StaticResource OutlineTextBox}" Watermark="Apenas números" />
+                            <TextBox Text="{Binding Cpf}" Classes="Outline"
+                                Theme="{StaticResource OutlineTextBox}"
+                                Watermark="Apenas números (11 dígitos)" MaxLength="11" />
                         </StackPanel>
                     </StackPanel>
 
-                    <Grid ColumnDefinitions="*, *" Margin="0,10,0,0">
-                        <Button Grid.Column="0" Content="Cancelar (ESC)"
-                            Command="{Binding FecharModalCommand}" Classes="Flat" Foreground="Gray"
-                            HorizontalAlignment="Left" Padding="15,10" />
+                    <Grid ColumnDefinitions="*, *" Margin="0,15,0,0">
+                        <Button Grid.Column="0" Content="Cancelar"
+                            Command="{Binding FecharModalCommand}"
+                            Classes="Flat" Foreground="Gray" HorizontalAlignment="Left"
+                            Padding="15,10" IsCancel="True" />
                         <Button Grid.Column="1" Content="Salvar Condutor"
-                            Command="{Binding SalvarCommand}" IsDefault="True" Classes="Primary"
-                            Theme="{StaticResource SolidButton}" Background="#4CAF50"
+                            Command="{Binding SalvarCommand}" IsDefault="True"
+                            Classes="Primary" Theme="{StaticResource SolidButton}"
+                            Background="#4CAF50"
                             Foreground="White" HorizontalAlignment="Right" Padding="25,10"
                             CornerRadius="20" />
                     </Grid>

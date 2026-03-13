@@ -2,6 +2,7 @@
 using Serilog;
 using System;
 using System.Threading;
+using System.Globalization;
 using Velopack;
 
 namespace CoreMDFe.Desktop
@@ -13,6 +14,16 @@ namespace CoreMDFe.Desktop
         [STAThread]
         public static void Main(string[] args)
         {
+            // =========================================================================
+            // FORÇAR LOCALIZAÇÃO PT-BR (Datas, Moedas e Números)
+            // Heurística de Nielsen #2: Correspondência entre o sistema e o mundo real
+            // =========================================================================
+            var culture = new CultureInfo("pt-BR");
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+
             // 1. CONFIGURAÇÃO GLOBAL DO SERILOG
             Log.Logger = new LoggerConfiguration()
 #if DEBUG

@@ -3,33 +3,63 @@ using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Cadastros;
 using CoreMDFe.Core.Entities;
 using CoreMDFe.Core.Interfaces;
+using CoreMDFe.Core.Validations;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations; // Adicionado para validações
 using System.Threading.Tasks;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
-    public partial class VeiculosViewModel : ObservableObject
+    // 1. Mudamos a herança para ObservableValidator
+    public partial class VeiculosViewModel : ObservableValidator
     {
         private readonly IMediator _mediator;
         private readonly IAppDbContext _dbContext;
 
         [ObservableProperty] private ObservableCollection<Veiculo> _veiculos = new();
         [ObservableProperty] private bool _isModalAberto;
-        [ObservableProperty] private Veiculo _novoVeiculo = new();
-
         [ObservableProperty] private bool _isVeiculoAvancadoAberto;
 
-        // NOVO: Controle do Tipo de Veículo
-        public ObservableCollection<string> ListaTiposVeiculo { get; } = new() { "0 - Tração", "1 - Reboque" };
-        [ObservableProperty] private int _tipoVeiculoSelecionadoIndex = 0; // Padrão: Tração
-
-        [ObservableProperty] private int _rodadoSelecionadoIndex = 2; // Padrão: Cavalo Mecânico
-        [ObservableProperty] private int _carroceriaSelecionadaIndex = 2; // Padrão: Fechada
-
+        private Guid _veiculoEmEdicaoId = Guid.Empty;
         private string _ufPadraoEmpresa = "SP";
+
+        // ====================================================================
+        // PROPRIEDADES COM VALIDAÇÃO (Substituem o antigo NovoVeiculo)
+        // ====================================================================
+        [ObservableProperty]
+        [Required(ErrorMessage = "A Placa é obrigatória.")]
+        [Placa(ErrorMessage = "A Placa informada é inválida (Use padrão Antigo ou Mercosul).")]
+        private string _placa = string.Empty;
+
+        [ObservableProperty]
+        [Required(ErrorMessage = "O Renavam é obrigatório.")]
+        [Renavam(ErrorMessage = "O Renavam informado não é válido. Verifique os números.")]
+        private string _renavam = string.Empty;
+
+        [ObservableProperty]
+        [Required(ErrorMessage = "Obrigatório.")]
+        [RegularExpression(@"^[1-9]\d*$", ErrorMessage = "Apenas números (maior que 0).")]
+        private string _taraKg = string.Empty;
+
+        [ObservableProperty]
+        [Required(ErrorMessage = "Obrigatório.")]
+        [RegularExpression(@"^[1-9]\d*$", ErrorMessage = "Apenas números (maior que 0).")]
+        private string _capacidadeKg = string.Empty;
+
+        [ObservableProperty]
+        [Required(ErrorMessage = "Obrigatório.")]
+        [RegularExpression(@"^[1-9]\d*$", ErrorMessage = "Apenas números (maior que 0).")]
+        private string _capacidadeM3 = string.Empty;
+
+        // Controle dos ComboBoxes
+        public ObservableCollection<string> ListaTiposVeiculo { get; } = new() { "0 - Tração", "1 - Reboque" };
+        [ObservableProperty] private int _tipoVeiculoSelecionadoIndex = 0;
+
+        [ObservableProperty] private int _rodadoSelecionadoIndex = 2;
+        [ObservableProperty] private int _carroceriaSelecionadaIndex = 2;
 
         public ObservableCollection<string> ListaTiposRodado { get; } = new() { "01 - Truck", "02 - Toco", "03 - Cavalo Mecânico", "04 - VAN", "05 - Utilitário", "06 - Outros" };
         public ObservableCollection<string> ListaTiposCarroceria { get; } = new() { "00 - Não aplicável", "01 - Aberta", "02 - Fechada/Baú", "03 - Granelera", "04 - Porta Container", "05 - Sider" };
@@ -59,11 +89,20 @@ namespace CoreMDFe.Desktop.ViewModels
         [RelayCommand]
         private void AbrirModal()
         {
-            NovoVeiculo = new Veiculo { UfLicenciamento = _ufPadraoEmpresa };
-            IsVeiculoAvancadoAberto = false;
-            TipoVeiculoSelecionadoIndex = 0; // Reseta para Tração
+            _veiculoEmEdicaoId = Guid.Empty;
+            Placa = string.Empty;
+            Renavam = string.Empty;
+            TaraKg = string.Empty;
+            CapacidadeKg = string.Empty;
+            CapacidadeM3 = string.Empty;
+
+            TipoVeiculoSelecionadoIndex = 0;
             RodadoSelecionadoIndex = 2;
             CarroceriaSelecionadaIndex = 2;
+
+            // Mágica: Pinta de vermelho os campos vazios ao abrir
+            ValidateAllProperties();
+
             IsModalAberto = true;
         }
 
@@ -73,15 +112,27 @@ namespace CoreMDFe.Desktop.ViewModels
         [RelayCommand]
         private async Task Salvar()
         {
-            if (string.IsNullOrWhiteSpace(NovoVeiculo.Placa)) return;
+            ValidateAllProperties();
 
-            // Salva o tipo do veículo (0 ou 1)
-            NovoVeiculo.TipoVeiculo = TipoVeiculoSelecionadoIndex;
+            // Interrompe se houver alguma caixa de texto vermelha
+            if (HasErrors) return;
 
-            NovoVeiculo.TipoRodado = (RodadoSelecionadoIndex + 1).ToString("D2");
-            NovoVeiculo.TipoCarroceria = CarroceriaSelecionadaIndex.ToString("D2");
+            // Monta a entidade para salvar no banco
+            var veiculo = new Veiculo
+            {
+                Id = _veiculoEmEdicaoId,
+                Placa = Placa.ToUpper(), // Força maiúscula
+                Renavam = Renavam,
+                UfLicenciamento = _ufPadraoEmpresa,
+                TaraKg = int.Parse(TaraKg),
+                CapacidadeKg = int.Parse(CapacidadeKg),
+                CapacidadeM3 = int.Parse(CapacidadeM3),
+                TipoVeiculo = TipoVeiculoSelecionadoIndex,
+                TipoRodado = (RodadoSelecionadoIndex + 1).ToString("D2"),
+                TipoCarroceria = CarroceriaSelecionadaIndex.ToString("D2")
+            };
 
-            await _mediator.Send(new SalvarVeiculoCommand(NovoVeiculo));
+            await _mediator.Send(new SalvarVeiculoCommand(veiculo));
             await CarregarListaAsync();
             IsModalAberto = false;
         }
@@ -96,22 +147,13 @@ namespace CoreMDFe.Desktop.ViewModels
         [RelayCommand]
         private void Editar(Veiculo veiculo)
         {
-            NovoVeiculo = new Veiculo
-            {
-                Id = veiculo.Id,
-                Placa = veiculo.Placa,
-                Renavam = veiculo.Renavam,
-                UfLicenciamento = veiculo.UfLicenciamento,
-                TaraKg = veiculo.TaraKg,
-                CapacidadeKg = veiculo.CapacidadeKg,
-                CapacidadeM3 = veiculo.CapacidadeM3, // Carrega o M3
-                TipoVeiculo = veiculo.TipoVeiculo,
-                TipoRodado = veiculo.TipoRodado,
-                TipoCarroceria = veiculo.TipoCarroceria,
-                DataCriacao = veiculo.DataCriacao
-            };
+            _veiculoEmEdicaoId = veiculo.Id;
+            Placa = veiculo.Placa;
+            Renavam = veiculo.Renavam;
+            TaraKg = veiculo.TaraKg.ToString();
+            CapacidadeKg = veiculo.CapacidadeKg.ToString();
+            CapacidadeM3 = veiculo.CapacidadeM3.ToString();
 
-            // Sincroniza o ComboBox de Tipo de Veículo
             TipoVeiculoSelecionadoIndex = veiculo.TipoVeiculo;
 
             if (int.TryParse(veiculo.TipoRodado, out int rodado))
@@ -119,6 +161,8 @@ namespace CoreMDFe.Desktop.ViewModels
 
             if (int.TryParse(veiculo.TipoCarroceria, out int carroceria))
                 CarroceriaSelecionadaIndex = Math.Max(0, carroceria);
+
+            ValidateAllProperties();
 
             IsModalAberto = true;
         }
