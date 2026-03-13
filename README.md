@@ -107,7 +107,7 @@ Abra o terminal (Powershell/CMD), navegue até a pasta `CoreMDFe.Desktop` e exec
 
 ```bash
 set DOTNET_ROLL_FORWARD=Major
-vpk pack -u CoreMDFe -v 1.0.2 -p .\publish-win -e CoreMDFe.Desktop.exe
+dotnet publish -c Release -r win-x64 -o ./publish-win
 
 ```
 
@@ -115,13 +115,13 @@ vpk pack -u CoreMDFe -v 1.0.2 -p .\publish-win -e CoreMDFe.Desktop.exe
 
 ```powershell
 $env:DOTNET_ROLL_FORWARD="Major"
-vpk pack -u CoreMDFe -v 1.0.2 -p .\publish-win -e CoreMDFe.Desktop.exe
+dotnet publish -c Release -r win-x64 -o ./publish-win
 
 ```
 
 2. **Gerar Pacotes Velopack:**
 ```bash
-vpk pack -u CoreMDFe -v 1.3.2 -p ./publish-win -e CoreMDFe.Desktop --packAuthors "Eder Gross Cichelero" --packTitle "CoreMDFe" -i ./CoreMDFe.Desktop/Assets/icon.png
+vpk pack -u CoreMDFe -v 1.3.2 -p ./publish-win -e CoreMDFe.Desktop.exe --packAuthors "Eder Gross Cichelero" --packTitle "CoreMDFe" -i ./CoreMDFe.Desktop/Assets/icon.png
 
 ```
 
