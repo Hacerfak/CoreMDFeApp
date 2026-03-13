@@ -57,8 +57,8 @@ namespace CoreMDFe.Application.Features.Configuracoes
                 return false; // Rejeita interceções de terceiros
             };
 
-            // Forçar TLS 1.2 explicitamente (Sefaz não aceita inferior)
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            // Forçar TLS 1.3 explicitamente
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls13;
 
 #pragma warning restore SYSLIB0014
 
