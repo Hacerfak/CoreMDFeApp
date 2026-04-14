@@ -107,7 +107,7 @@
                                 Foreground="#555555" Margin="0,0,0,5" FontSize="13" />
                             <TextBox Text="{Binding Nome}" Classes="Outline"
                                 Theme="{StaticResource OutlineTextBox}"
-                                Watermark="Nome conforme CNH" />
+                                PlaceholderText="Nome conforme CNH" />
                         </StackPanel>
 
                         <StackPanel>
@@ -115,7 +115,7 @@
                                 Margin="0,0,0,5" FontSize="13" />
                             <TextBox Text="{Binding Cpf}" Classes="Outline"
                                 Theme="{StaticResource OutlineTextBox}"
-                                Watermark="Apenas números (11 dígitos)" MaxLength="11" />
+                                PlaceholderText="Apenas números (11 dígitos)" MaxLength="11" />
                         </StackPanel>
                     </StackPanel>
 

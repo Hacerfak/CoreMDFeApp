@@ -114,7 +114,7 @@
                                 Foreground="#555" Margin="0,0,0,5" FontSize="13" />
                             <TextBox Text="{Binding Placa}" Classes="Outline"
                                 Theme="{StaticResource OutlineTextBox}" MaxLength="7"
-                                Watermark="ABC1D23 ou ABC1234" />
+                                PlaceholderText="ABC1D23 ou ABC1234" />
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
@@ -140,21 +140,23 @@
                                 <TextBlock Text="Tara (KG)" FontWeight="SemiBold" Foreground="#555"
                                     Margin="0,0,0,5" FontSize="13" />
                                 <TextBox Text="{Binding TaraKg}" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 10000" />
+                                    Theme="{StaticResource OutlineTextBox}"
+                                    PlaceholderText="Ex: 10000" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Capacid. (KG)" FontWeight="SemiBold"
                                     Foreground="#555" Margin="0,0,0,5" FontSize="13" />
                                 <TextBox Text="{Binding CapacidadeKg}" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 25000" />
+                                    Theme="{StaticResource OutlineTextBox}"
+                                    PlaceholderText="Ex: 25000" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="4">
                                 <TextBlock Text="Capacid. (M³)" FontWeight="SemiBold"
                                     Foreground="#555" Margin="0,0,0,5" FontSize="13" />
                                 <TextBox Text="{Binding CapacidadeM3}" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 50" />
+                                    Theme="{StaticResource OutlineTextBox}" PlaceholderText="Ex: 50" />
                             </StackPanel>
                         </Grid>
 

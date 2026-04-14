@@ -14,6 +14,7 @@ using System.Xml.Linq;
 using Microsoft.EntityFrameworkCore;
 using CoreMDFe.Core.Interfaces;
 using Serilog;
+using Avalonia.Input.Platform;
 
 namespace CoreMDFe.Desktop.ViewModels
 {

@@ -331,7 +331,7 @@
                                                 <TextBlock Text="CNPJ Seguradora" FontSize="12"
                                                     FontWeight="SemiBold" Foreground="#666" />
                                                 <TextBox Text="{Binding SeguradoraCnpj}"
-                                                    Watermark="Ex: 00.000.000/0001-00"
+                                                    PlaceholderText="Ex: 00.000.000/0001-00"
                                                     Classes="Outline"
                                                     Theme="{StaticResource OutlineTextBox}" />
                                             </StackPanel>
@@ -339,7 +339,7 @@
                                                 <TextBlock Text="Nome da Seguradora" FontSize="12"
                                                     FontWeight="SemiBold" Foreground="#666" />
                                                 <TextBox Text="{Binding SeguradoraNome}"
-                                                    Watermark="Ex: Porto Seguro S/A"
+                                                    PlaceholderText="Ex: Porto Seguro S/A"
                                                     Classes="Outline"
                                                     Theme="{StaticResource OutlineTextBox}" />
                                             </StackPanel>
@@ -396,17 +396,20 @@
                                                 <TextBlock Text="Descrição do Produto" FontSize="12"
                                                     FontWeight="SemiBold" Foreground="#666" />
                                                 <TextBox Text="{Binding NomeProdutoPredominante}"
-                                                    Watermark="Ex: Soja em grãos" Classes="Outline"
+                                                    PlaceholderText="Ex: Soja em grãos"
+                                                    Classes="Outline"
                                                     Theme="{StaticResource OutlineTextBox}" />
                                             </StackPanel>
                                         </Grid>
                                         <Grid ColumnDefinitions="*, 15, *">
                                             <TextBox Grid.Column="0" Text="{Binding NcmProduto}"
-                                                Watermark="Código NCM (Opcional)" Classes="Outline"
+                                                PlaceholderText="Código NCM (Opcional)"
+                                                Classes="Outline"
                                                 Theme="{StaticResource OutlineTextBox}" />
 
                                             <TextBox Grid.Column="2" Text="{Binding CeanProduto}"
-                                                Watermark="GTIN / EAN (Opcional)" Classes="Outline"
+                                                PlaceholderText="GTIN / EAN (Opcional)"
+                                                Classes="Outline"
                                                 Theme="{StaticResource OutlineTextBox}" />
                                         </Grid>
                                     </StackPanel>
@@ -437,10 +440,10 @@
                                             Foreground="#666" Margin="0,5,0,0" />
                                         <Grid ColumnDefinitions="*, 15, *">
                                             <TextBox Grid.Column="0" Text="{Binding Ciot}"
-                                                Watermark="Código CIOT" Classes="Outline"
+                                                PlaceholderText="Código CIOT" Classes="Outline"
                                                 Theme="{StaticResource OutlineTextBox}" />
                                             <TextBox Grid.Column="2" Text="{Binding CpfCnpjCiot}"
-                                                Watermark="CPF/CNPJ do Responsável pelo CIOT"
+                                                PlaceholderText="CPF/CNPJ do Responsável pelo CIOT"
                                                 Classes="Outline"
                                                 Theme="{StaticResource OutlineTextBox}" />
                                         </Grid>
@@ -451,12 +454,12 @@
                                         <Grid ColumnDefinitions="*, 15, *">
                                             <TextBox Grid.Column="0"
                                                 Text="{Binding CnpjFornecedorValePedagio}"
-                                                Watermark="CNPJ Fornecedor do Pedágio"
+                                                PlaceholderText="CNPJ Fornecedor do Pedágio"
                                                 Classes="Outline"
                                                 Theme="{StaticResource OutlineTextBox}" />
                                             <TextBox Grid.Column="2"
                                                 Text="{Binding CnpjPagadorValePedagio}"
-                                                Watermark="CNPJ Pagador" Classes="Outline"
+                                                PlaceholderText="CNPJ Pagador" Classes="Outline"
                                                 Theme="{StaticResource OutlineTextBox}" />
                                         </Grid>
                                     </StackPanel>

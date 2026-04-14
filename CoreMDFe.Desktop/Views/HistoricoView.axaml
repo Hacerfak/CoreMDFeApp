@@ -314,9 +314,10 @@
                             Foreground="#2196F3" />
                         <TextBlock Text="Preencha os dados do motorista que assumirá o MDF-e."
                             TextWrapping="Wrap" Foreground="Gray" />
-                        <TextBox Text="{Binding NovoCondutorNome}" Watermark="Nome Completo"
+                        <TextBox Text="{Binding NovoCondutorNome}" PlaceholderText="Nome Completo"
                             Classes="Outline" Theme="{StaticResource OutlineTextBox}" />
-                        <TextBox Text="{Binding NovoCondutorCpf}" Watermark="CPF (Somente Números)"
+                        <TextBox Text="{Binding NovoCondutorCpf}"
+                            PlaceholderText="CPF (Somente Números)"
                             Classes="Outline" Theme="{StaticResource OutlineTextBox}" />
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                             Spacing="10"

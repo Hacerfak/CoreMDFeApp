@@ -57,7 +57,7 @@
                                     Foreground="#555555" FontSize="13" />
                                 <TextBox Text="{Binding SenhaCertificado}" PasswordChar="•"
                                     Classes="Outline" Theme="{StaticResource OutlineTextBox}"
-                                    Watermark="Digite a senha..." />
+                                    PlaceholderText="Digite a senha..." />
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -80,14 +80,15 @@
                                 <TextBlock Text="Último Número Autorizado"
                                     FontWeight="SemiBold" Foreground="#555555" FontSize="13" />
                                 <TextBox Text="{Binding UltimaNumeracao}" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 10" />
+                                    Theme="{StaticResource OutlineTextBox}" PlaceholderText="Ex: 10" />
                             </StackPanel>
 
                             <StackPanel Grid.Row="0" Grid.Column="2" Spacing="5">
                                 <TextBlock Text="Série"
                                     FontWeight="SemiBold" Foreground="#555555" FontSize="13" />
                                 <TextBox Text="{Binding Serie}" Classes="Outline"
-                                    Theme="{StaticResource OutlineTextBox}" Watermark="Ex: 001" />
+                                    Theme="{StaticResource OutlineTextBox}"
+                                    PlaceholderText="Ex: 001" />
                             </StackPanel>
                         </Grid>
 
@@ -223,7 +224,7 @@
                                 <TextBlock Text="CPF/CNPJ do Responsável" FontSize="12"
                                     Foreground="Gray" />
                                 <TextBox Text="{Binding SeguroCpfCnpjPadrao}" Classes="Outline"
-                                    Watermark="Caso seja o Contratante" />
+                                    PlaceholderText="Caso seja o Contratante" />
                             </StackPanel>
                         </Grid>
 
@@ -267,7 +268,7 @@
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBox Grid.Column="0" Text="{Binding DiretorioSalvarXml}"
                                         Classes="Outline" Theme="{StaticResource OutlineTextBox}"
-                                        IsReadOnly="True" Watermark="Caminho do XML..." />
+                                        IsReadOnly="True" PlaceholderText="Caminho do XML..." />
                                     <Button Grid.Column="1"
                                         Command="{Binding ProcurarDiretorioXmlCommand}"
                                         Classes="Outline" Margin="5,0,0,0">
@@ -283,7 +284,7 @@
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBox Grid.Column="0" Text="{Binding DiretorioSalvarPdf}"
                                         Classes="Outline" Theme="{StaticResource OutlineTextBox}"
-                                        IsReadOnly="True" Watermark="Caminho do PDF..." />
+                                        IsReadOnly="True" PlaceholderText="Caminho do PDF..." />
                                     <Button Grid.Column="1"
                                         Command="{Binding ProcurarDiretorioPdfCommand}"
                                         Classes="Outline" Margin="5,0,0,0">
@@ -325,7 +326,7 @@
                                 <TextBlock Text="Inscrição Estadual (IE)" FontSize="13"
                                     FontWeight="SemiBold" Foreground="#555" />
                                 <TextBox Text="{Binding Ie}" Classes="Outline"
-                                    Watermark="Isento se não houver" />
+                                    PlaceholderText="Isento se não houver" />
                             </StackPanel>
                         </UniformGrid>
 
@@ -379,13 +380,13 @@
                                 <TextBlock Text="E-mail da Empresa" FontSize="13"
                                     FontWeight="SemiBold" Foreground="#555" />
                                 <TextBox Text="{Binding Email}" Classes="Outline"
-                                    Watermark="exemplo@empresa.com" />
+                                    PlaceholderText="exemplo@empresa.com" />
                             </StackPanel>
                             <StackPanel Spacing="5">
                                 <TextBlock Text="RNTRC (ANTT)" FontSize="13" FontWeight="SemiBold"
                                     Foreground="#555" />
                                 <TextBox Text="{Binding Rntrc}" Classes="Outline"
-                                    Watermark="Registro de Transportador" />
+                                    PlaceholderText="Registro de Transportador" />
                             </StackPanel>
                         </UniformGrid>
 

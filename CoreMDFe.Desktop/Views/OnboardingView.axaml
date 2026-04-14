@@ -54,7 +54,8 @@
                             <Grid ColumnDefinitions="*, Auto">
                                 <TextBox Grid.Column="0" Text="{Binding CaminhoCertificado}"
                                     Classes="Outline" Theme="{StaticResource OutlineTextBox}"
-                                    Watermark="Nenhum arquivo selecionado..." IsReadOnly="True" />
+                                    PlaceholderText="Nenhum arquivo selecionado..."
+                                    IsReadOnly="True" />
                                 <Button Grid.Column="1"
                                     Command="{Binding ProcurarCertificadoCommand}" Classes="Outline"
                                     Margin="8,0,0,0" ToolTip.Tip="Procurar arquivo">
@@ -70,7 +71,7 @@
                                     Foreground="#555555" FontSize="13" />
                                 <TextBox Text="{Binding SenhaCertificado}" PasswordChar="•"
                                     Classes="Outline" Theme="{StaticResource OutlineTextBox}"
-                                    Watermark="Digite a senha..." />
+                                    PlaceholderText="Digite a senha..." />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Spacing="5">
