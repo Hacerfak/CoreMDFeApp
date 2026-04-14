@@ -4,6 +4,8 @@ using Avalonia.Markup.Xaml;
 using CoreMDFe.Core.Interfaces;
 using CoreMDFe.Infrastructure.Data;
 using CoreMDFe.Application.Services;
+using CoreMDFe.Application.Mediator;
+using CoreMDFe.Application.Features.Configuracoes;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using CoreMDFe.Desktop.ViewModels;
@@ -37,7 +39,7 @@ namespace CoreMDFe.Desktop
 
             // 3. Configura o Logging e o MediatR
             services.AddLogging();
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(global::CoreMDFe.Application.Features.Configuracoes.SalvarConfiguracaoCommand).Assembly));
+            services.AddNativeMediator(typeof(SalvarConfiguracaoCommand).Assembly);
 
             // 4. Registrar ViewModels (O MainViewModel TEM que ser Singleton para a navegação funcionar)
             services.AddSingleton<MainViewModel>();

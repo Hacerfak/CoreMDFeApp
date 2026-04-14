@@ -1,4 +1,4 @@
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -9,7 +9,7 @@ using CoreMDFe.Core.Interfaces;
 using CoreMDFe.Core.Security;
 using System.Linq;
 using CoreMDFe.Core.Entities;
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;

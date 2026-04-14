@@ -2,7 +2,7 @@ using CoreMDFe.Core.Interfaces;
 using DFe.Utils;
 using MDFe.Classes.Informacoes.Evento.CorpoEvento;
 using MDFe.Servicos.EventosMDFe;
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

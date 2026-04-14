@@ -1,4 +1,4 @@
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

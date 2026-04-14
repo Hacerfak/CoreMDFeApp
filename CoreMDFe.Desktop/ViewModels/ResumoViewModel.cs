@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Consultas;
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Serilog;
 using System;
 using System.Collections.ObjectModel;

@@ -4,7 +4,7 @@ using CoreMDFe.Application.Features.Cadastros;
 using CoreMDFe.Core.Entities;
 using CoreMDFe.Core.Interfaces;
 using CoreMDFe.Core.Validations;
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;

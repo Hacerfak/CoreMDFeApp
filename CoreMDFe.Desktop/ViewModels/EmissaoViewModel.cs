@@ -8,7 +8,7 @@ using CoreMDFe.Application.Features.Manifestos;
 using CoreMDFe.Core.Entities;
 using CoreMDFe.Core.Interfaces;
 using CoreMDFe.Application.Features.Consultas;
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

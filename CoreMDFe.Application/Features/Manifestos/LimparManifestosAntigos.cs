@@ -1,5 +1,5 @@
 using CoreMDFe.Core.Interfaces;
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;

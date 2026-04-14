@@ -146,12 +146,10 @@
     veic.Init();
     while (veic.HasMoreRows)
     {
-    //txtPlaca.Text += Environment.NewLine +
-    ((String)Report.GetColumnValue(&quot;MDFeProcMDFe.MDFe.InfMDFe.InfModal.Modal.VeicReboque.Placa&quot;));
-    txtPlaca.Text += ((String)Report.GetParameterValue(&quot;NewLine&quot;)) +
-    ((String)Report.GetColumnValue(&quot;MDFeProcMDFe.MDFe.InfMDFe.InfModal.Modal.VeicReboque.Placa&quot;));
+    txtPlaca.Text += ((String)Report.GetParameterValue("NewLine")) +
+    ((String)Report.GetColumnValue("MDFeProcMDFe.MDFe.InfMDFe.InfModal.Modal.VeicReboque.Placa"));
     string rntrc =
-    ((String)Report.GetColumnValue(&quot;MDFeProcMDFe.MDFe.InfMDFe.InfModal.Modal.VeicReboque.Prop.RNTRC&quot;));
+    ((String)Report.GetColumnValue("MDFeProcMDFe.MDFe.InfMDFe.InfModal.Modal.VeicReboque.Prop.RNTRC"));
     if ( string.IsNullOrEmpty(rntrc) )
     rntrc =
     ((String)Report.GetColumnValue(&quot;MDFeProcMDFe.MDFe.InfMDFe.InfModal.Modal.RNTRC&quot;));
@@ -955,7 +953,7 @@
     <Parameter Name="DocumentoCancelado" DataType="System.Boolean" AsString="" />
   </Dictionary>
   <ReportPage Name="Page1" RawPaperSize="9" LeftMargin="6" TopMargin="8" RightMargin="6"
-    BottomMargin="8" FirstPageSource="261" PlaceholderText.Font="Arial, 60pt"
+    BottomMargin="8" FirstPageSource="261" Watermark.Font="Arial, 60pt"
     StartPageEvent="Page1_StartPage">
     <PageHeaderBand Name="PageHeader1" Width="748.44" Height="280.61"
       BeforePrintEvent="PageHeader1_BeforePrint">

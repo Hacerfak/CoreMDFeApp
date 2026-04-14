@@ -1,4 +1,4 @@
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO; // Adicionado para podermos criar as pastas e copiar o arquivo

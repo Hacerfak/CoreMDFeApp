@@ -2,7 +2,7 @@ using CoreMDFe.Core.Entities;
 using CoreMDFe.Core.Interfaces;
 using MDFe.Servicos.ConsultaProtocoloMDFe;
 using MDFe.Utils.Configuracoes; // Adicionado para acessar a MDFeConfiguracao
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;

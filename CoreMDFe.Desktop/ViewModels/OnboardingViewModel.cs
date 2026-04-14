@@ -4,7 +4,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Onboarding;
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 

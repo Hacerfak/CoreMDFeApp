@@ -4,7 +4,7 @@ using DFe.Utils;
 using FastReport;
 using FastReport.Export.PdfSimple;
 using MDFe.Classes.Retorno;
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;

@@ -8,7 +8,6 @@
   <ItemGroup>
     <PackageReference Include="FastReport.OpenSource" Version="2026.2.0" />
     <PackageReference Include="FastReport.OpenSource.Export.PdfSimple" Version="2026.2.0" />
-    <PackageReference Include="MediatR" Version="14.1.0" />
     <PackageReference Include="Serilog" Version="4.3.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />

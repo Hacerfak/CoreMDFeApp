@@ -1,6 +1,6 @@
 using CoreMDFe.Core.Entities;
 using CoreMDFe.Core.Interfaces;
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;

@@ -1,4 +1,4 @@
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

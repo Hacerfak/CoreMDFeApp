@@ -1,4 +1,4 @@
-using MediatR;
+using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
 using CoreMDFe.Core.Interfaces;
 using System;
