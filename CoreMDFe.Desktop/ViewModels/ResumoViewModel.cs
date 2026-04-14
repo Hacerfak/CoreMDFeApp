@@ -1,12 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Consultas;
-using LiveChartsCore;
-using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore.SkiaSharpView.Painting;
 using MediatR;
 using Serilog;
-using SkiaSharp;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -14,11 +10,20 @@ using System.Threading.Tasks;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
+    // Classe auxiliar para as colunas do gráfico nativo
+    public class BarChartItem
+    {
+        public string Data { get; set; } = string.Empty;
+        public int Valor { get; set; }
+        public double AlturaBarra { get; set; }
+        public bool TemValor => Valor > 0;
+    }
+
     public partial class ResumoViewModel : ObservableObject
     {
         private readonly IMediator _mediator;
 
-        // --- ESTATÍSTICAS MENSAIS (As que você já tinha) ---
+        // --- ESTATÍSTICAS MENSAIS ---
         [ObservableProperty] private int _totalMesAtual;
         [ObservableProperty] private int _autorizados;
         [ObservableProperty] private int _encerrados;
@@ -31,7 +36,7 @@ namespace CoreMDFe.Desktop.ViewModels
         public bool TemManifestosEmAberto => EmAberto > 0;
         [ObservableProperty] private string _mesAtualTexto = string.Empty;
 
-        // --- NOVAS MÉTRICAS DE BI (Últimos 7 Dias) ---
+        // --- MÉTRICAS DE BI ---
         [ObservableProperty] private string _mediaDiariaDFes = "0";
         [ObservableProperty] private string _mediaDiariaPeso = "0 kg";
         [ObservableProperty] private string _mediaDiariaValor = "R$ 0,00";
@@ -41,9 +46,9 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty]
         private ObservableCollection<RankingCidadeDto> _cidadesRanking = new();
 
-        // --- GRÁFICO (LiveCharts) ---
-        [ObservableProperty] private ISeries[] _seriesGrafico = Array.Empty<ISeries>();
-        [ObservableProperty] private Axis[] _eixosXGrafico = Array.Empty<Axis>();
+        // --- PROPRIEDADE PARA O GRÁFICO NATIVO (O que estava faltando) ---
+        [ObservableProperty]
+        private ObservableCollection<BarChartItem> _barrasGrafico = new();
 
         public ResumoViewModel(IMediator mediator)
         {
@@ -58,7 +63,6 @@ namespace CoreMDFe.Desktop.ViewModels
             Log.Information("[RESUMO] Carregando estatísticas e métricas de BI...");
             try
             {
-                // 1. Carrega Resumo Mensal (Aba Superior)
                 var stats = await _mediator.Send(new ConsultarEstatisticasResumoQuery());
                 TotalMesAtual = stats.TotalMesAtual;
                 Autorizados = stats.Autorizados;
@@ -67,7 +71,6 @@ namespace CoreMDFe.Desktop.ViewModels
                 Rejeitados = stats.Rejeitados;
                 EmAberto = stats.EmAberto;
 
-                // 2. Carrega Métricas de BI dos Últimos 7 Dias (Aba Inferior)
                 var metricas = await _mediator.Send(new ConsultarMetricasResumoQuery());
 
                 MediaDiariaDFes = metricas.MediaDiariaDFes.ToString("F1");
@@ -78,29 +81,19 @@ namespace CoreMDFe.Desktop.ViewModels
 
                 CidadesRanking = new ObservableCollection<RankingCidadeDto>(metricas.CidadesDescarregamento);
 
-                // 3. Monta as Linhas do Gráfico
-                SeriesGrafico = new ISeries[]
-                {
-                    new LineSeries<int>
-                    {
-                        Values = metricas.EvolucaoDiaria.Select(x => x.QuantidadeManifestos).ToArray(),
-                        Name = "MDF-es Emitidos",
-                        Fill = new SolidColorPaint(SKColors.Purple.WithAlpha(30)), // Tom combinando com o roxo do sistema
-                        Stroke = new SolidColorPaint(SKColors.Purple) { StrokeThickness = 3 },
-                        GeometrySize = 10,
-                        GeometryStroke = new SolidColorPaint(SKColors.Purple) { StrokeThickness = 2 }
-                    }
-                };
+                // --- LÓGICA DO GRÁFICO NATIVO ---
+                var maxValor = metricas.EvolucaoDiaria.Any() ? metricas.EvolucaoDiaria.Max(x => x.QuantidadeManifestos) : 0;
+                var maxAlturaPixels = 160.0;
 
-                EixosXGrafico = new Axis[]
+                var listaBarras = metricas.EvolucaoDiaria.Select(x => new BarChartItem
                 {
-                    new Axis
-                    {
-                        Labels = metricas.EvolucaoDiaria.Select(x => x.Data).ToArray(),
-                        LabelsRotation = 45,
-                        TextSize = 12
-                    }
-                };
+                    Data = x.Data,
+                    Valor = x.QuantidadeManifestos,
+                    AlturaBarra = maxValor > 0 ? (x.QuantidadeManifestos / (double)maxValor) * maxAlturaPixels : 0
+                }).ToList();
+
+                // Atualiza a coleção que a View (XAML) está observando
+                BarrasGrafico = new ObservableCollection<BarChartItem>(listaBarras);
             }
             catch (Exception ex)
             {

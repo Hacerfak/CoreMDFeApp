@@ -2,7 +2,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
     xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
-    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
     x:Class="CoreMDFe.Desktop.Views.ResumoView"
     x:DataType="vm:ResumoViewModel">
 
@@ -157,8 +156,39 @@
                         <Grid RowDefinitions="Auto,*">
                             <TextBlock Text="Volume de Emissões" FontSize="14" FontWeight="SemiBold"
                                 Foreground="Gray" Margin="0,0,0,15" />
-                            <lvc:CartesianChart Grid.Row="1" Height="220"
-                                Series="{Binding SeriesGrafico}" XAxes="{Binding EixosXGrafico}" />
+
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding BarrasGrafico}"
+                                Height="200" VerticalAlignment="Bottom">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="1" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid RowDefinitions="*, Auto" Margin="2,0">
+                                            <Border Grid.Row="0" Background="#8C9EFF"
+                                                Height="{Binding AlturaBarra}" Width="25"
+                                                VerticalAlignment="Bottom" CornerRadius="4,4,0,0"
+                                                ToolTip.Tip="{Binding Valor, StringFormat='{}Total: {0} MDF-es'}">
+
+                                                <TextBlock Text="{Binding Valor}"
+                                                    Foreground="#311B92"
+                                                    HorizontalAlignment="Center" FontWeight="Bold"
+                                                    Margin="0,5,0,0" FontSize="11"
+                                                    IsVisible="{Binding TemValor}" />
+                                            </Border>
+
+                                            <TextBlock Grid.Row="1" Text="{Binding Data}"
+                                                FontSize="10"
+                                                Foreground="Gray" HorizontalAlignment="Center"
+                                                Margin="0,8,0,0" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
                         </Grid>
                     </Border>
                 </StackPanel>
