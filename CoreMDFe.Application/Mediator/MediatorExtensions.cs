@@ -11,16 +11,21 @@ namespace CoreMDFe.Application.Mediator
             // Regista o serviço central do Mediator
             services.AddSingleton<IMediator, NativeMediator>();
 
-            // Procura todas as classes que implementam IRequestHandler<,>
+            // Procura todas as classes que implementam pelo menos um IRequestHandler<,>
             var handlerTypes = assembly.GetTypes()
                 .Where(t => t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>)))
                 .ToList();
 
-            // Regista cada Handler encontrado no Inversor de Dependência nativo
+            // Regista CADA UMA das interfaces que a classe implementa
             foreach (var type in handlerTypes)
             {
-                var interfaceType = type.GetInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
-                services.AddTransient(interfaceType, type);
+                var interfacesImplementadas = type.GetInterfaces()
+                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
+
+                foreach (var interfaceType in interfacesImplementadas)
+                {
+                    services.AddTransient(interfaceType, type);
+                }
             }
 
             return services;
