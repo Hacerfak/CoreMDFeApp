@@ -4,11 +4,6 @@ using DFe.Utils;
 using MDFe.Servicos.RecepcaoMDFe;
 using CoreMDFe.Application.Mediator;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using MDFeEletronico = MDFe.Classes.Informacoes.MDFe;
 
 namespace CoreMDFe.Application.Features.Manifestos
@@ -29,34 +24,55 @@ namespace CoreMDFe.Application.Features.Manifestos
 
         public async Task<ReenviarManifestoResult> Handle(ReenviarManifestoCommand request, CancellationToken cancellationToken)
         {
-            // Garante que as configurações de certificado/serviço estão aplicadas
             await _mediator.Send(new Configuracoes.AplicarConfiguracaoZeusCommand(), cancellationToken);
 
-            var manifesto = await _dbContext.Manifestos.FirstOrDefaultAsync(m => m.Id == request.ManifestoId, cancellationToken);
-            if (manifesto == null || string.IsNullOrEmpty(manifesto.XmlAssinado))
-                return new ReenviarManifestoResult(false, "MDF-e ou XML original não encontrado.");
+            // Carrega o manifesto e os dados da empresa para obtermos a última numeração atualizada
+            var manifesto = await _dbContext.Manifestos
+                .Include(m => m.Empresa)
+                .ThenInclude(e => e.Configuracao)
+                .FirstOrDefaultAsync(m => m.Id == request.ManifestoId, cancellationToken);
+
+            if (manifesto == null || manifesto.Empresa?.Configuracao == null || string.IsNullOrEmpty(manifesto.XmlAssinado))
+                return new ReenviarManifestoResult(false, "MDF-e ou configuração não encontrado.");
 
             try
             {
-                // 1. Extrai a classe MDFe do XML que já estava assinado no banco
-                var doc = XDocument.Parse(manifesto.XmlAssinado);
-                var nodeMDFe = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "MDFe");
-                var xmlParaDesserializar = nodeMDFe != null ? nodeMDFe.ToString() : manifesto.XmlAssinado;
+                var mdfe = FuncoesXml.XmlStringParaClasse<MDFeEletronico>(manifesto.XmlAssinado);
 
-                var mdfe = FuncoesXml.XmlStringParaClasse<MDFeEletronico>(xmlParaDesserializar);
+                // ====================================================================
+                // LÓGICA DE ATUALIZAÇÃO DA NUMERAÇÃO NO REENVIO
+                // ====================================================================
+                // Garante que o documento pegará a próxima numeração válida antes de reenviar
+                long novoNumero = manifesto.Empresa.Configuracao.UltimaNumeracao + 1;
 
-                // 2. Transmite novamente usando o serviço de recepção síncrona do Zeus
+                mdfe.InfMDFe.Ide.NMDF = novoNumero;
+                mdfe.InfMDFe.Ide.CMDF = new Random().Next(11111111, 99999999); // Atualiza o código aleatório (Segurança)
+
+                // IMPORTANTE: Limpamos a assinatura e o ID antigos para forçar o componente Zeus 
+                // a gerar uma nova chave de acesso (baseada no novo número) e a assinar o XML novamente.
+                mdfe.Signature = null;
+                mdfe.InfMDFe.Id = null;
+
                 var servicoRecepcao = new ServicoMDFeRecepcao();
                 var retornoEnvio = servicoRecepcao.MDFeRecepcaoSinc(mdfe);
 
-                // 3. Atualiza os dados de retorno no banco
                 manifesto.ReciboAutorizacao = retornoEnvio.RetornoXmlString ?? "";
                 manifesto.ProtocoloAutorizacao = retornoEnvio.ProtMdFe?.InfProt?.NProt ?? "";
                 manifesto.CodigoStatus = retornoEnvio?.CStat.ToString() ?? "0";
                 manifesto.MotivoStatus = retornoEnvio?.XMotivo ?? "Sem comunicação";
 
-                // Atualiza o status conforme a resposta da SEFAZ
                 manifesto.Status = manifesto.CodigoStatus == "100" ? StatusManifesto.Autorizado : StatusManifesto.Rejeitado;
+
+                // ATUALIZA AS INFORMAÇÕES DO DOCUMENTO NO BANCO (Número, Chave e XML Corrigido)
+                manifesto.Numero = (int)novoNumero;
+                manifesto.ChaveAcesso = mdfe.InfMDFe.Id?.Length >= 47 ? mdfe.InfMDFe.Id.Substring(4) : "";
+                manifesto.XmlAssinado = retornoEnvio.EnvioXmlString ?? "";
+
+                // Assim como na Emissão Original, só "queima" o número se a SEFAZ autorizar de fato
+                if (manifesto.Status == StatusManifesto.Autorizado)
+                {
+                    manifesto.Empresa.Configuracao.UltimaNumeracao = novoNumero;
+                }
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
 

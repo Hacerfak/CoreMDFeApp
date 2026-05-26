@@ -48,7 +48,6 @@ namespace CoreMDFe.Application.Features.Manifestos
         bool HasSeguro, string SeguradoraCnpj, string SeguradoraNome, string NumeroApolice, string NumeroAverbacao,
         bool HasProdutoPredominante, string TipoCarga, string NomeProdutoPredominante, string NcmProduto, string CeanProduto,
         bool HasCiotValePedagio, string Ciot, string CpfCnpjCiot, string CnpjFornecedorValePedagio, string CnpjPagadorValePedagio,
-        // --- NOVOS CAMPOS PARA CARREGAMENTO POSTERIOR ---
         string? IbgeCarregamentoManual = null, string? MunicipioCarregamentoManual = null,
         string? IbgeDescarregamentoManual = null, string? MunicipioDescarregamentoManual = null
     ) : IRequest<EmitirManifestoResult>;
@@ -70,31 +69,17 @@ namespace CoreMDFe.Application.Features.Manifestos
         {
             try
             {
-                // Se o caminho for nulo ou a pasta não existir, aborta a limpeza silenciosamente
-                if (string.IsNullOrWhiteSpace(caminhoDiretorio) || !Directory.Exists(caminhoDiretorio))
-                    return;
-
+                if (string.IsNullOrWhiteSpace(caminhoDiretorio) || !Directory.Exists(caminhoDiretorio)) return;
                 var arquivosXml = Directory.GetFiles(caminhoDiretorio, "*.xml");
 
                 foreach (var arquivo in arquivosXml)
                 {
                     var nomeArquivo = Path.GetFileName(arquivo).ToLower();
-
-                    // REGRAS DE MANUTENÇÃO:
-                    // 1. Arquivo final do MDF-e autorizado (termina em -mdfe.xml)
-                    // 2. Arquivos de eventos consolidados (termina em proceventomdfe.xml)
                     bool deveManter = nomeArquivo.EndsWith("-mdfe.xml");
 
                     if (!deveManter)
                     {
-                        try
-                        {
-                            File.Delete(arquivo);
-                        }
-                        catch
-                        {
-                            // Ignora silenciosamente se o SO estiver bloqueando o arquivo temporário
-                        }
+                        try { File.Delete(arquivo); } catch { }
                     }
                 }
             }
@@ -131,7 +116,10 @@ namespace CoreMDFe.Application.Features.Manifestos
 
             mdfe.InfMDFe.Ide.Mod = ModeloDocumento.MDFe;
             mdfe.InfMDFe.Ide.Serie = (short)empresa.Configuracao.Serie;
-            mdfe.InfMDFe.Ide.NMDF = empresa.Configuracao.UltimaNumeracao;
+
+            // LÓGICA DE NÚMERO CORRIGIDA: Soma 1 no último número autorizado!
+            mdfe.InfMDFe.Ide.NMDF = empresa.Configuracao.UltimaNumeracao + 1;
+
             mdfe.InfMDFe.Ide.CMDF = new Random().Next(11111111, 99999999);
             mdfe.InfMDFe.Ide.DhEmi = DateTime.Now;
             mdfe.InfMDFe.Ide.ProcEmi = MDFeIdentificacaoProcessoEmissao.EmissaoComAplicativoContribuinte;
@@ -144,7 +132,6 @@ namespace CoreMDFe.Application.Features.Manifestos
             if (request.DataInicioViagem.HasValue) mdfe.InfMDFe.Ide.DhIniViagem = request.DataInicioViagem.Value.DateTime;
             if (request.IsCanalVerde) mdfe.InfMDFe.Ide.IndCanalVerde = "1";
 
-            // Lógica Exclusiva: Carregamento Posterior ou Normal
             if (request.IsCarregamentoPosterior)
             {
                 mdfe.InfMDFe.Ide.IndCarregaPosterior = "1";
@@ -194,10 +181,10 @@ namespace CoreMDFe.Application.Features.Manifestos
             #region Responsável Técnico
             mdfe.InfMDFe.InfRespTec = new MDFeInfRespTec
             {
-                CNPJ = "64615275000112", // Apenas números
+                CNPJ = "64615275000112",
                 XContato = "Eder Gross Cichelero",
                 Email = "hacerfak@hacerfak.com.br",
-                Fone = "54992221877" // Apenas números
+                Fone = "54992221877"
             };
             #endregion
 
@@ -275,18 +262,16 @@ namespace CoreMDFe.Application.Features.Manifestos
 
             if (request.IsCarregamentoPosterior)
             {
-                // Para Carregamento Posterior, enviamos o município de descarga exigido, mas SEM NENHUMA NOTA
                 mdfe.InfMDFe.InfDoc.InfMunDescarga.Add(new MDFeInfMunDescarga
                 {
                     CMunDescarga = request.IbgeDescarregamentoManual,
                     XMunDescarga = request.MunicipioDescarregamentoManual,
-                    InfNFe = null, // Sem notas
-                    InfCTe = null  // Sem notas
+                    InfNFe = null,
+                    InfCTe = null
                 });
             }
             else
             {
-                // Emissão Normal (Com notas)
                 var cidadesDescarga = request.Documentos.GroupBy(d => new { d.IbgeDescarga, d.MunicipioDescarga });
                 foreach (var cidade in cidadesDescarga)
                 {
@@ -342,7 +327,6 @@ namespace CoreMDFe.Application.Features.Manifestos
 
             if (request.IsCarregamentoPosterior)
             {
-                // Para Carregamento Posterior, a SEFAZ exige a tag, mas zerada
                 mdfe.InfMDFe.Tot.QNFe = null;
                 mdfe.InfMDFe.Tot.QCTe = null;
                 mdfe.InfMDFe.Tot.vCarga = 0m;
@@ -350,7 +334,6 @@ namespace CoreMDFe.Application.Features.Manifestos
             }
             else
             {
-                // Totais Normais
                 mdfe.InfMDFe.Tot.QNFe = request.Documentos.Count(d => d.Tipo == 55);
                 mdfe.InfMDFe.Tot.QCTe = request.Documentos.Count(d => d.Tipo == 57);
                 if (mdfe.InfMDFe.Tot.QNFe == 0) mdfe.InfMDFe.Tot.QNFe = null;
@@ -367,12 +350,7 @@ namespace CoreMDFe.Application.Features.Manifestos
             mdfe.InfMDFe.InfAdic.InfCpl = string.IsNullOrWhiteSpace(empresa.Configuracao.InfoComplementarPadrao) ? null : empresa.Configuracao.InfoComplementarPadrao;
             #endregion
 
-            try
-            {
-                Log.Information("[EMISSÃO] XML GERADO (PRÉ-ASSINATURA) COM SUCESSO!");
-            }
-            catch (Exception ex) { Log.Error($"[ERRO XML EMISSÃO] {ex.Message}"); }
-
+            try { Log.Information("[EMISSÃO] XML GERADO (PRÉ-ASSINATURA) COM SUCESSO!"); } catch { }
             Log.Information("[EMISSÃO] Iniciando envio do XML para a SEFAZ...");
 
             try
@@ -401,20 +379,17 @@ namespace CoreMDFe.Application.Features.Manifestos
                     InformacoesComplementares = empresa.Configuracao.InfoComplementarPadrao,
                     InformacoesFisco = empresa.Configuracao.InfoFiscoPadrao,
 
-                    // Totais Básicos
                     QtdNFe = request.IsCarregamentoPosterior ? 0 : request.Documentos.Count(d => d.Tipo == 55),
                     QtdCTe = request.IsCarregamentoPosterior ? 0 : request.Documentos.Count(d => d.Tipo == 57),
                     ValorTotalCarga = request.IsCarregamentoPosterior ? 0 : request.Documentos.Sum(d => d.Valor),
                     PesoTotalCarga = request.IsCarregamentoPosterior ? 0 : request.Documentos.Sum(d => d.Peso),
 
-                    // Produto Predominante
                     ProdutoTipoCarga = request.HasProdutoPredominante && !request.IsCarregamentoPosterior ? request.TipoCarga : "",
                     ProdutoNome = request.HasProdutoPredominante && !request.IsCarregamentoPosterior ? request.NomeProdutoPredominante : "",
                     ProdutoNCM = request.HasProdutoPredominante && !request.IsCarregamentoPosterior ? request.NcmProduto : "",
                     ProdutoEAN = request.HasProdutoPredominante && !request.IsCarregamentoPosterior ? request.CeanProduto : ""
                 };
 
-                // 1. Relacionamento: Veículos (Tração e Reboques)
                 if (request.VeiculoTracao != null)
                 {
                     historico.Veiculos.Add(new ManifestoVeiculo
@@ -448,16 +423,13 @@ namespace CoreMDFe.Application.Features.Manifestos
                     });
                 }
 
-                // 2. Relacionamento: Condutores
                 if (request.Condutor != null)
                 {
                     historico.Condutores.Add(new ManifestoCondutor { CondutorBaseId = request.Condutor.Id, Cpf = request.Condutor.Cpf, Nome = request.Condutor.Nome });
                 }
 
-                // 3. Relacionamento: Cidades e Notas Fiscais
                 if (request.IsCarregamentoPosterior)
                 {
-                    // Apenas regista as cidades manuais (Sem Notas)
                     if (long.TryParse(request.IbgeCarregamentoManual, out long codCarrega))
                         historico.MunicipiosCarregamento.Add(new ManifestoMunicipioCarregamento { CodigoIbge = codCarrega, NomeMunicipio = request.MunicipioCarregamentoManual ?? "" });
 
@@ -466,7 +438,6 @@ namespace CoreMDFe.Application.Features.Manifestos
                 }
                 else
                 {
-                    // Regista Cidades extraídas dos XMLs e atrela as notas aos respetivos municípios
                     foreach (var c in request.Documentos.GroupBy(d => new { d.IbgeCarregamento, d.MunicipioCarregamento }))
                     {
                         historico.MunicipiosCarregamento.Add(new ManifestoMunicipioCarregamento { CodigoIbge = c.Key.IbgeCarregamento, NomeMunicipio = c.Key.MunicipioCarregamento });
@@ -483,7 +454,6 @@ namespace CoreMDFe.Application.Features.Manifestos
                     }
                 }
 
-                // 4. Relacionamento: Percurso
                 if (!string.IsNullOrWhiteSpace(request.UfsPercurso))
                 {
                     int ordem = 1;
@@ -491,7 +461,6 @@ namespace CoreMDFe.Application.Features.Manifestos
                         historico.Percursos.Add(new ManifestoPercurso { UF = uf, Ordem = ordem++ });
                 }
 
-                // 5. Relacionamento: Seguro, CIOT e Vale Pedágio
                 if (request.HasSeguro)
                 {
                     historico.Seguros.Add(new ManifestoSeguro { CnpjSeguradora = request.SeguradoraCnpj, NomeSeguradora = request.SeguradoraNome, NumeroApolice = request.NumeroApolice, NumeroAverbacao = request.NumeroAverbacao, Responsavel = 1 });
@@ -502,11 +471,14 @@ namespace CoreMDFe.Application.Features.Manifestos
                     historico.ValesPedagio.Add(new ManifestoValePedagio { CnpjFornecedor = request.CnpjFornecedorValePedagio, CpfCnpjPagador = request.CnpjPagadorValePedagio });
 
                 historico.Status = historico.CodigoStatus == "100" ? StatusManifesto.Autorizado : StatusManifesto.Rejeitado;
+
+                // LÓGICA DE NÚMERO CORRIGIDA: Só grava no banco como consumido se a SEFAZ autorizou!
                 if (historico.Status == StatusManifesto.Autorizado)
                 {
-                    empresa.Configuracao.UltimaNumeracao++;
+                    empresa.Configuracao.UltimaNumeracao = (long)mdfe.InfMDFe.Ide.NMDF;
                     Log.Information("[EMISSÃO] MDF-e Autorizado com sucesso!");
                 }
+
                 _dbContext.Manifestos.Add(historico);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
