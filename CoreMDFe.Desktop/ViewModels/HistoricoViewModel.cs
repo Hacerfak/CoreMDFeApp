@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using CoreMDFe.Core.Interfaces;
 using Serilog;
 using Avalonia.Input.Platform;
+using System.ComponentModel.DataAnnotations;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
@@ -47,7 +48,7 @@ namespace CoreMDFe.Desktop.ViewModels
         }
     }
 
-    public partial class HistoricoViewModel : ObservableObject
+    public partial class HistoricoViewModel : ObservableValidator
     {
         private readonly IMediator _mediator;
         private readonly IServiceProvider _serviceProvider;
@@ -69,7 +70,12 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty] private ManifestoEletronico? _manifestoSelecionado;
 
         [ObservableProperty] private bool _isDialogCancelarAberto;
-        [ObservableProperty] private string _justificativaCancelamento = string.Empty;
+
+        [ObservableProperty]
+        [Required(ErrorMessage = "O preenchimento da justificativa é obrigatório.")]
+        [MinLength(15, ErrorMessage = "A Sefaz exige no mínimo 15 caracteres.")]
+        [MaxLength(255, ErrorMessage = "A justificativa ultrapassou o limite máximo de 255 caracteres.")]
+        private string _justificativaCancelamento = string.Empty;
 
         [ObservableProperty] private bool _isDialogCondutorAberto;
         [ObservableProperty] private string _novoCondutorNome = string.Empty;
@@ -417,6 +423,12 @@ namespace CoreMDFe.Desktop.ViewModels
         [RelayCommand]
         private async Task ConfirmarCancelamento()
         {
+            // Dispara a validação visual na tela para pintar os campos de vermelho se estiverem inválidos
+            ValidateAllProperties();
+
+            // Se o texto for menor que 15 ou maior que 255, a execução para aqui!
+            if (HasErrors) return;
+
             if (ManifestoSelecionado != null)
             {
                 var id = ManifestoSelecionado.Id; var just = JustificativaCancelamento;
