@@ -56,8 +56,8 @@ namespace CoreMDFe.Application.Features.Manifestos
                 var servicoRecepcao = new ServicoMDFeRecepcao();
                 var retornoEnvio = servicoRecepcao.MDFeRecepcaoSinc(mdfe);
 
-                manifesto.ReciboAutorizacao = retornoEnvio.RetornoXmlString ?? "";
-                manifesto.ProtocoloAutorizacao = retornoEnvio.ProtMdFe?.InfProt?.NProt ?? "";
+                manifesto.ReciboAutorizacao = retornoEnvio?.RetornoXmlString ?? "";
+                manifesto.ProtocoloAutorizacao = retornoEnvio?.ProtMdFe?.InfProt?.NProt ?? "";
                 manifesto.CodigoStatus = retornoEnvio?.CStat.ToString() ?? "0";
                 manifesto.MotivoStatus = retornoEnvio?.XMotivo ?? "Sem comunicação";
 
@@ -66,7 +66,7 @@ namespace CoreMDFe.Application.Features.Manifestos
                 // ATUALIZA AS INFORMAÇÕES DO DOCUMENTO NO BANCO (Número, Chave e XML Corrigido)
                 manifesto.Numero = (int)novoNumero;
                 manifesto.ChaveAcesso = mdfe.InfMDFe.Id?.Length >= 47 ? mdfe.InfMDFe.Id.Substring(4) : "";
-                manifesto.XmlAssinado = retornoEnvio.EnvioXmlString ?? "";
+                manifesto.XmlAssinado = retornoEnvio?.EnvioXmlString ?? "";
 
                 // Assim como na Emissão Original, só "queima" o número se a SEFAZ autorizar de fato
                 if (manifesto.Status == StatusManifesto.Autorizado)
