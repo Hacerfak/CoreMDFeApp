@@ -2,7 +2,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CoreMDFe.Application.Features.Consultas;
 using CoreMDFe.Application.Mediator;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
 using Serilog;
+using SkiaSharp;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -10,15 +14,6 @@ using System.Threading.Tasks;
 
 namespace CoreMDFe.Desktop.ViewModels
 {
-    // Classe auxiliar para as colunas do gráfico nativo
-    public class BarChartItem
-    {
-        public string Data { get; set; } = string.Empty;
-        public int Valor { get; set; }
-        public double AlturaBarra { get; set; }
-        public bool TemValor => Valor > 0;
-    }
-
     public partial class ResumoViewModel : ObservableObject
     {
         private readonly IMediator _mediator;
@@ -46,9 +41,15 @@ namespace CoreMDFe.Desktop.ViewModels
         [ObservableProperty]
         private ObservableCollection<RankingCidadeDto> _cidadesRanking = new();
 
-        // --- PROPRIEDADE PARA O GRÁFICO NATIVO (O que estava faltando) ---
+        // --- PROPRIEDADES DO LIVECHARTS2 ---
         [ObservableProperty]
-        private ObservableCollection<BarChartItem> _barrasGrafico = new();
+        private ObservableCollection<ISeries> _series = new();
+
+        [ObservableProperty]
+        private Axis[] _xAxes = Array.Empty<Axis>();
+
+        [ObservableProperty]
+        private Axis[] _yAxes = Array.Empty<Axis>();
 
         public ResumoViewModel(IMediator mediator)
         {
@@ -81,19 +82,57 @@ namespace CoreMDFe.Desktop.ViewModels
 
                 CidadesRanking = new ObservableCollection<RankingCidadeDto>(metricas.CidadesDescarregamento);
 
-                // --- LÓGICA DO GRÁFICO NATIVO ---
+                // --- CONFIGURAÇÃO DO GRÁFICO DE LINHAS MODERNIZADO ---
                 var maxValor = metricas.EvolucaoDiaria.Any() ? metricas.EvolucaoDiaria.Max(x => x.QuantidadeManifestos) : 0;
-                var maxAlturaPixels = 160.0;
+                var valores = metricas.EvolucaoDiaria.Select(x => x.QuantidadeManifestos).ToArray();
+                var datas = metricas.EvolucaoDiaria.Select(x => x.Data).ToArray();
 
-                var listaBarras = metricas.EvolucaoDiaria.Select(x => new BarChartItem
+                Series = new ObservableCollection<ISeries>
+{
+    new LineSeries<int>
+    {
+        Values = valores,
+        Name = "MDF-es Emitidos",
+        Stroke = new SolidColorPaint(SKColor.Parse("#8C9EFF")) { StrokeThickness = 3 },
+        Fill = new SolidColorPaint(SKColor.Parse("#8C9EFF").WithAlpha(40)),
+        
+        // VISUAL MODERNIZADO: 
+        // Bolinhas menores e mais discretas. (Coloque 0 se preferir uma linha totalmente lisa)
+        GeometrySize = 4,
+        GeometryFill = new SolidColorPaint(SKColors.White),
+        GeometryStroke = new SolidColorPaint(SKColor.Parse("#311B92")) { StrokeThickness = 2 },
+        LineSmoothness = 0.5
+    }
+};
+
+                XAxes = new Axis[]
                 {
-                    Data = x.Data,
-                    Valor = x.QuantidadeManifestos,
-                    AlturaBarra = maxValor > 0 ? (x.QuantidadeManifestos / (double)maxValor) * maxAlturaPixels : 0
-                }).ToList();
+    new Axis
+    {
+        Labels = datas,
+        LabelsPaint = new SolidColorPaint(SKColors.Gray),
+        TextSize = 11,
+        MinStep = 1,
+        // Remove a linha de grade vertical para deixar mais limpo
+        SeparatorsPaint = null
+    }
+                };
 
-                // Atualiza a coleção que a View (XAML) está observando
-                BarrasGrafico = new ObservableCollection<BarChartItem>(listaBarras);
+                YAxes = new Axis[]
+                {
+    new Axis
+    {
+        MinLimit = 0, // NUNCA permite números negativos
+        MinStep = 1,  // FORÇA números inteiros (0, 1, 2, 3)
+        // Se estiver tudo zerado, força o gráfico a ter uma altura visual até 5
+        MaxLimit = maxValor == 0 ? 5 : null,
+
+        LabelsPaint = new SolidColorPaint(SKColors.Gray),
+        TextSize = 11,
+        // Linhas horizontais bem suaves e sutis
+        SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#F0F0F0")) { StrokeThickness = 1 }
+    }
+                };
             }
             catch (Exception ex)
             {

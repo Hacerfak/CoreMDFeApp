@@ -2,12 +2,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="clr-namespace:CoreMDFe.Desktop.ViewModels"
     xmlns:materialIcons="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
     x:Class="CoreMDFe.Desktop.Views.ResumoView"
     x:DataType="vm:ResumoViewModel">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="40" Spacing="20">
 
+            <!-- CABEÇALHO E ATENÇÃO MANTIDOS IGUAIS -->
             <Grid ColumnDefinitions="*, Auto">
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="Resumo Operacional" FontSize="28" FontWeight="Light"
@@ -36,7 +38,9 @@
                 </Grid>
             </Border>
 
+            <!-- CARDS DE TOTAIS MANTIDOS IGUAIS -->
             <UniformGrid Columns="4" Margin="0,10,0,0">
+                <!-- Total Emitidos -->
                 <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
                     Padding="20" Margin="0,0,15,0">
                     <StackPanel>
@@ -53,6 +57,7 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Encerrados -->
                 <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
                     Padding="20" Margin="0,0,15,0">
                     <StackPanel>
@@ -69,6 +74,7 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Em Trânsito -->
                 <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
                     Padding="20" Margin="0,0,15,0">
                     <StackPanel>
@@ -85,6 +91,7 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Invalidados -->
                 <Border Background="White" CornerRadius="8" BoxShadow="0 2 10 0 #0A000000"
                     Padding="20">
                     <StackPanel>
@@ -114,6 +121,7 @@
 
                 <StackPanel Grid.Column="0" Margin="0,0,15,0">
 
+                    <!-- MÉDIAS MANTIDAS IGUAIS -->
                     <UniformGrid Columns="3" Margin="0,0,0,15">
                         <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,10,0"
                             BoxShadow="0 2 10 0 #0A000000">
@@ -151,48 +159,25 @@
                         </Border>
                     </UniformGrid>
 
+                    <!-- GRÁFICO MODERNO AQUI -->
                     <Border Background="White" CornerRadius="8" Padding="20"
                         BoxShadow="0 2 10 0 #0A000000">
                         <Grid RowDefinitions="Auto,*">
                             <TextBlock Text="Volume de Emissões" FontSize="14" FontWeight="SemiBold"
                                 Foreground="Gray" Margin="0,0,0,15" />
 
-                            <ItemsControl Grid.Row="1" ItemsSource="{Binding BarrasGrafico}"
-                                Height="200" VerticalAlignment="Bottom">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Rows="1" />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid RowDefinitions="*, Auto" Margin="2,0">
-                                            <Border Grid.Row="0" Background="#8C9EFF"
-                                                Height="{Binding AlturaBarra}" Width="25"
-                                                VerticalAlignment="Bottom" CornerRadius="4,4,0,0"
-                                                ToolTip.Tip="{Binding Valor, StringFormat='{}Total: {0} MDF-es'}">
-
-                                                <TextBlock Text="{Binding Valor}"
-                                                    Foreground="#311B92"
-                                                    HorizontalAlignment="Center" FontWeight="Bold"
-                                                    Margin="0,5,0,0" FontSize="11"
-                                                    IsVisible="{Binding TemValor}" />
-                                            </Border>
-
-                                            <TextBlock Grid.Row="1" Text="{Binding Data}"
-                                                FontSize="10"
-                                                Foreground="Gray" HorizontalAlignment="Center"
-                                                Margin="0,8,0,0" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
+                            <lvc:CartesianChart Grid.Row="1"
+                                Height="200"
+                                Series="{Binding Series}"
+                                XAxes="{Binding XAxes}"
+                                YAxes="{Binding YAxes}"
+                                TooltipPosition="Top">
+                            </lvc:CartesianChart>
                         </Grid>
                     </Border>
                 </StackPanel>
 
+                <!-- TOP CIDADES MANTIDO IGUAL -->
                 <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="20"
                     BoxShadow="0 2 10 0 #0A000000" VerticalAlignment="Top">
                     <StackPanel>
@@ -222,7 +207,6 @@
                     </StackPanel>
                 </Border>
             </Grid>
-
         </StackPanel>
     </ScrollViewer>
 </UserControl>
